@@ -1,0 +1,58 @@
+<html>
+<!--
+    This file is part of JScriptLog.  This notice must remain.
+
+    Created by Glendon Holst.  Copyright 2005.
+    
+    JLog is free software licensed under the GNU General Public License.
+	See the included LICENSE.txt and GNU.txt files.
+
+    Check <http://jlogic.sourceforge.net/> for further information.
+-->
+
+<script language="javascript" type="text/javascript" src="JScriptLog_Types.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Enclosures.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Unify.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_KB.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Goals.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Prover.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Display.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_Parser.js"></script>
+<script language="javascript" type="text/javascript" src="JScriptLog_UI.js"></script>
+
+	<head>
+		<title>
+			JScriptLog v0.1.0 alpha
+		</title>
+	</head>
+	<body bgcolor="#bbbbbb" onload="jslog_ui_consult();">
+		<form name="formUI">
+			<p>
+Query<br>
+				<textarea width="90%" name="query" wrap="logical" rows="1" cols="45"></textarea>
+
+				<select name="premade_queries">
+				</select>
+
+				<input name="start" type="button" value="Query" onclick="jslog_ui_query();">
+				<input name="retry" type="button" value="Retry" onclick="jslog_ui_retry();">
+				<input name="stop" type="button" value="Stop" onclick="jslog_ui_stop();">
+			</p>
+			<p>
+Output<br>
+				<textarea width="100%" name="output" wrap="logical" rows="5" cols="90"></textarea>
+				<br>
+				<input name="clear" type="button" value="Clear" onclick="jslog_ui_clear();">
+			</p>
+			<p>
+KB<br>
+				<textarea width="100%" name="kb" wrap="logical" rows="21" cols="90"></textarea>
+				<br>
+				<input name="consult" type="button" value="Consult KB" onclick="jslog_ui_consult();">
+			</p>
+		</form>
+<p>
+<a href="LICENSE.txt">Licensed</a> under the <a href="GPL.txt">GPL</a>.
+</p>
+	</body>
+</html>
