@@ -13,7 +13,7 @@
 // * Goal Objects
 ///////////////////////////////////
 
-var TYPE_PREDICATE_GOAL = 1; // KB predicates 
+var TYPE_ATOM_GOAL = 1; // KB predicates 
 var TYPE_VARIABLE_GOAL = 2; // KB predicates, with a variable term 
 var TYPE_FUNCTION_GOAL = 3; // single-shot external function, no retry
 var TYPE_TRAVERSAL_GOAL = 4; // single-shot traversal function for try and retry
@@ -42,12 +42,12 @@ function newGoal(encl,parent,kb)
  if (encl.term.try_fn != undefined || encl.term.retry_fn != undefined)
   return newTraversalGoal(encl,parent,encl.term.try_fn,encl.term.try_fn);
   
- return newPredicateGoal(encl,parent,kb);
+ return newAtomGoal(encl,parent,kb);
 }
 
-// isPredicate(encl.term) must be true
-function newPredicateGoal(encl,parent,kb)
-{var goal = new Goal(TYPE_PREDICATE_GOAL,encl,parent);
+// isAtom(encl.term) must be true
+function newAtomGoal(encl,parent,kb)
+{var goal = new Goal(TYPE_ATOM_GOAL,encl,parent);
 
  goal.rule_index = 0;
  
@@ -90,9 +90,9 @@ function newTraversalGoal(encl,parent,try_fn,retry_fn)
 // * Goal test functions
 ///////////////////////////////////
 
-function isPredicateGoal(goal)
+function isAtomGoal(goal)
 {
- return (goal.type == TYPE_PREDICATE_GOAL);
+ return (goal.type == TYPE_ATOM_GOAL);
 }
 
 function isVariableGoal(goal)
@@ -135,7 +135,7 @@ function tryGoal(goal,kb,frontier,explored)
       goal.ruleset = encl.term.ruleset;
      else
 	  goal.ruleset = getRuleSet(kb,encl.term);
-  case TYPE_PREDICATE_GOAL:
+  case TYPE_ATOM_GOAL:
      var rule_body;
 
      if (goal.ruleset == null)
@@ -218,7 +218,7 @@ function retryGoal(goal,kb,frontier,explored)
  switch (goal.type)
  {
   case TYPE_VARIABLE_GOAL:
-  case TYPE_PREDICATE_GOAL:
+  case TYPE_ATOM_GOAL:
      var rule_body;
 
 	 removeChildGoalsFromFrontier(goal,frontier);

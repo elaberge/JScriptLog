@@ -13,8 +13,9 @@
 // * Type objects
 ///////////////////////////////////
 
-var TYPE_PREDICATE = 1; 
-var TYPE_VARIABLE = 2; // children[0] is the index into the Enclosure
+var TYPE_ATOM = 1; 
+var TYPE_NUMBER = 2; 
+var TYPE_VARIABLE = 3; // children[0] is the index into the Enclosure
 
 // type is one of the TYPE_* values, 
 // name is the name of the term (typically the predicate or function symbol),
@@ -28,8 +29,8 @@ function Term(type, name)
 }
 
 
-function newPredicate(name,terms)
-{var term = new Term(TYPE_PREDICATE,name);
+function newAtom(name,terms)
+{var term = new Term(TYPE_ATOM,name);
 
  term.children = terms;
  return term;
@@ -37,12 +38,12 @@ function newPredicate(name,terms)
 
 function newConstant(name)
 {
- return new Term(TYPE_PREDICATE,name);
+ return new Term(TYPE_ATOM,name);
 }
 
 function newNumber(value)
 {
- return new Term(TYPE_PREDICATE,parseFloat(value));
+ return new Term(TYPE_NUMBER,parseFloat(value));
 }
 
 function newVariable(name)
@@ -51,7 +52,7 @@ function newVariable(name)
 }
 
 function newConsPair(lhs,rhs)
-{var term = new Term(TYPE_PREDICATE,',');
+{var term = new Term(TYPE_ATOM,',');
  
  term.children[0] = lhs;
  term.children[1] = rhs;
@@ -76,7 +77,7 @@ function newConsPairsFromTerms(terms)
 }
 
 function newOrPair(lhs,rhs)
-{var term = new Term(TYPE_PREDICATE,';');
+{var term = new Term(TYPE_ATOM,';');
 
  term.children[0] = lhs;
  term.children[1] = rhs;
@@ -84,7 +85,7 @@ function newOrPair(lhs,rhs)
 }
 
 function newListPair(lhs,rhs)
-{var term = new Term(TYPE_PREDICATE,'.');
+{var term = new Term(TYPE_ATOM,'.');
 
  term.children[0] = lhs;
  term.children[1] = rhs;
@@ -93,7 +94,7 @@ function newListPair(lhs,rhs)
 
 function newListNull()
 {
- return new Term(TYPE_PREDICATE,'[]');
+ return new Term(TYPE_ATOM,'[]');
 }
 
 // Returns a single list term where each element in the list is the element in terms.
@@ -111,7 +112,7 @@ function newListFromTerms(terms)
 }
 
 function newRuleTerm(lhs,rhs)
-{var term = new Term(TYPE_PREDICATE,':-');
+{var term = new Term(TYPE_ATOM,':-');
 
  term.children[0] = lhs;
  term.children[1] = rhs;
@@ -119,7 +120,7 @@ function newRuleTerm(lhs,rhs)
 }
 
 function newCommandOp(rhs)
-{var term = new Term(TYPE_PREDICATE,':-');
+{var term = new Term(TYPE_ATOM,':-');
 
  term.children[0] = rhs;
  return term;
@@ -129,21 +130,19 @@ function newCommandOp(rhs)
 // * Type test functions
 ///////////////////////////////////
 
-function isPredicate(term)
+function isAtom(term)
 {
- return (term.type == TYPE_PREDICATE);
+ return (term.type == TYPE_ATOM);
 }
 
 function isConstant(term)
 {
- return (term.type == TYPE_PREDICATE && term.children.length == 0);
+ return (term.type == TYPE_ATOM && term.children.length == 0);
 }
 
 function isNumber(term)
 {
- return (term.type == TYPE_PREDICATE && 
-			term.children.length == 0 && 
-				term.name.constructor == Number);
+ return (term.type == TYPE_NUMBER);
 }
 
 function isVariable(term)
@@ -153,32 +152,32 @@ function isVariable(term)
 
 function isConsPair(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == ',' && term.children.length == 2);
+ return (term.type == TYPE_ATOM && term.name == ',' && term.children.length == 2);
 }
 
 function isOrPair(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == ';' && term.children.length == 2);
+ return (term.type == TYPE_ATOM && term.name == ';' && term.children.length == 2);
 }
 
 function isListPair(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == '.' && term.children.length == 2);
+ return (term.type == TYPE_ATOM && term.name == '.' && term.children.length == 2);
 }
 
 function isListNull(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == '[]' && term.children.length == 0);
+ return (term.type == TYPE_ATOM && term.name == '[]' && term.children.length == 0);
 }
 
 function isRuleTerm(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == ':-' && term.children.length == 2);
+ return (term.type == TYPE_ATOM && term.name == ':-' && term.children.length == 2);
 }
 
 function isCommandOp(term)
 {
- return (term.type == TYPE_PREDICATE && term.name == ':-' && term.children.length == 1);
+ return (term.type == TYPE_ATOM && term.name == ':-' && term.children.length == 1);
 }
 
 

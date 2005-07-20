@@ -47,10 +47,10 @@ function KB()
   ruleset = new RuleSet('\\+',1,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
-		newPredicate('\\+',[newVariable('X')]),
+		newAtom('\\+',[newVariable('X')]),
 		newConsPair(newVariable('X'),
 			newConsPair(newConstant('!'),newConstant('fail'))))));
-  ruleset.rules.push(newRule(newPredicate('\\+',[newVariable('_')])));
+  ruleset.rules.push(newRule(newAtom('\\+',[newVariable('_')])));
  
   addRuleSet(this,ruleset);
  }
@@ -84,7 +84,7 @@ function KB()
   ruleset = new RuleSet('call',1,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
-		newPredicate('call',[newVariable('X')]),
+		newAtom('call',[newVariable('X')]),
 		newVariable('X'))));
  
   addRuleSet(this,ruleset);
@@ -102,7 +102,7 @@ function KB()
   ruleset = new RuleSet('is',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('is',[newVariable('X'),newVariable('E')]),is_fn));
+  		newAtom('is',[newVariable('X'),newVariable('E')]),is_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -111,7 +111,7 @@ function KB()
   ruleset = new RuleSet('<',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('<',[newVariable('L'),newVariable('R')]),lt_fn));
+  		newAtom('<',[newVariable('L'),newVariable('R')]),lt_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -120,7 +120,7 @@ function KB()
   ruleset = new RuleSet('=<',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('=<',[newVariable('L'),newVariable('R')]),lte_fn));
+  		newAtom('=<',[newVariable('L'),newVariable('R')]),lte_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -129,7 +129,7 @@ function KB()
   ruleset = new RuleSet('>',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('>',[newVariable('L'),newVariable('R')]),gt_fn));
+  		newAtom('>',[newVariable('L'),newVariable('R')]),gt_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -138,7 +138,7 @@ function KB()
   ruleset = new RuleSet('>=',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('>=',[newVariable('L'),newVariable('R')]),gte_fn));
+  		newAtom('>=',[newVariable('L'),newVariable('R')]),gte_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -147,7 +147,7 @@ function KB()
   ruleset = new RuleSet('=',2,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('=',[newVariable('L'),newVariable('R')]),unify_fn));
+  		newAtom('=',[newVariable('L'),newVariable('R')]),unify_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -156,7 +156,7 @@ function KB()
   ruleset = new RuleSet('write',1,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('write',[newVariable('O')]),write_fn));
+  		newAtom('write',[newVariable('O')]),write_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -165,7 +165,7 @@ function KB()
   ruleset = new RuleSet('writeln',1,false);
 
   ruleset.rules.push(newFunctionRule(
-  		newPredicate('writeln',[newVariable('O')]),writeln_fn));
+  		newAtom('writeln',[newVariable('O')]),writeln_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -176,6 +176,54 @@ function KB()
   ruleset.rules.push(newFunctionRule(newConstant('nl'),nl_fn));
  
   addRuleSet(this,ruleset);  
+ }
+ // +/1 eval function
+ {
+  ruleset = new RuleSet('+',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,positive_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // -/1 eval function 
+ {
+  ruleset = new RuleSet('-',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,negative_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // +/2 eval function
+ {
+  ruleset = new RuleSet('+',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,plus_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // -/2 eval function
+ {
+  ruleset = new RuleSet('-',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,minus_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // */2 eval function
+ {
+  ruleset = new RuleSet('*',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,multiply_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // //2 eval function
+ {
+  ruleset = new RuleSet('/',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,divide_eval_fn);
+   
+  addRuleSet(this,ruleset);
  }
  
  return this;
@@ -209,28 +257,28 @@ function newRule(term)
  if (isRuleTerm(term))
  {var t = term.children[0];
 
-  if (!isPredicate(t))
-   throw Error("Rule LHS must be predicate.");
+  if (!isAtom(t))
+   throw Error("Rule LHS must be atom.");
   
   rule = new Rule(t.name,t.children.length,encl.enclosure,t);
   rule.body = getTermArrayFromBinaryTerm(term.children[1],isConsPair);
   return rule;
  }
- else if (isPredicate(term))
+ else if (isAtom(term))
  {
   rule = new Rule(term.name,term.children.length,encl.enclosure,encl.term);
   return rule;
  }
  else
-  throw Error("Rule LHS must be predicate.");
+  throw Error("Rule LHS must be atom.");
 }
 
 function newFunctionRule(term,fn)
 {var encl = newTermEnclosure(term);
  var rule;
   
- if (!isPredicate(term))
-  throw Error("Rule LHS must be predicate.");
+ if (!isAtom(term))
+  throw Error("Rule LHS must be atom.");
  
  rule = new Rule(term.name,term.children.length,encl.enclosure,encl.term);
  rule.body = null;
@@ -243,8 +291,8 @@ function newTraversalRule(term,try_fn,retry_fn)
 {var encl = newTermEnclosure(term);
  var rule;
   
- if (!isPredicate(term))
-  throw Error("Rule LHS must be predicate.");
+ if (!isAtom(term))
+  throw Error("Rule LHS must be atom.");
  
  rule = new Rule(term.name,term.children.length,encl.enclosure,encl.term);
  rule.body = null;
@@ -318,8 +366,22 @@ function getUnifiedRuleEnclosure(rule,encl,binding)
  return null;
 }
 
+function setEvaluateFunctionForRuleSet(ruleset,eval_fn)
+{
+ ruleset.eval_fn = eval_fn;
+
+ return ruleset;
+}
+
 ///////////////////////////////////
 // * Builtin functions
+///////////////////////////////////
+
+///////////////////////////////////
+// *_try_fn(goal,frontier,explored) is a traversal function called when attempting to prove
+// goal.  goal was just removed from frontier, but is not on either frontier or explored stack.
+// goal will need to be placed on one of either the frontier or explored stack.
+// Returns true if the goal can be explored further, false if not.
 ///////////////////////////////////
 
 function true_try_fn(goal,frontier,explored)
@@ -327,6 +389,14 @@ function true_try_fn(goal,frontier,explored)
  explored.push(goal);
  return true;
 }
+
+///////////////////////////////////
+// *_retry_fn(goal,frontier,explored) is a traversal function called when attempting to prove
+// goal again (i.e., a goal retry).  goal was just removed from explored, but is not on either 
+// frontier or explored stack.
+// goal will need to be placed on one of either the frontier or explored stack.
+// Returns true if the goal can be explored further, false if not.
+///////////////////////////////////
 
 function cut_retry_fn(goal,frontier,explored)
 {var g;
@@ -348,23 +418,23 @@ function cut_retry_fn(goal,frontier,explored)
  return false;
 }
 
-// FIX: evaluate expressions properly. (currently only work for a single binary op).
+///////////////////////////////////
+// *_fn(goal) is a function called when attempting to prove goal.  
+// Returns true if the goal succeeds, false if not.
+///////////////////////////////////
+
+// FIX: pass in the current KB in use (currently uses the globally defined jslog_kb).
 function is_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  var x;
  
- var op = rhs.term.name;
- var e1 = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[0]));
- var e2 = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[1]));
- var n1 = e1.term.name;
- var n2 = e2.term.name;
-   
-// x = newNumber(jslog_evaluate(newSubtermEnclosure(encl.enclosure,encl.term.children[1])));
-
- x = newNumber(eval(n1.toString()+op.toString()+n2.toString()));
+ x = jslog_Evaluate(jslog_kb,rhs);
  
+ if (!isNumber(x))
+  throw new Error("Expected RHS to evaluate to a number in operator: is/2");
+  
  return jslog_unify(lhs,newBlankEnclosure(0,x),goal.bindings);
 }
 
@@ -439,4 +509,89 @@ function writeln_fn(goal)
  write_fn(goal);
  nl_fn(goal);
  return true;
+}
+
+///////////////////////////////////
+// *_eval_fn(values) is a function called when evaluating an expression.  
+// values is a stack of value terms.  The function should pop off the N number of values
+// from the values stack it needs, compute the single value result, and push the
+// result back onto values.
+// The argument order of values is the same order as for the function (i.e., Nth argument 
+// is the Nth pop).
+// Must succeed, returning the computed value, or throw an exception.
+// NOTE: Terms on the values stack are immutable and should never be changed.
+///////////////////////////////////
+
+function positive_eval_fn(values)
+{var i = values.pop();
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+  
+ values.push(i);
+ return i;
+}
+
+function negative_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(-1 * i.name);
+ values.push(result);
+ return result;
+}
+
+function plus_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name + j.name);   
+ values.push(result);
+ return result;
+}
+
+function minus_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name - j.name);   
+ values.push(result);
+ return result;
+}
+
+function multiply_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name * j.name);   
+ values.push(result);
+ return result;
+}
+
+function divide_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name / j.name);   
+ values.push(result);
+ return result;
 }

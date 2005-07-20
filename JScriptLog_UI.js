@@ -45,13 +45,13 @@ function jslog_ui_consult()
   addRuleSet(jslog_kb,new RuleSet('member',2,false));
  
   addRule(jslog_kb,newRule(
-	t = newPredicate('member',[newVariable('X'),newListPair(newVariable('X'),newVariable('_'))])),
+	t = newAtom('member',[newVariable('X'),newListPair(newVariable('X'),newVariable('_'))])),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('member',[newVariable('X'),newListPair(newVariable('_'),newVariable('Xs'))]),
-		newPredicate('member',[newVariable('X'),newVariable('Xs')]))),
+		newAtom('member',[newVariable('X'),newListPair(newVariable('_'),newVariable('Xs'))]),
+		newAtom('member',[newVariable('X'),newVariable('Xs')]))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -61,10 +61,10 @@ function jslog_ui_consult()
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('queens',[newVariable('N'),newVariable('Qs')]),
+		newAtom('queens',[newVariable('N'),newVariable('Qs')]),
 		newConsPair(
-			newPredicate('range',[newNumber(1),newVariable('N'),newVariable('Ns')]),
-			newPredicate('queens',[newVariable('Ns'),newListNull(),newVariable('Qs')])))),
+			newAtom('range',[newNumber(1),newVariable('N'),newVariable('Ns')]),
+			newAtom('queens',[newVariable('Ns'),newListNull(),newVariable('Qs')])))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -75,16 +75,16 @@ function jslog_ui_consult()
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('queens',[newVariable('UQs'),newVariable('SQs'),newVariable('Qs')]),
+		newAtom('queens',[newVariable('UQs'),newVariable('SQs'),newVariable('Qs')]),
 		newConsPairsFromTerms([
-			newPredicate('selectq',[newVariable('Q'),newVariable('UQs'),newVariable('UQs1')]),
-			newPredicate('\\+',[newPredicate('attack',[newVariable('Q'),newVariable('SQs')])]),
-			newPredicate('queens',[newVariable('UQs1'),
+			newAtom('selectq',[newVariable('Q'),newVariable('UQs'),newVariable('UQs1')]),
+			newAtom('\\+',[newAtom('attack',[newVariable('Q'),newVariable('SQs')])]),
+			newAtom('queens',[newVariable('UQs1'),
 				newListPair(newVariable('Q'),newVariable('SQs')),newVariable('Qs')])]))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(
-	t = newPredicate('queens',[newListNull(),newVariable('Qs'),newVariable('Qs')])),
+	t = newAtom('queens',[newListNull(),newVariable('Qs'),newVariable('Qs')])),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -94,8 +94,8 @@ function jslog_ui_consult()
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('attack',[newVariable('X'),newVariable('Xs')]),
-		 newPredicate('attack',[newVariable('X'),newNumber(1),newVariable('Xs')]))),
+		newAtom('attack',[newVariable('X'),newVariable('Xs')]),
+		 newAtom('attack',[newVariable('X'),newNumber(1),newVariable('Xs')]))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -106,18 +106,18 @@ function jslog_ui_consult()
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('attack',[newVariable('X'),newVariable('N'),newListPair(newVariable('Y'),newVariable('_'))]),
+		newAtom('attack',[newVariable('X'),newVariable('N'),newListPair(newVariable('Y'),newVariable('_'))]),
 		newOrPair(
-			newPredicate('is',[newVariable('X'),newPredicate('+',[newVariable('Y'),newVariable('N')])]),
-			newPredicate('is',[newVariable('X'),newPredicate('-',[newVariable('Y'),newVariable('N')])])))),
+			newAtom('is',[newVariable('X'),newAtom('+',[newVariable('Y'),newVariable('N')])]),
+			newAtom('is',[newVariable('X'),newAtom('-',[newVariable('Y'),newVariable('N')])])))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('attack',[newVariable('X'),newVariable('N'),newListPair(newVariable('_'),newVariable('Ys'))]),
+		newAtom('attack',[newVariable('X'),newVariable('N'),newListPair(newVariable('_'),newVariable('Ys'))]),
 		newConsPair(
-			newPredicate('is',[newVariable('N1'),newPredicate('+',[newVariable('N'),newNumber(1)])]),
-			newPredicate('attack',[newVariable('X'),newVariable('N1'),newVariable('Ys')])))),
+			newAtom('is',[newVariable('N1'),newAtom('+',[newVariable('N'),newNumber(1)])]),
+			newAtom('attack',[newVariable('X'),newVariable('N1'),newVariable('Ys')])))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -129,15 +129,15 @@ function jslog_ui_consult()
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('range',[newVariable('M'),newVariable('N'),newListPair(newVariable('M'),newVariable('Ns'))]),
+		newAtom('range',[newVariable('M'),newVariable('N'),newListPair(newVariable('M'),newVariable('Ns'))]),
 		newConsPairsFromTerms([
-			newPredicate('<',[newVariable('M'),newVariable('N')]),
-			newPredicate('is',[newVariable('M1'),newPredicate('+',[newVariable('M'),newNumber(1)])]),
-			newPredicate('range',[newVariable('M1'),newVariable('N'),newVariable('Ns')])]))),
+			newAtom('<',[newVariable('M'),newVariable('N')]),
+			newAtom('is',[newVariable('M1'),newAtom('+',[newVariable('M'),newNumber(1)])]),
+			newAtom('range',[newVariable('M1'),newVariable('N'),newVariable('Ns')])]))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(
-	t = newPredicate('range',[newVariable('N'),newVariable('N'),newListPair(newVariable('N'),newListNull())])),
+	t = newAtom('range',[newVariable('N'),newVariable('N'),newListPair(newVariable('N'),newListNull())])),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -148,13 +148,13 @@ function jslog_ui_consult()
   addRuleSet(jslog_kb,new RuleSet('selectq',3,false));
  
   addRule(jslog_kb,newRule(
-	t = newPredicate('selectq',[newVariable('X'),newListPair(newVariable('X'),newVariable('Xs')),newVariable('Xs')])),
+	t = newAtom('selectq',[newVariable('X'),newListPair(newVariable('X'),newVariable('Xs')),newVariable('Xs')])),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newPredicate('selectq',[newVariable('X'),newListPair(newVariable('Y'),newVariable('Ys')),newListPair(newVariable('Y'),newVariable('Zs'))]),
-		newPredicate('selectq',[newVariable('X'),newVariable('Ys'),newVariable('Zs')]))),
+		newAtom('selectq',[newVariable('X'),newListPair(newVariable('Y'),newVariable('Ys')),newListPair(newVariable('Y'),newVariable('Zs'))]),
+		newAtom('selectq',[newVariable('X'),newVariable('Ys'),newVariable('Zs')]))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
@@ -179,28 +179,28 @@ function jslog_ui_init_query()
 {var q = new Array();
  var i = 0;
   
- q[i++] = newPredicate('member',[newVariable('Y'),
+ q[i++] = newAtom('member',[newVariable('Y'),
 		newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
 			newNumber(1),newNumber(2),newVariable('Z')])]);
   
- q[i++] = newPredicate('queens',[newNumber(4),newVariable('X')]);
- q[i++] = newPredicate('queens',[newNumber(5),newVariable('X')]);
- q[i++] = newPredicate('queens',[newNumber(6),newVariable('X')]);
- q[i++] = newPredicate('queens',[newNumber(7),newVariable('X')]);
- q[i++] = newPredicate('queens',[newNumber(8),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(4),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(5),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(6),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(7),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(8),newVariable('X')]);
 
 
- q[i++] = newPredicate('\\+',[newConstant('true')]);
- q[i++] = newPredicate('call',[newConstant('true')]);
+ q[i++] = newAtom('\\+',[newConstant('true')]);
+ q[i++] = newAtom('call',[newConstant('true')]);
  q[i++] = newConstant('fail');
- q[i++] = newPredicate('<',[newNumber(4),newNumber(3)]);
- q[i++] = newPredicate('is',[newVariable('X'),newPredicate('+',[newNumber(3),newNumber(4)])]);
- q[i++] = newPredicate(';',[newConstant('fail'),newConstant('true')]);
- q[i++] = newPredicate('selectq',[newVariable('X'),newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),newConstant('d')]),newVariable('Y')]);
- q[i++] = newPredicate('range',[newNumber(1),newNumber(4),newVariable('X')]);
- q[i++] = newPredicate('\\+',[newPredicate('attack',[newNumber(3),newListFromTerms([newNumber(1),newNumber(4),newNumber(2)])])]);
- q[i++] = newPredicate('\\+',[newPredicate('attack',[newNumber(4),newListFromTerms([newNumber(1)])])]);
- q[i++] = newPredicate('\\+',[newPredicate('attack',[newNumber(4),newListFromTerms([newNumber(3),newNumber(1)])])]);
+ q[i++] = newAtom('<',[newNumber(4),newNumber(3)]);
+ q[i++] = newAtom('is',[newVariable('X'),newAtom('+',[newAtom('*',[newNumber(3),newNumber(4)]),newAtom('/',[newAtom('-',[newAtom('-',[newNumber(3)]),newNumber(4)]),newNumber(4)])])]);
+ q[i++] = newAtom(';',[newConstant('fail'),newConstant('true')]);
+ q[i++] = newAtom('selectq',[newVariable('X'),newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),newConstant('d')]),newVariable('Y')]);
+ q[i++] = newAtom('range',[newNumber(1),newNumber(4),newVariable('X')]);
+ q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(3),newListFromTerms([newNumber(1),newNumber(4),newNumber(2)])])]);
+ q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(1)])])]);
+ q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(3),newNumber(1)])])]);
 
  for (i = 0; i < q.length; i++)
  {

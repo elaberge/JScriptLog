@@ -16,7 +16,7 @@
 // FIX: Display all unary and binary operators as operators (needs table of operators from KB).
 // FIX: Display variables uniquely (not just by their local names).
 
-// term is either a Term or Enclosure (preferrable)
+// encl is either a Term or Enclosure (preferrable)
 function jslog_toString(encl)
 {var tostr_terms = new Array(1);
  var tostr;
@@ -68,9 +68,9 @@ function jslog_toString(encl)
    tostr_terms.push(")");
    tostr_terms.push(newSubTermEnclosure(tostr.enclosure,tostr.term.children[0]));
   } 
-  else if (tostr.term.children.length == 0)  // display Atom, Number, or Predicate/0
+  else if (tostr.term.children.length == 0)  // display Constant, Number, or Atom/0
    str += tostr.term.name.toString();
-  else  // display Predicate/N
+  else  // display Atom/N
   {var args = newConsPairsFromTerms(tostr.term.children);
   
    str += tostr.term.name.toString() + "(";

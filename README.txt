@@ -3,15 +3,13 @@ Created by Glendon Holst.  Copyright 2005.
 
 INTRODUCTION:
 
-JScriptLog version 0.1.alpha is an exploratory, partial implementation of Prolog in JavaScript.  It has potential, and is released in this early development phase in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (but about 30x slower than JLog).
+JScriptLog version 0.2.alpha is an exploratory, partial implementation of Prolog in JavaScript.  It has potential, and is released in this early development phase in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (but about 30x slower than JLog).
 
 It has many critical shortcomings, and lots of room for improvement.
 
 CRITIAL SHORTCOMINGS:
 
 * There is no parser.  It is possible to construct the terms directly (see existing code and queries for N-Queens).  A future goal is to write the parser in Prolog itself. 
-
-* Does not fully evaluate expressions.  The is/2 predicate only solves for a single, simple (+,-,*,/) binary operation.
 
 * The available built in predicates are very limited (sufficient  for the N-Queens KB example).
 
@@ -24,6 +22,8 @@ POSSIBLE IMPROVEMENTS:
 * Rewrite display / unify / evaluate expression / some of prove to use generic tree traversal (possible code size reduction without performance penalty?).
 
 * Improve efficiency of code paths for goals in try and retry (e.g., optimize KB Predicate rule to assume the ruleset is bound  to KB predicate -- no test for other goal types).
+
+* Properly support tail-recursion optimizations to save stack space (e.g., if goal can't retry, merge with previous sibling-goal).
 
 * Support operators / precedence during display and parsing (encode in KB rulesets). 
 

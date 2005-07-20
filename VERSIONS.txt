@@ -1,0 +1,12 @@
+JScriptLog 0.2.alpha 
+====================
+
+¥ Added JScriptLog_Evaluate.js for expression evaluation.  is/2 now evaluates expressions of arbitrary complexity (only the basic math operations are supported at present: +,-,*,/). 
+
+¥ Change references to PREDICATE to ATOM (e.g., TYPE_PREDICATE is now TYPE_ATOM, isPredicate is now isAtom, newPredicate is now newAtom, and TYPE_PREDICATE_GOAL is now TYPE_ATOM_GOAL).  Added specialized type for NUMBER.
+
+
+JScriptLog 0.1.alpha 
+====================
+
+¥ Initial Release.  
