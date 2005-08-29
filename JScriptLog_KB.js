@@ -15,7 +15,7 @@
 ///////////////////////////////////
 
 // FIX: Change fn(goal) to fn(encl) where encl is the FinalEnclosure.
-// FIX: RuleSets should be denote operator information (if it represents an operator).
+// FIX: RuleSets should denote operator information (if it represents an operator).
 
 // The KnowledgeBase (array of prolog rule clauses).
 var jslog_kb = new KB();
@@ -97,6 +97,19 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // findall(T,G,L) :- M=[], internal:findall(T,G,M), M =.. [_|L].
+ {
+  ruleset = new RuleSet('findall',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('findall',[newVariable('T'),newVariable('G'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('=',[newVariable('M'),newListNull()]),
+			newAtom('internal:findall',[newVariable('T'),newVariable('G'),newVariable('M')]),
+			newAtom('=..',[newVariable('M'),newListPair(newVariable('_'),newVariable('L'))])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
  // is/2 : eval function
  {
   ruleset = new RuleSet('is',2,false);
@@ -151,21 +164,77 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+ // \=(X,Y) :- \+(=(X,Y)).
+ {
+  ruleset = new RuleSet('\\=',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('\\=',[newVariable('X'),newVariable('Y')]),
+		newAtom('\\+',[newAtom('=',[newVariable('X'),newVariable('Y')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // ==/2 : identical function
+ {
+  ruleset = new RuleSet('==',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('==',[newVariable('L'),newVariable('R')]),identical_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // \==(X,Y) :- \+(==(X,Y)).
+ {
+  ruleset = new RuleSet('\\==',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('\\==',[newVariable('X'),newVariable('Y')]),
+		newAtom('\\+',[newAtom('==',[newVariable('X'),newVariable('Y')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // =../2 : atom to list
+ {
+  ruleset = new RuleSet('=..',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('=..',[newVariable('L'),newVariable('R')]),atom_to_list_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // copy_term/2 : copy term function
+ {
+  ruleset = new RuleSet('copy_term',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('copy_term',[newVariable('L'),newVariable('R')]),copy_term_fn));
+ 
+  addRuleSet(this,ruleset);  
+ } 
+ // asserta/1
+ {
+  ruleset = new RuleSet('asserta',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('asserta',[newVariable('L')]),asserta_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // assertz/1
+ {
+  ruleset = new RuleSet('assertz',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('assertz',[newVariable('L')]),assertz_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
  // write/1 : ouput function
  {
   ruleset = new RuleSet('write',1,false);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('write',[newVariable('O')]),write_fn));
- 
-  addRuleSet(this,ruleset);  
- }
- // writeln/1 : ouput function
- {
-  ruleset = new RuleSet('writeln',1,false);
-
-  ruleset.rules.push(newFunctionRule(
-  		newAtom('writeln',[newVariable('O')]),writeln_fn));
  
   addRuleSet(this,ruleset);  
  }
@@ -177,6 +246,7 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+
  // +/1 eval function
  {
   ruleset = new RuleSet('+',1,false);
@@ -223,6 +293,33 @@ function KB()
   
   setEvaluateFunctionForRuleSet(ruleset,divide_eval_fn);
    
+  addRuleSet(this,ruleset);
+ }
+
+ // internal:atom_append!/2 a atom mutate function that adds an argument
+ {
+  ruleset = new RuleSet('internal:atom_append!',2,false);
+  
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:atom_append!',[newVariable('A'),newVariable('E')]),internal_atom_append_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:findall(T,G,M) :- call(G), internal:atom_append!(M,T), fail.
+ // internal:findall(_,_,_) :- !.
+ {
+  ruleset = new RuleSet('internal:findall',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:findall',[newVariable('T'),newVariable('G'),newVariable('M')]),
+		newConsPairsFromTerms([
+			newAtom('call',[newVariable('G')]),
+			newAtom('internal:atom_append!',[newVariable('M'),newVariable('T')]),
+			newConstant('fail')]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:findall',[newVariable('_'),newVariable('_'),newVariable('_')]),
+			newConstant('!'))));
+ 
   addRuleSet(this,ruleset);
  }
  
@@ -490,6 +587,102 @@ function unify_fn(goal)
  return jslog_unify(lhs,rhs,goal.bindings); 
 }
 
+function identical_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ 
+ return jslog_identical(lhs,rhs); 
+}
+
+function atom_to_list_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ 
+ if (isAtom(lhs.term))
+ {var list = newListNull();
+  var i;
+  
+  for (i = lhs.term.children.length - 1; i >= 0; i--)
+   list = newListPair(lhs.term.children[i],list);
+
+  lhs = newSubtermEnclosure(lhs.enclosure,newListPair(newConstant(lhs.term.name),list));
+ }
+ else if (isNumber(lhs.term))
+ {
+  lhs = newBlankEnclosure(0,newListPair(lhs.term,newListNull()));
+ }
+ else if (isListPair(rhs.term)) 
+ {var head = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[0]));
+  var atom;
+  
+  if (isConstant(head.term))
+  {
+   atom = newBlankEnclosure(0,newAtom(head.term.name,[]));
+  }
+  else
+   throw new Error("Expected constant value in =../2.");
+  
+  do
+  {
+   rhs = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[1]));
+
+   if (isListPair(rhs.term))
+   {var i = atom.term.children.length;
+    var v = newVariable('_');
+	
+    head = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[0]));
+   
+	v.children[0] = i;
+    atom.term.children[i] = v;
+	atom.enclosure[i] = head;
+   }
+   else if (isListNull(rhs.term))
+    break;
+   else
+    throw new Error("Expected list pair in =../2.");
+    
+  } while (head != null);
+
+  rhs = atom;
+ }
+ else
+  throw new Error("Expected valid instantiated value in =../2.");
+
+ return jslog_unify(lhs,rhs,goal.bindings); 
+}
+
+function copy_term_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+
+ return jslog_unify(newDuplicateEnclosure(lhs),rhs,goal.bindings);
+}
+
+// FIX: pass in the current KB in use (currently uses the globally defined jslog_kb).
+// FIX: test for ruleset being dynamic before adding rule.
+function internal_assert_fn(append,goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var orig = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var term = newDuplicateTermFromEnclosure(orig);
+ 
+ addRule(jslog_kb,newRule(term),append);
+ 
+ return true;
+}
+
+function asserta_fn(goal)
+{
+ return internal_assert_fn(false,goal);
+}
+
+function assertz_fn(goal)
+{
+ return internal_assert_fn(true,goal);
+}
+
 function write_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
@@ -504,11 +697,24 @@ function nl_fn(goal)
  return true; 
 }
 
-function writeln_fn(goal)
-{
- write_fn(goal);
- nl_fn(goal);
- return true;
+function internal_atom_append_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ 
+ if (isAtom(lhs.term))
+ {var ci = lhs.term.children.length;
+  var ei = lhs.enclosure.length;
+  var v = newVariable('_');
+	
+  v.children[0] = ei;
+  lhs.term.children[ci] = v;
+  lhs.enclosure[ei] = rhs;
+ }
+ else
+  throw new Error("Expected atom in internal:atom_append!/2.");
+
+ return true; 
 }
 
 ///////////////////////////////////

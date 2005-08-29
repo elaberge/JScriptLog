@@ -16,6 +16,7 @@
 var TYPE_ATOM = 1; 
 var TYPE_NUMBER = 2; 
 var TYPE_VARIABLE = 3; // children[0] is the index into the Enclosure
+var TYPE_OBJECT = 4; // name is an object reference
 
 // type is one of the TYPE_* values, 
 // name is the name of the term (typically the predicate or function symbol),
@@ -49,6 +50,11 @@ function newNumber(value)
 function newVariable(name)
 {
  return new Term(TYPE_VARIABLE,name);
+}
+
+function newObjectReference(obj)
+{
+ return new Term(TYPE_OBJECT,obj);
 }
 
 function newConsPair(lhs,rhs)
@@ -126,6 +132,81 @@ function newCommandOp(rhs)
  return term;
 }
 
+// Given a term, returns a duplicate of that term. 
+// Invokes newDuplicateTerm(term,variables) below
+function newDuplicateTerm(term)
+{var variables = new Array();
+
+ return newDuplicateTerm(term,variables);
+}
+
+// Given a term, returns a duplicate of that term. 
+// The term must already have had an enclosure created via newTermEnclosure to bind
+// variable children[0] to the enclosure array -- duped vars reference the same enclosure entry.
+// The duplicate term has the same type and name, the same number of children,
+// and duplicated children -- performs a deep copy.
+// Variables in the duplicate term are represented via a single unnamed variable instance
+// (i.e., variables lose their names, and the number of variables may be reduced).
+// The variables parameter must be an empty array.  On completetion, variables contains
+// the duplicated variables at the same index they point to in the enclosure.
+function newDuplicateTerm(term,variables)
+{var terms_hash = new Object();
+ var terms = new Array(1);
+ var t;
+ var t_copy;
+ 
+ terms.push(term);
+
+ // find and copy all terms
+ while ((t = terms.pop()) != undefined)
+ {
+  if (isVariable(t))
+  {
+   if (variables[t.children[0]] == undefined)
+   {
+    t_copy = newVariable('_');
+   
+    t_copy.children[0] = t.children[0];
+	
+    variables[t.children[0]] = t_copy;
+	terms_hash[t] = t_copy;
+   }
+  }
+  else if (terms_hash[t] == undefined)
+  {var i;
+  
+   t_copy = new Term(t.type,t.name);
+   t_copy.children = new Array(t.children.length);
+   
+   terms_hash[t] = t_copy;
+   
+   for (i=0; i < t.children.length; i++)
+	terms.push(t.children[i]);
+  }
+ }
+ 
+ terms.push(term);
+
+ // connect duplicate terms like original ones
+ while ((t = terms.pop()) != undefined)
+ {var i;
+  
+  t_copy = terms_hash[t];
+    
+  for (i=0; i < t.children.length; i++)
+   t_copy.children[i] = terms_hash[t.children[i]];
+ }
+ 
+ return terms_hash[term];
+}
+
+// pair is a convenience object for holding two objects
+function Pair(first, second)
+{
+ this.first = first;
+ this.second = second;
+ return this;
+}
 ///////////////////////////////////
 // * Type test functions
 ///////////////////////////////////
@@ -148,6 +229,11 @@ function isNumber(term)
 function isVariable(term)
 {
  return (term.type == TYPE_VARIABLE);
+}
+
+function isObjectReference(term)
+{
+ return (term.type == TYPE_OBJECT);
 }
 
 function isConsPair(term)

@@ -13,8 +13,8 @@
 // jslog_unify_* functions for Unification
 ///////////////////////////////////
 
-// unify Enclosures encl1 with encl2
-// returns true if they unify, false otherwise.
+// Unify Enclosures encl1 with encl2
+// Returns true if they unify, false otherwise.
 // encl1 and encl2 are mutated only in the case that unification occurs, 
 // bindings is the array of affected enclosure entries, and their bound enclosures.
 // bindings must be an empty array (e.g., new Array()) when passed in.
@@ -61,5 +61,24 @@ function jslog_unify(encl1,encl2,bindings)
   return true;
 
  removeBindings(bindings);
+ return false;
+}
+
+// Tests if Enclosures encl1 and encl2 are identical.
+// Returns true if they are identical, false otherwise.
+function jslog_identical(encl1,encl2)
+{var bindings = new Array();
+ var result;
+ 
+ result = jslog_unify(encl1,encl2,bindings);
+ 
+ if (result)
+ {
+  if (bindings.length == 0)
+   return true;
+   
+  removeBindings(bindings); 
+ }
+ 
  return false;
 }

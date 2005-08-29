@@ -41,6 +41,10 @@ function jslog_toString(encl)
   {
    jslog_toString_Variable(tostr_terms,tostr);
   }
+  else if (isObjectReference(tostr.term))  // display ObjectReference
+  {
+   str += tostr.term.name.toString();
+  }   
   else if (isConsPair(tostr.term))  // display ConsPairs
   {
    jslog_toString_BinaryOp(tostr_terms,tostr,isConsPair,",",false);

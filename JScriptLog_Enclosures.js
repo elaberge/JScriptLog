@@ -42,7 +42,7 @@ function Binding(enclosure,index)
  return this;
 }
 
-// Creates an enclosure of size from existing term
+// Creates an enclosure of size for existing term
 function newBlankEnclosure(size,term)
 {
  return new Enclosure(new Array(size),term);
@@ -53,6 +53,135 @@ function newBlankEnclosure(size,term)
 function newSubtermEnclosure(encl,term)
 {
  return new Enclosure(encl,term);
+}
+
+// Creates a duplicate enclosure via a deep copy.  The terms in encl remain unchanged
+// but all enclosures in the enclosure tree are copied.
+function newDuplicateEnclosure(encl)
+{var encls_hash = new Object();
+// var encls_todo = new Array();
+ var encls = new Array(1);
+ var e;
+ var e_copy;
+ 
+ encls.push(encl);
+
+ // find and copy all enclosures
+ while ((e = encls.pop()) != undefined)
+ {
+  if (encls_hash[e] == undefined)
+  {var i;
+  
+   e_copy = new Array(e.enclosure.length);
+   encls_hash[e] = e_copy;
+   
+   for (i=0; i < e_copy.length; i++)
+   {
+    if (e.enclosure[i] != null)
+	 encls.push(getFinalEnclosure(e.enclosure[i]));
+   }
+  }
+ }
+ 
+ encls.push(encl);
+
+ // connect duplicate enclosures like original ones
+ while ((e = encls.pop()) != undefined)
+ {var i;
+  
+  e_copy = encls_hash[e];
+    
+  for (i=0; i < e_copy.length; i++)
+  {
+   if (e.enclosure[i] != null)
+   {var fin_encl = getFinalEnclosure(e.enclosure[i]);
+   
+    e_copy[i] = newSubtermEnclosure(encls_hash[fin_encl],fin_encl.term);
+   }
+  }
+ }
+ 
+ return newSubtermEnclosure(encls_hash[encl],encl.term);
+}
+
+// Creates a duplicate term from the given enclosure.  Terms are copied.
+// Variable equivalence is maintained by using the same variable instance.
+function newDuplicateTermFromEnclosure(encl)
+{var encls_hash = new Object();
+ var encls = new Array(1);
+ var e;
+ 
+ encl = getFinalEnclosure(encl);
+ encls.push(encl);
+
+ // find and copy all terms
+ while ((e = encls.pop()) != undefined)
+ {
+  if (encls_hash[e] == undefined)
+  {var variables = new Array();
+   var t_copy;
+   var i;
+
+   t_copy = newDuplicateTerm(e.term,variables);
+   encls_hash[e] = new Pair(variables,t_copy);
+   
+   for (i=0; i < e.enclosure.length; i++)
+   {
+    if (e.enclosure[i] != null && variables[i] != undefined)
+	 encls.push(getFinalEnclosure(e.enclosure[i]));
+   }
+  }
+ }
+
+ encls.push(encl);
+ 
+ // replace bound variables in terms with their bound values
+ while ((e = encls.pop()) != undefined)
+ {var i;
+  var hash_pair = encls_hash[e];
+  
+  replaceVariablesWithTerms(hash_pair.second,e.enclosure,encls_hash);
+  
+  for (i=0; i < e.enclosure.length; i++)
+  {
+   if (e.enclosure[i] != null && hash_pair.first[i] != undefined)
+    encls.push(getFinalEnclosure(e.enclosure[i]));
+  }
+ }
+ 
+ return encls_hash[encl];
+}
+
+// helper function for newDuplicateTermFromEnclosure
+function replaceVariablesWithTerms(term,enclosure,encls_hash)
+{var terms = new Array(1);
+ var terms_hash = new Object();
+ var t;
+ 
+ terms.push(term);
+
+ // find variables and replace them with bound term copies
+ while ((t = terms.pop()) != undefined)
+ {
+  if (!isVariable(t) && terms_hash[t] == undefined)
+  {var i;
+  
+   terms_hash[t] = t;
+   
+   for (i=0; i < t.children.length; i++)
+   {var c = t.children[i];
+   
+    if (isVariable(c))
+	{
+	 if (enclosure[c.children[0]] != null)
+	  t.children[i] = encls_hash[getFinalEnclosure(enclosure[c.children[0]])].second;
+	}
+	else 
+     terms.push(t.children[i]);
+   }
+  }
+ }
+ return true;
 }
 
 // Creates a new enclosure for term.

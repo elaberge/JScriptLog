@@ -26,7 +26,8 @@ function jslog_ui_clear()
  window.document.formUI.output.value = "";
 }
 
-// FIX: member/2 and N-Queens predicates are for demo purposes only.  Remove.
+// FIX: N-Queens predicates are for demo purposes only.  Remove.
+// FIX: member/2, writeln/1, assert/1, etc. are non-ISO builtins.  Move to builtins library.
 // FIX: jslog_ui_init_query is for demo purposes only.  Remove.
 // FIX: needs to parse kb source, update KB, and perform post-consult optimizations.
 function jslog_ui_consult()
@@ -55,6 +56,35 @@ function jslog_ui_consult()
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
+ // writeln(O) :- write(O), nl.
+ {
+  addRuleSet(jslog_kb,new RuleSet('writeln',1,false));
+
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('writeln',[newVariable('O')]),
+		newConsPair(newAtom('write',[newVariable('O')]),newConstant('nl')))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // assert(X) :- assertz(X).
+ {
+  addRuleSet(jslog_kb,new RuleSet('assert',1,false));
+
+  addRule(jslog_kb,newRule(
+	t = newRuleTerm(
+		newAtom('assert',[newVariable('X')]),
+		newAtom('assertz',[newVariable('X')]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // :- dynamic(p/2).
+ {
+  addRuleSet(jslog_kb,new RuleSet('p',2,true));
+
+  window.document.formUI.kb.value += ":- dynamic p/2\n\n";	
+ }
+ 
  //queens(N,Qs) :- range(1,N,Ns), queens(Ns,[],Qs).
  {
   addRuleSet(jslog_kb,new RuleSet('queens',2,false));
@@ -201,7 +231,26 @@ function jslog_ui_init_query()
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(3),newListFromTerms([newNumber(1),newNumber(4),newNumber(2)])])]);
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(1)])])]);
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(3),newNumber(1)])])]);
-
+ q[i++] = newConsPair(newAtom('=..',[newAtom('p',[newConstant('a'),newConstant('b'),newConstant('c')]),newVariable('L')]),
+					  newAtom('=..',[newVariable('X'),newVariable('L')]));
+ q[i++] = newAtom('=..',[newNumber(4),newVariable('L')]);
+ q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
+						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
+			newAtom('copy_term',[newVariable('X'),newVariable('Z')]),
+			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]);
+ q[i++] = newAtom('internal:atom_append!',[newConstant('[]'),newConstant('a')]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('M'),newListNull()]),
+			newAtom('internal:atom_append!',[newVariable('M'),newConstant('a')])]);
+ q[i++] = newAtom('=',[newVariable('M'),newListNull()]);
+ q[i++] = newAtom('findall',[newVariable('T'),
+			newAtom('member',[newVariable('T'),
+				newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
+				newNumber(1),newNumber(2),newVariable('Z')])]),
+			newVariable('L')]);
+ 
  for (i = 0; i < q.length; i++)
  {
   window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i]),i.toString(),i==1);
