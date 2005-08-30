@@ -150,8 +150,8 @@ function newDuplicateTerm(term)
 // The variables parameter must be an empty array.  On completetion, variables contains
 // the duplicated variables at the same index they point to in the enclosure.
 function newDuplicateTerm(term,variables)
-{var terms_hash = new Object();
- var terms = new Array(1);
+{var terms_hash = new Hashtable();
+ var terms = new Array();
  var t;
  var t_copy;
  
@@ -169,16 +169,18 @@ function newDuplicateTerm(term,variables)
     t_copy.children[0] = t.children[0];
 	
     variables[t.children[0]] = t_copy;
-	terms_hash[t] = t_copy;
+	hashPut(terms_hash,t,t_copy);
    }
+   else
+    hashPut(terms_hash,t,variables[t.children[0]]);
   }
-  else if (terms_hash[t] == undefined)
+  else if (hashGet(terms_hash,t) == undefined)
   {var i;
   
    t_copy = new Term(t.type,t.name);
    t_copy.children = new Array(t.children.length);
    
-   terms_hash[t] = t_copy;
+   hashPut(terms_hash,t,t_copy);
    
    for (i=0; i < t.children.length; i++)
 	terms.push(t.children[i]);
@@ -191,22 +193,15 @@ function newDuplicateTerm(term,variables)
  while ((t = terms.pop()) != undefined)
  {var i;
   
-  t_copy = terms_hash[t];
+  t_copy = hashGet(terms_hash,t);
     
   for (i=0; i < t.children.length; i++)
-   t_copy.children[i] = terms_hash[t.children[i]];
+   t_copy.children[i] = hashGet(terms_hash,t.children[i]);
  }
  
- return terms_hash[term];
+ return hashGet(terms_hash,term);
 }
 
-// pair is a convenience object for holding two objects
-function Pair(first, second)
-{
- this.first = first;
- this.second = second;
- return this;
-}
 ///////////////////////////////////
 // * Type test functions
 ///////////////////////////////////

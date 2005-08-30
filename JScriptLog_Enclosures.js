@@ -58,22 +58,24 @@ function newSubtermEnclosure(encl,term)
 // Creates a duplicate enclosure via a deep copy.  The terms in encl remain unchanged
 // but all enclosures in the enclosure tree are copied.
 function newDuplicateEnclosure(encl)
-{var encls_hash = new Object();
-// var encls_todo = new Array();
- var encls = new Array(1);
+{var encls_hash = new Hashtable();
+ var encls_todo = new Array();
+ var encls = new Array();
  var e;
  var e_copy;
  
+ encl = getFinalEnclosure(encl);
  encls.push(encl);
 
  // find and copy all enclosures
  while ((e = encls.pop()) != undefined)
  {
-  if (encls_hash[e] == undefined)
+  if (hashGet(encls_hash,e) == undefined)
   {var i;
   
    e_copy = new Array(e.enclosure.length);
-   encls_hash[e] = e_copy;
+   hashPut(encls_hash,e,e_copy);
+   encls_todo.push(e);
    
    for (i=0; i < e_copy.length; i++)
    {
@@ -83,32 +85,31 @@ function newDuplicateEnclosure(encl)
   }
  }
  
- encls.push(encl);
-
  // connect duplicate enclosures like original ones
- while ((e = encls.pop()) != undefined)
+ while ((e = encls_todo.pop()) != undefined)
  {var i;
   
-  e_copy = encls_hash[e];
-    
+  e_copy = hashGet(encls_hash,e);
+   
   for (i=0; i < e_copy.length; i++)
   {
    if (e.enclosure[i] != null)
    {var fin_encl = getFinalEnclosure(e.enclosure[i]);
    
-    e_copy[i] = newSubtermEnclosure(encls_hash[fin_encl],fin_encl.term);
+    e_copy[i] = newSubtermEnclosure(hashGet(encls_hash,fin_encl),fin_encl.term);
+	encls.push(fin_encl);
    }
-  }
+  } 
  }
  
- return newSubtermEnclosure(encls_hash[encl],encl.term);
+ return newSubtermEnclosure(hashGet(encls_hash,encl),encl.term);
 }
 
 // Creates a duplicate term from the given enclosure.  Terms are copied.
 // Variable equivalence is maintained by using the same variable instance.
 function newDuplicateTermFromEnclosure(encl)
-{var encls_hash = new Object();
- var encls = new Array(1);
+{var encls_hash = new Hashtable();
+ var encls = new Array();
  var e;
  
  encl = getFinalEnclosure(encl);
@@ -117,13 +118,13 @@ function newDuplicateTermFromEnclosure(encl)
  // find and copy all terms
  while ((e = encls.pop()) != undefined)
  {
-  if (encls_hash[e] == undefined)
+  if (hashGet(encls_hash,e) == undefined)
   {var variables = new Array();
    var t_copy;
    var i;
 
    t_copy = newDuplicateTerm(e.term,variables);
-   encls_hash[e] = new Pair(variables,t_copy);
+   hashPut(encls_hash,e,new Pair(variables,t_copy));
    
    for (i=0; i < e.enclosure.length; i++)
    {
@@ -138,7 +139,7 @@ function newDuplicateTermFromEnclosure(encl)
  // replace bound variables in terms with their bound values
  while ((e = encls.pop()) != undefined)
  {var i;
-  var hash_pair = encls_hash[e];
+  var hash_pair = hashGet(encls_hash,e);
   
   replaceVariablesWithTerms(hash_pair.second,e.enclosure,encls_hash);
   
@@ -149,13 +150,13 @@ function newDuplicateTermFromEnclosure(encl)
   }
  }
  
- return encls_hash[encl];
+ return hashGet(encls_hash,encl).second;
 }
 
 // helper function for newDuplicateTermFromEnclosure
 function replaceVariablesWithTerms(term,enclosure,encls_hash)
-{var terms = new Array(1);
- var terms_hash = new Object();
+{var terms = new Array();
+ var terms_hash = new Hashtable();
  var t;
  
  terms.push(term);
@@ -163,10 +164,10 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
  // find variables and replace them with bound term copies
  while ((t = terms.pop()) != undefined)
  {
-  if (!isVariable(t) && terms_hash[t] == undefined)
+  if (!isVariable(t) && hashGet(terms_hash,t) == undefined)
   {var i;
   
-   terms_hash[t] = t;
+   hashPut(terms_hash,t,t);
    
    for (i=0; i < t.children.length; i++)
    {var c = t.children[i];
@@ -174,7 +175,7 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
     if (isVariable(c))
 	{
 	 if (enclosure[c.children[0]] != null)
-	  t.children[i] = encls_hash[getFinalEnclosure(enclosure[c.children[0]])].second;
+	  t.children[i] = hashGet(encls_hash,getFinalEnclosure(enclosure[c.children[0]])).second;
 	}
 	else 
      terms.push(t.children[i]);
@@ -190,7 +191,7 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
 function newTermEnclosure(term)
 {var encl = new Array();
  var vars = new Object();
- var terms = new Array(1);
+ var terms = new Array();
  var t;
  
  terms.push(term);

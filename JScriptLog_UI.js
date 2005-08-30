@@ -236,20 +236,43 @@ function jslog_ui_init_query()
  q[i++] = newAtom('=..',[newNumber(4),newVariable('L')]);
  q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
 						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
+ q[i++] = newAtom('=',[newVariable('A'),newVariable('A')]);
  q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
 			newAtom('copy_term',[newVariable('X'),newVariable('Z')]),
+			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
+			newAtom('internal:copy_term',[newVariable('X'),newVariable('Z')]),
 			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]);
  q[i++] = newAtom('internal:atom_append!',[newConstant('[]'),newConstant('a')]);
  q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('M'),newListNull()]),
 			newAtom('internal:atom_append!',[newVariable('M'),newConstant('a')])]);
  q[i++] = newAtom('=',[newVariable('M'),newListNull()]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('M'),newAtom('p',[newVariable('X'),newConstant('b')])]),
+			newAtom('=',[newVariable('N'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
+			newAtom('\\==',[newVariable('M'),newVariable('N')])]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('M'),newAtom('p',[newVariable('X'),newConstant('b'),newVariable('A')])]),
+			newAtom('=',[newVariable('N'),newAtom('p',[newConstant('a'),newVariable('Y'),newVariable('B')])]),
+			newAtom('=',[newVariable('M'),newVariable('N')]),
+			newAtom('==',[newVariable('M'),newVariable('N')])]);
  q[i++] = newAtom('findall',[newVariable('T'),
 			newAtom('member',[newVariable('T'),
 				newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
 				newNumber(1),newNumber(2),newVariable('Z')])]),
 			newVariable('L')]);
+ q[i++] = newAtom('findall',[newVariable('X'),
+			newAtom('queens',[newNumber(4),newVariable('X')]),
+			newVariable('L')]);
+ q[i++] = newAtom('asserta',[newRuleTerm(
+			newAtom('p',[newVariable('X'),newVariable('Y')]),
+			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
+						newAtom('is',[newVariable('X'),newAtom('+',[newVariable('A'),newNumber(2)])])))]);
+ q[i++] = newAtom('asserta',[newAtom('p',[newNumber(4),newVariable('X')])]);
+ q[i++] = newAtom('p',[newVariable('X'),newVariable('Y')]);
  
  for (i = 0; i < q.length; i++)
  {

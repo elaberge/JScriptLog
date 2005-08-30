@@ -33,8 +33,16 @@ function jslog_unify(encl1,encl2,bindings)
   
   if (isVariable(lhs.term))
   {
-   bindings.push(new Binding(lhs.enclosure,lhs.term.children[0],rhs));
-   lhs.enclosure[lhs.term.children[0]] = rhs;
+   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure && 
+		lhs.term.children[0] == rhs.term.children[0])
+   {
+    // do nothing, variables are equal
+   }
+   else
+   {
+    bindings.push(new Binding(lhs.enclosure,lhs.term.children[0],rhs));
+    lhs.enclosure[lhs.term.children[0]] = rhs;
+   }
   }
   else if (isVariable(rhs.term))
   {

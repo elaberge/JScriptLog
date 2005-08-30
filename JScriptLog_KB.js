@@ -68,7 +68,6 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
- // FIX: expand all ConsPairs in Y -- shouldn't need this rule?
  // ,(X,Y) :- X,Y.
  {
   ruleset = new RuleSet(',',2,false);
@@ -97,14 +96,14 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
- // findall(T,G,L) :- M=[], internal:findall(T,G,M), M =.. [_|L].
+ // findall(T,G,L) :- internal:copy_term([],M), internal:findall(T,G,M), M =.. [_|L].
  {
   ruleset = new RuleSet('findall',3,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('findall',[newVariable('T'),newVariable('G'),newVariable('L')]),
 		newConsPairsFromTerms([
-			newAtom('=',[newVariable('M'),newListNull()]),
+			newAtom('internal:copy_term',[newListNull(),newVariable('M')]),
 			newAtom('internal:findall',[newVariable('T'),newVariable('G'),newVariable('M')]),
 			newAtom('=..',[newVariable('M'),newListPair(newVariable('_'),newVariable('L'))])]))));
  
@@ -305,7 +304,16 @@ function KB()
    
   addRuleSet(this,ruleset);
  }
- // internal:findall(T,G,M) :- call(G), internal:atom_append!(M,T), fail.
+ // internal:copy_term/2 copy term so that term is copied, not just the enclosures
+ {
+  ruleset = new RuleSet('internal:copy_term',2,false);
+  
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:copy_term',[newVariable('T'),newVariable('C')]),internal_copy_term_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:findall(T,G,M) :- call(G), copy_term(T,U), internal:atom_append!(M,U), fail.
  // internal:findall(_,_,_) :- !.
  {
   ruleset = new RuleSet('internal:findall',3,false);
@@ -314,7 +322,8 @@ function KB()
 		newAtom('internal:findall',[newVariable('T'),newVariable('G'),newVariable('M')]),
 		newConsPairsFromTerms([
 			newAtom('call',[newVariable('G')]),
-			newAtom('internal:atom_append!',[newVariable('M'),newVariable('T')]),
+			newAtom('copy_term',[newVariable('T'),newVariable('U')]),
+			newAtom('internal:atom_append!',[newVariable('M'),newVariable('U')]),
 			newConstant('fail')]))));
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('internal:findall',[newVariable('_'),newVariable('_'),newVariable('_')]),
@@ -659,6 +668,15 @@ function copy_term_fn(goal)
  var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
 
  return jslog_unify(newDuplicateEnclosure(lhs),rhs,goal.bindings);
+}
+
+function internal_copy_term_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ var term = newDuplicateTermFromEnclosure(lhs);
+  
+ return jslog_unify(newTermEnclosure(term),rhs,goal.bindings);
 }
 
 // FIX: pass in the current KB in use (currently uses the globally defined jslog_kb).
