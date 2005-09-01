@@ -1,3 +1,37 @@
+JScriptLog 0.3.alpha
+====================
+
+¥ Added retract/1 predicate and removeRuleFromRuleSet method. IMPORTANT NOTE: retract/1 only removes facts, not rules from the KB.  This will be fixed in the future when support for abolish/1 and clause/2 are introduced.
+
+¥ Modified getTermNameArity to throw an error if term was not an atom (i.e., variables, numbers and objects don't have name/arity).
+
+¥ Fixed protocol for calling FUNCTION and TRAVERSAL goal functions.  The KB is now set as a property of each goal at the start of the 'try'.
+
+¥ Added isDynamicRuleSet method to test if a ruleset is dynamic.
+
+¥ Added getRuleNameArityFromTerm method.
+
+¥ Added JScriptLog_Hashtable.js file with objects and methods for a hashtable that supports objects as keys (not just strings).
+
+¥ Fixed jslog_unify method so that equivalent variables are not bound (e.g.,previously, =(A,A), could cause infinite loop).
+
+¥ Added asserta/1, assertz/1, and assert/1 predicates.  Added newDuplicateTermFromEnclosure and replaceVariablesWithTerms method.  Added internal:copy_term/2 predicate.
+
+¥ Added a new term type for OBJECT reference (a term can reference an object).  Added newObjectReference and isObjectReference methods.  Updated jslog_toString to handle object reference case specially.
+
+¥ Added newDuplicateTerm method to perform copy of a term.
+
+¥ Added copy_term/2 predicate.  Added newDuplicateEnclosure method. 
+
+¥ Added findall/3 predicate.  Added internal:findall/3 and a internal:atom_append!/2 atom mutator predicate.
+
+¥ Added =../2 predicate.
+
+¥ Added ==/2 and \==/2 identicallity test predicates.  Added jslog_identical method.
+
+¥ Added \=/2 non-unifiable test predicate.
+
+
 JScriptLog 0.2.alpha 
 ====================
 

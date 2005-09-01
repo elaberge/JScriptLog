@@ -26,6 +26,14 @@ function Goal(type,encl,parent)
  this.parent = parent;
  this.bindings = null;
  
+ //// Other Properties (document here):
+ // this.kb : the KB used to try the goal
+ // this.ruleset :
+ // this.rule_index : 
+ // this.fn : the goal function
+ // this.try_fn : the try traversal function
+ // this.retry_fn : the retry traversal function
+ 
  return this;
 }
 
@@ -115,20 +123,22 @@ function isTraversalGoal(goal)
 ///////////////////////////////////
 
 
-// tryGoal(goal,frontier,explored) returns true if succeeds, false otherwise
+// tryGoal(goal,kb,frontier,explored) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
 // goal.bindings must be null if fail, or no unification occured.
 function tryGoal(goal,kb,frontier,explored)
 {
+ goal.kb = kb;
+ 
  switch (goal.type)
  {
   case TYPE_VARIABLE_GOAL:
-     var encl;
+     var encl = getFinalEnclosure(goal.encl);
      
-	 if ((encl = getBoundEnclosure(goal.encl)) == null)
+	 if (!isAtom(encl.term))
 	 {
 	  frontier.push(goal); 
-      throw new Error("Cannot call variable.");
+      throw new Error("Variable must be bound to atom.");
      }
 
      if (encl.term.ruleset != null)
@@ -210,8 +220,9 @@ function tryGoal(goal,kb,frontier,explored)
 
 // retryGoal(goal,frontier,explored) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
+// goal.kb must be set to the current KB.
 // goal.bindings must be null if fail, or no unification occured.
-function retryGoal(goal,kb,frontier,explored)
+function retryGoal(goal,frontier,explored)
 {
  undoGoalBindings(goal);
 
@@ -224,9 +235,10 @@ function retryGoal(goal,kb,frontier,explored)
 	 removeChildGoalsFromFrontier(goal,frontier);
 
 	 // handle FUNCTION and TRAVERSAL // FIX: Remove to optimize pred path (move to var)
-     rule_body = newRuleBodyArrayEnclosure(goal.encl.enclosure,goal.ruleset.rules[goal.rule_index]);
-	 if (rule_body.retry_fn != null)
-	  return rule_body.retry_fn(goal,frontier,explored);
+     {var r = newRuleBodyArrayEnclosure(goal.encl.enclosure,goal.ruleset.rules[goal.rule_index]);
+	  if (r.retry_fn != null)
+	  return r.retry_fn(goal,frontier,explored);
+	 }
 	 
 	 goal.rule_index++;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
@@ -239,7 +251,7 @@ function retryGoal(goal,kb,frontier,explored)
 	 else if (rule_body.terms != null)
 	 {
 	  explored.push(goal);
-      addBodyGoalsToFrontier(goal,rule_body,kb,frontier);
+      addBodyGoalsToFrontier(goal,rule_body,goal.kb,frontier);
 	  return true;
 	 }
 	 else // FIX: Remove (ensure rule_body.terms cannot be null)
@@ -287,14 +299,14 @@ function removeChildGoalsFromFrontier(parent,frontier)
 
 // returns an ArrayEnclosure for the next matching Rule, startng from goal.rule_index (inclusive).
 // goal.binding is mutated to an array (empty if fail).
-// returns null if no rules match.
+// returns null if no rules match.  goal.rule_index equals the index for the matched rule.
 function nextUnifiedRuleBodyForGoal(goal)
 {var rule;
  var enclosure;
 
  goal.bindings = new Array();
  
- for (;goal.rule_index < goal.ruleset.rules.length;)
+ while (goal.rule_index < goal.ruleset.rules.length)
  {
   rule = goal.ruleset.rules[goal.rule_index];
 

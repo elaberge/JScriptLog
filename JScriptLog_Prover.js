@@ -63,7 +63,7 @@ function jslog_prove(kb,frontier,explored)
    {
     if ((goal = explored.pop()) == undefined)
 	 return false;
-   } while (!retryGoal(goal,kb,frontier,explored));
+   } while (!retryGoal(goal,frontier,explored));
   }
  }
  
@@ -77,7 +77,7 @@ function jslog_prove_retry(kb,frontier,explored)
  {
   if ((goal = explored.pop()) == undefined)
    return false;
- } while (!retryGoal(goal,kb,frontier,explored));
+ } while (!retryGoal(goal,frontier,explored));
 
  return jslog_prove(kb,frontier,explored);
 }

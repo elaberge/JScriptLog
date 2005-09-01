@@ -109,6 +109,7 @@ function newDuplicateEnclosure(encl)
 // Variable equivalence is maintained by using the same variable instance.
 function newDuplicateTermFromEnclosure(encl)
 {var encls_hash = new Hashtable();
+ var encls_todo = new Array();
  var encls = new Array();
  var e;
  
@@ -125,7 +126,8 @@ function newDuplicateTermFromEnclosure(encl)
 
    t_copy = newDuplicateTerm(e.term,variables);
    hashPut(encls_hash,e,new Pair(variables,t_copy));
-   
+   encls_todo.push(e);
+      
    for (i=0; i < e.enclosure.length; i++)
    {
     if (e.enclosure[i] != null && variables[i] != undefined)
@@ -134,20 +136,11 @@ function newDuplicateTermFromEnclosure(encl)
   }
  }
 
- encls.push(encl);
- 
  // replace bound variables in terms with their bound values
- while ((e = encls.pop()) != undefined)
- {var i;
-  var hash_pair = hashGet(encls_hash,e);
-  
-  replaceVariablesWithTerms(hash_pair.second,e.enclosure,encls_hash);
-  
-  for (i=0; i < e.enclosure.length; i++)
-  {
-   if (e.enclosure[i] != null && hash_pair.first[i] != undefined)
-    encls.push(getFinalEnclosure(e.enclosure[i]));
-  }
+ while ((e = encls_todo.pop()) != undefined)
+ {var t = hashGet(encls_hash,e).second;
+
+  replaceVariablesWithTerms(t,e.enclosure,encls_hash);
  }
  
  return hashGet(encls_hash,encl).second;
@@ -164,7 +157,7 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
  // find variables and replace them with bound term copies
  while ((t = terms.pop()) != undefined)
  {
-  if (!isVariable(t) && hashGet(terms_hash,t) == undefined)
+  if ((!isVariable(t)) && (hashGet(terms_hash,t) == undefined))
   {var i;
   
    hashPut(terms_hash,t,t);
@@ -178,7 +171,7 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
 	  t.children[i] = hashGet(encls_hash,getFinalEnclosure(enclosure[c.children[0]])).second;
 	}
 	else 
-     terms.push(t.children[i]);
+     terms.push(c);
    }
   }
  }

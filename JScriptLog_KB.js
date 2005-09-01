@@ -14,7 +14,6 @@
 // KB* member functions for KnowledgeBase
 ///////////////////////////////////
 
-// FIX: Change fn(goal) to fn(encl) where encl is the FinalEnclosure.
 // FIX: RuleSets should denote operator information (if it represents an operator).
 
 // The KnowledgeBase (array of prolog rule clauses).
@@ -88,7 +87,7 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
- // !/0 : traversal functions
+ // !/0 : commit function
  {
   ruleset = new RuleSet('!',0,false);
 
@@ -228,6 +227,16 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+ // FIX: build retract/1 from internal predicates which support both abolish/1 and clause/2.
+ // retract/1
+ {
+  ruleset = new RuleSet('retract',1,false);
+
+  ruleset.rules.push(newTraversalRule(newAtom('retract',[newVariable('A')]),
+		retract_try_fn,retract_retry_fn));
+ 
+  addRuleSet(this,ruleset);
+ }
  // write/1 : ouput function
  {
   ruleset = new RuleSet('write',1,false);
@@ -296,6 +305,7 @@ function KB()
  }
 
  // internal:atom_append!/2 a atom mutate function that adds an argument
+ // internal:atom_append!(A,E).  Adds E as an extra argument of A.
  {
   ruleset = new RuleSet('internal:atom_append!',2,false);
   
@@ -305,6 +315,7 @@ function KB()
   addRuleSet(this,ruleset);
  }
  // internal:copy_term/2 copy term so that term is copied, not just the enclosures
+ // internal:copy_term(T,C).  C is a copy of T.
  {
   ruleset = new RuleSet('internal:copy_term',2,false);
   
@@ -450,9 +461,27 @@ function addRule(kb,rule,append)
   ruleset.rules.unshift(rule);
 }
 
+// Remove rule at index from ruleset.  
+function removeRuleFromRuleSet(ruleset,index)
+{
+ if (!isDynamicRuleSet(ruleset))
+  throw new Error("Must declare rule dynamic to remove: "+getRuleNameArity(ruleset));
+ 
+ ruleset.rules.splice(index,1);
+}
+
+// Get ruleset used to prove term.
 function getRuleSet(kb,term)
 {
  return kb.rulesets[getTermNameArity(term)];
+}
+
+function getRuleNameArityFromTerm(term)
+{
+ if (isRuleTerm(term))
+  return getTermNameArity(term.children[0]);
+ else
+  return getTermNameArity(term);
 }
 
 function getRuleNameArity(rule)
@@ -479,6 +508,11 @@ function setEvaluateFunctionForRuleSet(ruleset,eval_fn)
  return ruleset;
 }
 
+function isDynamicRuleSet(ruleset)
+{
+ return (ruleset == undefined || ruleset.dynamic);
+}
+
 ///////////////////////////////////
 // * Builtin functions
 ///////////////////////////////////
@@ -494,6 +528,38 @@ function true_try_fn(goal,frontier,explored)
 {
  explored.push(goal);
  return true;
+}
+
+// FIX: Handle case where term is a rule.
+function retract_try_fn(goal,frontier,explored)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+
+ goal.subgoal = newAtomGoal(lhs,goal,goal.kb);
+ goal.subgoal.kb = goal.kb;
+ goal.subgoal.rule_index = 0;
+ 
+ if (goal.subgoal.ruleset == undefined)
+ {
+  frontier.push(goal);
+  goal.subgoal = null;
+  return false;
+ }
+
+ var rule_body = nextUnifiedRuleBodyForGoal(goal.subgoal);
+ 
+ if (rule_body != null)
+ {
+  removeRuleFromRuleSet(goal.subgoal.ruleset,goal.subgoal.rule_index);
+  explored.push(goal);
+  return true;
+ }
+ else // no rule matches
+ {
+  frontier.push(goal);
+  goal.subgoal = null;
+  return false;
+ } 
 }
 
 ///////////////////////////////////
@@ -524,19 +590,41 @@ function cut_retry_fn(goal,frontier,explored)
  return false;
 }
 
+// FIX: Handle case where term is a rule.
+function retract_retry_fn(goal,frontier,explored)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ undoGoalBindings(goal.subgoal);
+
+ var rule_body = nextUnifiedRuleBodyForGoal(goal.subgoal);
+ 
+ if (rule_body != null)
+ {
+  removeRuleFromRuleSet(goal.subgoal.ruleset,goal.subgoal.rule_index);
+  explored.push(goal);
+  return true;
+ }
+ else // no rule matches
+ {
+  frontier.push(goal);
+  goal.subgoal = null;
+  return false;
+ } 
+}
+
 ///////////////////////////////////
 // *_fn(goal) is a function called when attempting to prove goal.  
 // Returns true if the goal succeeds, false if not.
 ///////////////////////////////////
 
-// FIX: pass in the current KB in use (currently uses the globally defined jslog_kb).
 function is_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  var x;
  
- x = jslog_Evaluate(jslog_kb,rhs);
+ x = jslog_Evaluate(goal.kb,rhs);
  
  if (!isNumber(x))
   throw new Error("Expected RHS to evaluate to a number in operator: is/2");
@@ -679,14 +767,17 @@ function internal_copy_term_fn(goal)
  return jslog_unify(newTermEnclosure(term),rhs,goal.bindings);
 }
 
-// FIX: pass in the current KB in use (currently uses the globally defined jslog_kb).
-// FIX: test for ruleset being dynamic before adding rule.
 function internal_assert_fn(append,goal)
 {var encl = getFinalEnclosure(goal.encl);
  var orig = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var term = newDuplicateTermFromEnclosure(orig);
+ var rule = newRule(term);
+ var ruleset = getRuleSet(goal.kb,term);
  
- addRule(jslog_kb,newRule(term),append);
+ if (!isDynamicRuleSet(ruleset))
+  throw new Error("Must declare rule dynamic to modify: "+getRuleNameArity(rule));
+    
+ addRule(goal.kb,rule,append);
  
  return true;
 }

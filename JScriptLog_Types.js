@@ -151,6 +151,7 @@ function newDuplicateTerm(term)
 // the duplicated variables at the same index they point to in the enclosure.
 function newDuplicateTerm(term,variables)
 {var terms_hash = new Hashtable();
+ var terms_todo = new Array();
  var terms = new Array();
  var t;
  var t_copy;
@@ -179,6 +180,7 @@ function newDuplicateTerm(term,variables)
   
    t_copy = new Term(t.type,t.name);
    t_copy.children = new Array(t.children.length);
+   terms_todo.push(t);
    
    hashPut(terms_hash,t,t_copy);
    
@@ -187,10 +189,8 @@ function newDuplicateTerm(term,variables)
   }
  }
  
- terms.push(term);
-
  // connect duplicate terms like original ones
- while ((t = terms.pop()) != undefined)
+ while ((t = terms_todo.pop()) != undefined)
  {var i;
   
   t_copy = hashGet(terms_hash,t);
@@ -268,6 +268,9 @@ function isCommandOp(term)
 
 function getTermNameArity(term)
 {
+ if (!isAtom(term))
+  throw new Error("Expected atom.");
+  
  return (term.name.toString()+"/"+term.children.length.toString());
 }
 
