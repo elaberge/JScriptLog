@@ -140,7 +140,7 @@ function tryGoal(goal,kb,frontier,explored)
 	  frontier.push(goal); 
       throw new Error("Variable must be bound to atom.");
      }
-
+	 
      if (encl.term.ruleset != null)
       goal.ruleset = encl.term.ruleset;
      else
@@ -154,6 +154,7 @@ function tryGoal(goal,kb,frontier,explored)
       throw new Error("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
      }
 
+	 goal.retry_fn = null;
 	 goal.rule_index = 0;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
 	 
@@ -168,7 +169,7 @@ function tryGoal(goal,kb,frontier,explored)
       addBodyGoalsToFrontier(goal,rule_body,kb,frontier);
 	  return true;
 	 }
-	 else // handle FUNCTION and TRAVERSAL // FIX: Remove to optimize pred path (move to var)
+	 else // handle FUNCTION and TRAVERSAL
 	 {
 	  if (rule_body.fn != null)
 	  {
@@ -185,6 +186,7 @@ function tryGoal(goal,kb,frontier,explored)
 	  }
 	  else if (rule_body.try_fn != null)
 	  {
+	   goal.retry_fn = rule_body.retry_fn;
 	   return rule_body.try_fn(goal,frontier,explored);
 	  }
 	  else
@@ -234,11 +236,9 @@ function retryGoal(goal,frontier,explored)
 
 	 removeChildGoalsFromFrontier(goal,frontier);
 
-	 // handle FUNCTION and TRAVERSAL // FIX: Remove to optimize pred path (move to var)
-     {var r = newRuleBodyArrayEnclosure(goal.encl.enclosure,goal.ruleset.rules[goal.rule_index]);
-	  if (r.retry_fn != null)
-	  return r.retry_fn(goal,frontier,explored);
-	 }
+	 // handle TRAVERSAL retry
+     if (goal.retry_fn != null)
+	  return goal.retry_fn(goal,frontier,explored);
 	 
 	 goal.rule_index++;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
@@ -254,7 +254,7 @@ function retryGoal(goal,frontier,explored)
       addBodyGoalsToFrontier(goal,rule_body,goal.kb,frontier);
 	  return true;
 	 }
-	 else // FIX: Remove (ensure rule_body.terms cannot be null)
+	 else
 	 {
 	  frontier.push(goal);
 	  return false;

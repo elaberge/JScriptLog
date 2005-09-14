@@ -1,3 +1,8 @@
+JScriptLog 0.4.alpha
+====================
+
+¥ Modified tryGoal and retryGoal for the case where the goal represents a traversal (as determined at run-time) which needs to retry.  In the tryGoal function, the goal.retry_fn is set, so that on retry it is easy to determine if, and which, retry_fn to evaluate (this does not apply to TRAVERSE goals, which already have this information).
+
 JScriptLog 0.3.alpha
 ====================
 
