@@ -1,6 +1,10 @@
 JScriptLog 0.4.alpha
 ====================
 
+¥ Added repeat/0 and once/1 predicates. (todo: TEST)
+
+¥ Added var/1, nonvar/1, atom/1, atomic/1, compound/1, number/1 meta-logical predicates. (todo: TEST)
+
 ¥ Modified tryGoal and retryGoal for the case where the goal represents a traversal (as determined at run-time) which needs to retry.  In the tryGoal function, the goal.retry_fn is set, so that on retry it is easy to determine if, and which, retry_fn to evaluate (this does not apply to TRAVERSE goals, which already have this information).
 
 JScriptLog 0.3.alpha

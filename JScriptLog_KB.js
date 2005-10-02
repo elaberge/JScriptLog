@@ -77,6 +77,26 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // repeat.
+ // repeat :- repeat.
+ {
+  ruleset = new RuleSet('repeat',0,false);
+
+  ruleset.rules.push(newRule(newConstant('repeat')));
+  ruleset.rules.push(newRule(newRuleTerm(newConstant('repeat'),newConstant('repeat'))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // once(X) :- X, !.
+ {
+  ruleset = new RuleSet('once',1,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('once',[newVariable('X')]),
+		newConsPair(newVariable('X'),newConstant('!')))));
+ 
+  addRuleSet(this,ruleset);
+ }
  // call(X) :- X.
  {
   ruleset = new RuleSet('call',1,false);
@@ -87,6 +107,61 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // var/1 : isvar function
+ {
+  ruleset = new RuleSet('var',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('var',[newVariable('V')]),isvar_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // nonvar/1 : isnonvar function
+ {
+  ruleset = new RuleSet('nonvar',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('nonvar',[newVariable('V')]),isnonvar_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // atom/1 : isconstant function
+ {
+  ruleset = new RuleSet('atom',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('atom',[newVariable('A')]),isconstant_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // atomic/1 : isconstornum function
+ {
+  ruleset = new RuleSet('atomic',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('atomic',[newVariable('A')]),isconstornum_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // compound/1 : iscompound function
+ {
+  ruleset = new RuleSet('compound',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('compound',[newVariable('T')]),iscompound_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // number/1 : isnumber function
+ {
+  ruleset = new RuleSet('number',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('number',[newVariable('N')]),isnumber_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ 
  // !/0 : commit function
  {
   ruleset = new RuleSet('!',0,false);
@@ -630,6 +705,46 @@ function is_fn(goal)
   throw new Error("Expected RHS to evaluate to a number in operator: is/2");
   
  return jslog_unify(lhs,newBlankEnclosure(0,x),goal.bindings);
+}
+
+function isvar_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ return (isVariable(lhs.term));
+}
+
+function isnonvar_fn(goal)
+{
+ return (!isvar_fn(goal));
+}
+
+function isconstant_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ return (isConstant(lhs.term));
+}
+
+function isconstornum_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ return (isConstant(lhs.term) || isNumber(lhs.term));
+}
+
+function iscompound_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ return (isAtom(lhs.term) && lhs.term.children.length > 0);
+}
+
+function isnumber_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ 
+ return (isNumber(lhs.term));
 }
 
 function lt_fn(goal)

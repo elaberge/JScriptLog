@@ -3,15 +3,15 @@ Created by Glendon Holst.  Copyright 2005.
 
 INTRODUCTION:
 
-JScriptLog version 0.3.alpha is an exploratory, partial implementation of Prolog in JavaScript.  It has potential, and is released in this early development phase in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (but about 30x slower than JLog).
+JScriptLog version 0.4.alpha is an exploratory, partial implementation of Prolog in JavaScript.  It has potential, and is released in this early development phase in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (but about 30x slower than JLog).
 
 It has many critical shortcomings, and lots of room for improvement.
 
 CRITIAL SHORTCOMINGS:
 
-* There is no parser.  It is possible to construct the terms directly (see existing code and queries for N-Queens).  A future goal is to write the parser in Prolog itself. 
+* There is no parser.  It is possible to construct the terms directly (see existing code and queries for N-Queens).  See patch #1311136 for the writeJSLog/1 converter tool, which constructs the terms directly from the given Prolog source code, using an external Prolog interpreter, such as JLog.  A future goal is to write the parser for JScriptLog in Prolog itself.
 
-* The available built in predicates are limited (sufficient for the N-Queens solution and other simple queries).
+* The available built in predicates are incomplete (but sufficient for the N-Queens solution and other typical Prolog KBs).
 
 * There is no post-consult optimization phase (e.g., pre-binding).  There is room for performance improvement.
 
