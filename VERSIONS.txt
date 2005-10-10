@@ -1,9 +1,15 @@
 JScriptLog 0.4.alpha
 ====================
 
+¥ Modified the </2, =</2, >/2, and >=/2 operators to evaluate the LHS and RHS expressions before comparison. (todo: TEST)
+
+¥ Added comparison operators: =:=/2 and =\=/2. (todo: TEST)
+
+¥ Added math operators: ///2, mod/2, **/2, exp/1, log/1, sqrt/1, abs/1, sin/1, cos/1, tan/1, asin/1, acos/1, atan/1, atan2/2, integer/1, floor/1, ceiling/1, round/1, sign/1, /\/2, \//2, #/2, <</2, >>/2.  (todo: TEST)
+
 ¥ Added repeat/0 and once/1 predicates. (todo: TEST)
 
-¥ Added var/1, nonvar/1, atom/1, atomic/1, compound/1, number/1 meta-logical predicates. (todo: TEST)
+¥ Added meta-logical predicates: var/1, nonvar/1, atom/1, atomic/1, compound/1, number/1. (todo: TEST)
 
 ¥ Modified tryGoal and retryGoal for the case where the goal represents a traversal (as determined at run-time) which needs to retry.  In the tryGoal function, the goal.retry_fn is set, so that on retry it is easy to determine if, and which, retry_fn to evaluate (this does not apply to TRAVERSE goals, which already have this information).
 

@@ -228,6 +228,24 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+ // =:=/2 : compare function
+ {
+  ruleset = new RuleSet('=:=',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('=:=',[newVariable('L'),newVariable('R')]),eq_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // =\=/2 : compare function
+ {
+  ruleset = new RuleSet('=\\=',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('=\\=',[newVariable('L'),newVariable('R')]),neq_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
  // =/2 : unify function
  {
   ruleset = new RuleSet('=',2,false);
@@ -375,6 +393,214 @@ function KB()
   ruleset = new RuleSet('/',2,false);
   
   setEvaluateFunctionForRuleSet(ruleset,divide_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // ///2 eval function
+ {
+  ruleset = new RuleSet('//',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,intdivide_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // mod/2 eval function
+ {
+  ruleset = new RuleSet('mod',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,mod_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // mod/2 eval function
+ {
+  ruleset = new RuleSet('mod',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,mod_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // **/2 eval function
+ {
+  ruleset = new RuleSet('**',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,pow_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // exp/1 eval function
+ {
+  ruleset = new RuleSet('exp',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,exp_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // log/1 eval function
+ {
+  ruleset = new RuleSet('log',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,log_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // sqrt/1 eval function
+ {
+  ruleset = new RuleSet('sqrt',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,sqrt_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // abs/1 eval function
+ {
+  ruleset = new RuleSet('abs',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,abs_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // sin/1 eval function
+ {
+  ruleset = new RuleSet('sin',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,sin_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // cos/1 eval function
+ {
+  ruleset = new RuleSet('cos',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,cos_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // tan/1 eval function
+ {
+  ruleset = new RuleSet('tan',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,tan_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // asin/1 eval function
+ {
+  ruleset = new RuleSet('asin',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,asin_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // acos/1 eval function
+ {
+  ruleset = new RuleSet('acos',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,acos_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // atan/1 eval function
+ {
+  ruleset = new RuleSet('atan',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,atan_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // atan2/2 eval function
+ {
+  ruleset = new RuleSet('atan2',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,atan2_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // integer/1 eval function
+ {
+  ruleset = new RuleSet('integer',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,trunc_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // floor/1 eval function
+ {
+  ruleset = new RuleSet('floor',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,floor_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // ceiling/1 eval function
+ {
+  ruleset = new RuleSet('ceiling',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,ceiling_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // round/1 eval function
+ {
+  ruleset = new RuleSet('round',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,round_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // sign/1 eval function
+ {
+  ruleset = new RuleSet('sign',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,sign_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // /\/2 eval function
+ {
+  ruleset = new RuleSet('/\\',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_and_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // \//2 eval function
+ {
+  ruleset = new RuleSet('\\/',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_or_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // #/2 eval function
+ {
+  ruleset = new RuleSet('#',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_xor_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // \\/1 eval function
+ {
+  ruleset = new RuleSet('\\',1,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_negate_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // <</2 eval function
+ {
+  ruleset = new RuleSet('<<',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_lshift_eval_fn);
+   
+  addRuleSet(this,ruleset);
+ }
+ // >>/2 eval function
+ {
+  ruleset = new RuleSet('>>',2,false);
+  
+  setEvaluateFunctionForRuleSet(ruleset,bitwise_rshift_eval_fn);
    
   addRuleSet(this,ruleset);
  }
@@ -751,44 +977,90 @@ function lt_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
  
- if (isNumber(lhs.term) && isNumber(rhs.term))
-  return lhs.term.name < rhs.term.name;
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name < y.name;
  else
-  throw new Error("Number expected in operator: </2");
+  throw new Error("Expression evaluating to Number expected in operator: </2");
 }
 
 function lte_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
  
- if (isNumber(lhs.term) && isNumber(rhs.term))
-  return lhs.term.name <= rhs.term.name;
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name <= y.name;
  else
-  throw new Error("Number expected in operator: =</2");
+  throw new Error("Expression evaluating to Number expected in operator: =</2");
 }
 
 function gt_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
  
- if (isNumber(lhs.term) && isNumber(rhs.term))
-  return lhs.term.name > rhs.term.name;
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name > y.name;
  else
-  throw new Error("Number expected in operator: >/2");
+  throw new Error("Expression evaluating to Number expected in operator: >/2");
 }
 
 function gte_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
  
- if (isNumber(lhs.term) && isNumber(rhs.term))
-  return lhs.term.name >= rhs.term.name;
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name >= y.name;
  else
-  throw new Error("Number expected in operator: >=/2"); 
+  throw new Error("Expression evaluating to Number expected in operator: >=/2"); 
+}
+
+function eq_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
+ 
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name == y.name;
+ else
+  throw new Error("Expression evaluating to Number expected in operator: =:=/2"); 
+}
+
+function neq_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var x,y;
+ 
+ x = jslog_Evaluate(goal.kb,lhs);
+ y = jslog_Evaluate(goal.kb,rhs);
+ 
+ if (isNumber(x) && isNumber(y))
+  return x.name != y.name;
+ else
+  throw new Error("Expression evaluating to Number expected in operator: =\=/2"); 
 }
 
 function unify_fn(goal)
@@ -1022,6 +1294,328 @@ function divide_eval_fn(values)
   throw new Error("Expected Number values.");
  
  result = newNumber(i.name / j.name);   
+ values.push(result);
+ return result;
+}
+
+function intdivide_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var val;
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name / j.name); 
+ values.push(result);
+ 
+ result = trunc_eval_fn(values);
+ return result;
+}
+
+function mod_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(i.name % j.name);   
+ values.push(result);
+ return result;
+}
+
+function pow_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(Math.pow(i.name,j.name));   
+ values.push(result);
+ return result;
+}
+
+function exp_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.exp(i.name));
+ values.push(result);
+ return result;
+}
+
+function log_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.log(i.name));
+ values.push(result);
+ return result;
+}
+
+function sqrt_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.sqrt(i.name));
+ values.push(result);
+ return result;
+}
+
+function abs_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.abs(i.name));
+ values.push(result);
+ return result;
+}
+
+function sin_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.sin(i.name));
+ values.push(result);
+ return result;
+}
+
+function cos_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.cos(i.name));
+ values.push(result);
+ return result;
+}
+
+function tan_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.tan(i.name));
+ values.push(result);
+ return result;
+}
+
+function asin_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.asin(i.name));
+ values.push(result);
+ return result;
+}
+
+function acos_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.acos(i.name));
+ values.push(result);
+ return result;
+}
+
+function atan_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber(Math.atan(i.name));
+ values.push(result);
+ return result;
+}
+
+function atan2_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber(Math.atan2(i.name,j.name));   
+ values.push(result);
+ return result;
+}
+
+function trunc_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ if (i.name < 0)
+  result = newNumber(-1 * Math.floor(Math.abs(i.name)));
+ else 
+  result = newNumber(Math.floor(i.name));
+ 
+ values.push(result);
+ return result;
+}
+
+function floor_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ result = newNumber(Math.floor(i.name));
+ values.push(result);
+ return result;
+}
+
+function ceiling_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ result = newNumber(Math.ceil(i.name));
+ values.push(result);
+ return result;
+}
+
+function round_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ result = newNumber(Math.round(i.name));
+ values.push(result);
+ return result;
+}
+
+function sign_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ if (i.name > 0)
+  result = newNumber(1);
+ else if (i.name < 0)
+  result = newNumber(-1);
+ else 
+  result = newNumber(0);
+
+ values.push(result);
+ return result;
+}
+
+function bitwise_and_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber((i.name & j.name));   
+ values.push(result);
+ return result;
+}
+
+function bitwise_or_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber((i.name | j.name));   
+ values.push(result);
+ return result;
+}
+
+function bitwise_xor_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber((i.name ^ j.name));   
+ values.push(result);
+ return result;
+}
+
+function bitwise_negate_eval_fn(values)
+{var i = values.pop();
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+ 
+ result = newNumber((~ i.name));   
+ values.push(result);
+ return result;
+}
+
+function bitwise_lshift_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber((i.name << j.name));   
+ values.push(result);
+ return result;
+}
+
+function bitwise_rshift_eval_fn(values)
+{var i = values.pop();
+ var j = values.pop();
+ var result;
+
+ if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
+  throw new Error("Expected Number values.");
+ 
+ result = newNumber((i.name >> j.name));   
  values.push(result);
  return result;
 }
