@@ -208,7 +208,7 @@ var jslog_premade_queries = new Array();
 function jslog_ui_init_query()
 {var q = new Array();
  var i = 0;
-  
+
  q[i++] = newAtom('member',[newVariable('Y'),
 		newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
 			newNumber(1),newNumber(2),newVariable('Z')])]);
@@ -269,14 +269,45 @@ function jslog_ui_init_query()
  q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
 						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
  q[i++] = newAtom('=',[newVariable('A'),newVariable('A')]);
+
  q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
 			newAtom('copy_term',[newVariable('X'),newVariable('Z')]),
 			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]);
+
 /* q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
 			newAtom('internal:copy_term',[newVariable('X'),newVariable('Z')]),
-			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]); */
+			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]); 
+*/
+
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('Y'),newVariable('X')]),
+			newAtom('copy_term',[newAtom('f', [newVariable('X'),newVariable('Y')]),newVariable('F')]),
+			]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('Y'),newVariable('X')]),
+			newAtom('copy_term',[newAtom('f', [newVariable('X'),newVariable('Y')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])])]);			
+ q[i++] = newConsPairsFromTerms([
+			newAtom('copy_term',[newAtom('f', [newVariable('X'),newVariable('Y')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])]),
+			newAtom('=', [newVariable('Y'),newVariable('X')])]);			
+ q[i++] = newAtom('copy_term', [newAtom('f',[newVariable('X'),newVariable('X')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])]);			
+
+ q[i++] = newConsPairsFromTerms([
+			newAtom('=',[newVariable('Y'),newVariable('X')]),
+			newAtom('internal:copy_term',[newAtom('f', [newVariable('X'),newVariable('Y')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])])]);			
+ q[i++] = newConsPairsFromTerms([
+			newAtom('internal:copy_term',[newAtom('f', [newVariable('X'),newVariable('Y')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])]),
+			newAtom('=', [newVariable('Y'),newVariable('X')])]);			
+ q[i++] = newAtom('internal:copy_term', [newAtom('f',[newVariable('X'),newVariable('X')]),
+                        newAtom('f',[newConstant('a'),newVariable('Z')])]);			
+
+
  q[i++] = newAtom('internal:atom_append!',[newConstant('[]'),newConstant('a')]);
  q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('M'),newListNull()]),

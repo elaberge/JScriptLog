@@ -147,8 +147,10 @@ function newDuplicateTerm(term)
 // and duplicated children -- performs a deep copy.
 // Variables in the duplicate term are represented via a single unnamed variable instance
 // (i.e., variables lose their names, and the number of variables may be reduced).
-// The variables parameter must be an empty array.  On completetion, variables contains
-// the duplicated variables at the same index they point to in the enclosure.
+// The variables parameter must be an array, with each element either undefined or a Variable
+// instance.  On completion, variables contains the duplicated variables at the same index they 
+// point to in the enclosure -- new Variable instances are created only if the variables array
+// is undefined at the index position a variable references.
 function newDuplicateTerm(term,variables)
 {var terms_hash = new Hashtable();
  var terms_todo = new Array();

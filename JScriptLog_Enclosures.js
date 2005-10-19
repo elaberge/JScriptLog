@@ -70,11 +70,11 @@ function newDuplicateEnclosure(encl)
  // find and copy all enclosures
  while ((e = encls.pop()) != undefined)
  {
-  if (hashGet(encls_hash,e) == undefined)
+  if (hashGet(encls_hash,e.enclosure) == undefined)
   {var i;
   
    e_copy = new Array(e.enclosure.length);
-   hashPut(encls_hash,e,e_copy);
+   hashPut(encls_hash,e.enclosure,e_copy);
    encls_todo.push(e);
    
    for (i=0; i < e_copy.length; i++)
@@ -88,27 +88,27 @@ function newDuplicateEnclosure(encl)
  // connect duplicate enclosures like original ones
  while ((e = encls_todo.pop()) != undefined)
  {var i;
-  
-  e_copy = hashGet(encls_hash,e);
+
+  e_copy = hashGet(encls_hash,e.enclosure);
    
   for (i=0; i < e_copy.length; i++)
   {
    if (e.enclosure[i] != null)
    {var fin_encl = getFinalEnclosure(e.enclosure[i]);
-   
-    e_copy[i] = newSubtermEnclosure(hashGet(encls_hash,fin_encl),fin_encl.term);
-	encls.push(fin_encl);
+
+    e_copy[i] = newSubtermEnclosure(hashGet(encls_hash,fin_encl.enclosure),fin_encl.term);
    }
   } 
  }
  
- return newSubtermEnclosure(hashGet(encls_hash,encl),encl.term);
+ return newSubtermEnclosure(hashGet(encls_hash,encl.enclosure),encl.term);
 }
 
 // Creates a duplicate term from the given enclosure.  Terms are copied.
 // Variable equivalence is maintained by using the same variable instance.
 function newDuplicateTermFromEnclosure(encl)
 {var encls_hash = new Hashtable();
+ var enclosures_hash = new Hashtable();
  var encls_todo = new Array();
  var encls = new Array();
  var e;
@@ -120,12 +120,18 @@ function newDuplicateTermFromEnclosure(encl)
  while ((e = encls.pop()) != undefined)
  {
   if (hashGet(encls_hash,e) == undefined)
-  {var variables = new Array();
+  {var variables = hashGet(enclosures_hash,e.enclosure);
    var t_copy;
    var i;
 
+   if (variables == undefined)
+   {
+    variables = new Array(e.enclosure.length);
+    hashPut(enclosures_hash,e.enclosure,variables);
+   }
+    
    t_copy = newDuplicateTerm(e.term,variables);
-   hashPut(encls_hash,e,new Pair(variables,t_copy));
+   hashPut(encls_hash,e,t_copy);
    encls_todo.push(e);
       
    for (i=0; i < e.enclosure.length; i++)
@@ -138,12 +144,12 @@ function newDuplicateTermFromEnclosure(encl)
 
  // replace bound variables in terms with their bound values
  while ((e = encls_todo.pop()) != undefined)
- {var t = hashGet(encls_hash,e).second;
+ {var t = hashGet(encls_hash,e);
 
   replaceVariablesWithTerms(t,e.enclosure,encls_hash);
  }
- 
- return hashGet(encls_hash,encl).second;
+
+ return hashGet(encls_hash,encl);
 }
 
 // helper function for newDuplicateTermFromEnclosure
@@ -168,13 +174,14 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
     if (isVariable(c))
 	{
 	 if (enclosure[c.children[0]] != null)
-	  t.children[i] = hashGet(encls_hash,getFinalEnclosure(enclosure[c.children[0]])).second;
+	  t.children[i] = hashGet(encls_hash,getFinalEnclosure(enclosure[c.children[0]]));
 	}
 	else 
      terms.push(c);
    }
   }
  }
+ 
  return true;
 }
 

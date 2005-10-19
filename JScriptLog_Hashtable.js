@@ -12,6 +12,10 @@
 ///////////////////////////////////
 // * Hash*
 // A Hashtable that supports unnamed objects as keys.
+//
+//// Properties added to key objects (document here):
+// key.hash_key_value : the value used to order and find keys
+//
 ///////////////////////////////////
 
 function Hashtable()

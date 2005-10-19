@@ -1150,7 +1150,7 @@ function internal_copy_term_fn(goal)
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
  var term = newDuplicateTermFromEnclosure(lhs);
-  
+
  return jslog_unify(newTermEnclosure(term),rhs,goal.bindings);
 }
 

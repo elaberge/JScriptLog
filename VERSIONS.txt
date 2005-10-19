@@ -1,3 +1,11 @@
+JScriptLog 0.4.5.alpha
+====================
+
+¥ Fixed copy_term/2 and internal:copy_term/2.  Previously, the query: X=Y,copy_term(f(X,Y),f(a,Z)). would leave Z unbound (it should be bound Z=a).  Modified newDuplicateEnclosure to hash on the enclosure arrays, modified newDuplicateTermFromEnclosure to also keep a hash on the enclosure arrays to track the equivalent variables between terms, and modified replaceVariablesWithTerms slightly to change how the encls_hash was stored.  
+
+Thanks to Jeff T. for catching this bug! 
+
+
 JScriptLog 0.4.alpha
 ====================
 
