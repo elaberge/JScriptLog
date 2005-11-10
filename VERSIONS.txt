@@ -1,9 +1,15 @@
-JScriptLog 0.4.5.alpha
+JScriptLog 0.5.0.alpha
 ====================
 
-¥ Fixed copy_term/2 and internal:copy_term/2.  Previously, the query: X=Y,copy_term(f(X,Y),f(a,Z)). would leave Z unbound (it should be bound Z=a).  Modified newDuplicateEnclosure to hash on the enclosure arrays, modified newDuplicateTermFromEnclosure to also keep a hash on the enclosure arrays to track the equivalent variables between terms, and modified replaceVariablesWithTerms slightly to change how the encls_hash was stored.  
+¥ Fixed copy_term/2 and internal:copy_term/2.  Previously, the query: X=Y,copy_term(f(X,Y),f(a,Z)). would leave Z unbound (it should be bound Z=a).  Modified newDuplicateEnclosure to hash on the enclosure arrays, modified newDuplicateTermFromEnclosure to also keep a hash on the enclosure arrays to track the equivalent variables between terms, and modified replaceVariablesWithTerms slightly to change how the encls_hash value was stored.  
 
-Thanks to Jeff T. for catching this bug! 
+Thanks to Jeff Thompson for catching this bug! 
+
+¥ Added the ->/2, ->/3, and if/3 predicates.  Also added internal:atom_setarg!/3 predicate for mutating an atom.
+
+¥ Added meta-logical predicates: float/1 (same as number/1 because all numbers are float in Javascript), and integer/1.
+
+¥ Added math operators: float/1, float_fractional_part/1, and float_integer_part/1 (same as integer/1).
 
 
 JScriptLog 0.4.alpha

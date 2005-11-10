@@ -161,12 +161,65 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+ // float/1 eval function : isnumber function -- all numbers are floats.
+ {
+  ruleset = new RuleSet('float',1,false);
+
+  setEvaluateFunctionForRuleSet(ruleset,positive_eval_fn);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('float',[newVariable('N')]),isnumber_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
  
  // !/0 : commit function
  {
   ruleset = new RuleSet('!',0,false);
 
   ruleset.rules.push(newTraversalRule(newConstant('!'),true_try_fn,cut_retry_fn));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // ->(G,T) :- call(G), !, call(T).
+ {
+  ruleset = new RuleSet('->',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('->',[newVariable('G'),newVariable('T')]),
+		newConsPairsFromTerms([
+			newAtom('call',[newVariable('G')]),
+			newConstant('!'),
+			newAtom('call',[newVariable('T')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // ->(G,T,_) :- call(G), !, call(T).
+ // ->(_,_,F) :- call(F).
+ {
+  ruleset = new RuleSet('->',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('->',[newVariable('G'),newVariable('T'),newVariable('_')]),
+		newConsPairsFromTerms([
+			newAtom('call',[newVariable('G')]),
+			newConstant('!'),
+			newAtom('call',[newVariable('T')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('->',[newVariable('_'),newVariable('_'),newVariable('F')]),
+		newAtom('call',[newVariable('F')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // if(G,T,F) :- internal:copy_term(test(fail),V), internal:if(G,T,F).
+ {
+  ruleset = new RuleSet('if',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('if',[newVariable('G'),newVariable('T'),newVariable('F')]),
+		newConsPairsFromTerms([
+			newAtom('internal:copy_term',[newAtom('test',[newConstant('fail')]),newVariable('V')]),
+			newAtom('internal:if',[newVariable('G'),newVariable('T'),newVariable('F'),newVariable('V')])]))));
  
   addRuleSet(this,ruleset);
  }
@@ -516,13 +569,32 @@ function KB()
    
   addRuleSet(this,ruleset);
  }
- // integer/1 eval function
+ // integer/1 eval function : isinteger_fn 
  {
   ruleset = new RuleSet('integer',1,false);
   
   setEvaluateFunctionForRuleSet(ruleset,trunc_eval_fn);
-   
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('integer',[newVariable('N')]),isinteger_fn));
+ 
   addRuleSet(this,ruleset);
+ }
+ // float_factional_part/1 eval function.
+ {
+  ruleset = new RuleSet('float_fractional_part',1,false);
+
+  setEvaluateFunctionForRuleSet(ruleset,fractional_part_eval_fn);
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // float_integer_part/1 eval function.
+ {
+  ruleset = new RuleSet('float_integer_part',1,false);
+
+  setEvaluateFunctionForRuleSet(ruleset,trunc_eval_fn);
+ 
+  addRuleSet(this,ruleset);  
  }
  // floor/1 eval function
  {
@@ -605,13 +677,23 @@ function KB()
   addRuleSet(this,ruleset);
  }
 
- // internal:atom_append!/2 a atom mutate function that adds an argument
+ // internal:atom_append!/2 an atom mutate function that adds an argument
  // internal:atom_append!(A,E).  Adds E as an extra argument of A.
  {
   ruleset = new RuleSet('internal:atom_append!',2,false);
   
   ruleset.rules.push(newFunctionRule(
   		newAtom('internal:atom_append!',[newVariable('A'),newVariable('E')]),internal_atom_append_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:atom_setarg!/3 an atom mutate function that changes an argument
+ // internal:atom_setarg!(I,A,E). Set arg at index I (I in 1..N) in atom A (with N args) to E
+ {
+  ruleset = new RuleSet('internal:atom_setarg!',3,false);
+  
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:atom_setarg!',[newVariable('I'),newVariable('A'),newVariable('E')]),internal_atom_setarg_fn));
    
   addRuleSet(this,ruleset);
  }
@@ -643,7 +725,24 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // internal:if(G,T,_,V) :- call(G), internal:atom_setarg!(1,V,true), call(T).
+ // internal:if(_,_,F,test(fail)) :- call(F).
+ {
+  ruleset = new RuleSet('internal:if',4,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:if',[newVariable('G'),newVariable('T'),newVariable('_'),newVariable('V')]),
+		newConsPairsFromTerms([
+			newAtom('call',[newVariable('G')]),
+			newAtom('internal:atom_setarg!',[newNumber(1),newVariable('V'),newConstant('true')]),
+			newAtom('call',[newVariable('T')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:if',[newVariable('_'),newVariable('_'),newVariable('F'),newAtom('test',[newConstant('fail')])]),
+				newAtom('call',[newVariable('F')]))));
  
+  addRuleSet(this,ruleset);
+ }
+
  return this;
 }
 
@@ -973,6 +1072,13 @@ function isnumber_fn(goal)
  return (isNumber(lhs.term));
 }
 
+function isinteger_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+
+ return (isNumber(lhs.term) && (Math.round(lhs.term.name) == lhs.term.name));
+}
+
 function lt_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
@@ -1210,6 +1316,45 @@ function internal_atom_append_fn(goal)
  else
   throw new Error("Expected atom in internal:atom_append!/2.");
 
+ return true; 
+}
+
+function internal_atom_setarg_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var idx = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+
+ if (isNumber(idx.term) && (Math.round(idx.term.name) == idx.term.name))
+ {var i = idx.term.name - 1;
+ 
+  if (isAtom(lhs.term))
+  {
+   if (i >= 0 && i < lhs.term.children.length) 
+   {var t = lhs.term.children[i];
+   
+    if (isVariable(t))
+	{
+     lhs.enclosure[t.children[0]] = rhs;
+	}
+	else
+	{var v = newVariable('_');
+     var ei = lhs.enclosure.length;
+
+     v.children[0] = ei;
+     lhs.term.children[i] = v;
+     lhs.enclosure[ei] = rhs;
+	} 
+   }	
+   else
+    throw new Error("Index out of bounds in internal:atom_setarg!/3.");
+  }
+  else
+   throw new Error("Expected atom in internal:atom_setarg!/3.");
+ }
+ else
+  throw new Error("Expected integer in internal:atom_setarg!/3.");
+ 
  return true; 
 }
 
@@ -1539,6 +1684,26 @@ function sign_eval_fn(values)
  else 
   result = newNumber(0);
 
+ values.push(result);
+ return result;
+}
+
+function fractional_part_eval_fn(values)
+{var i = values.pop();
+ var v;
+ var result;
+
+ if (i == undefined || !isNumber(i)) 
+  throw new Error("Expected Number value.");
+
+ v = i.name;
+
+ values.push(i);
+ trunc_eval_fn(values);
+ 
+ i = values.pop(); // trunc_eval_fn returns a number
+ 
+ result = newNumber(v - i.name);  
  values.push(result);
  return result;
 }

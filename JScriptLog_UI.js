@@ -238,6 +238,9 @@ function jslog_ui_init_query()
  q[i++] = newAtom('is',[newVariable('X'),newAtom('sqrt',[newAtom('abs',[newNumber(-2)])])]);
  q[i++] = newAtom('is',[newVariable('X'),newAtom('integer',[newNumber(-3.6)])]);
  q[i++] = newAtom('is',[newVariable('X'),newAtom('integer',[newNumber(6.3)])]);
+ q[i++] = newAtom('is',[newVariable('X'),newAtom('float',[newNumber(6.3)])]);
+ q[i++] = newAtom('is',[newVariable('X'),newAtom('float_fractional_part',[newNumber(-3.6)])]);
+ q[i++] = newAtom('is',[newVariable('X'),newAtom('float_fractional_part',[newNumber(6.3)])]);
  q[i++] = newAtom('is',[newVariable('X'),newAtom('floor',[newNumber(6.3)])]);
  q[i++] = newAtom('is',[newVariable('X'),newAtom('ceiling',[newNumber(6.3)])]);
  q[i++] = newAtom('is',[newVariable('X'),newAtom('round',[newNumber(6.5)])]);
@@ -254,6 +257,8 @@ function jslog_ui_init_query()
  q[i++] = newAtom('atomic',[newAtom('abc',[newVariable('X')])]);
  q[i++] = newAtom('number',[newConstant('abc')]);
  q[i++] = newAtom('number',[newNumber(42)]);
+ q[i++] = newAtom('integer',[newNumber(42)]);
+ q[i++] = newAtom('integer',[newNumber(3.14)]);
  q[i++] = newAtom('compound',[newConstant('abc')]);
  q[i++] = newAtom('compound',[newNumber(42)]);
  q[i++] = newAtom('compound',[newAtom('abc',[newVariable('X')])]);
@@ -269,6 +274,24 @@ function jslog_ui_init_query()
  q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
 						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
  q[i++] = newAtom('=',[newVariable('A'),newVariable('A')]);
+
+ q[i++] = newAtom('if',[newAtom('queens',[newNumber(4),newVariable('X')]),
+			newAtom('queens',[newNumber(4),newVariable('Y')]),
+			newAtom('writeln',[newConstant('NO SOLNS')])]);
+ q[i++] = newAtom('if',[newConstant('fail'),
+			newAtom('writeln',[newConstant('YES')]),
+			newAtom('writeln',[newConstant('NO')])]);
+
+ q[i++] = newAtom('->',[newAtom('queens',[newNumber(4),newVariable('X')]),
+			newAtom('queens',[newNumber(4),newVariable('Y')])]);
+ q[i++] = newAtom('->',[newAtom('queens',[newNumber(4),newVariable('X')]),
+			newAtom('queens',[newNumber(4),newVariable('Y')]),
+			newAtom('writeln',[newConstant('NO SOLNS')])]);
+ q[i++] = newAtom('->',[newConstant('fail'),
+			newAtom('writeln',[newConstant('YES')])]);
+ q[i++] = newAtom('->',[newConstant('fail'),
+			newAtom('writeln',[newConstant('YES')]),
+			newAtom('writeln',[newConstant('NO')])]);
 
  q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
