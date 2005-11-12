@@ -11,6 +11,14 @@ Thanks to Jeff Thompson for catching this bug!
 
 ¥ Added math operators: float/1, float_fractional_part/1, and float_integer_part/1 (same as integer/1).
 
+¥ Added arg/3 predicate.
+
+¥ Added term_variables/2 and ground/1 predicates.  Also added internal:term_variables/2 which both these predicates use, and added the enumFinalVariableEnclosures and enumVariables methods to find unbound variables in an enclosure and term.
+
+¥ Added some generally useful internal predicates: internal:member/2, internal:append/3, internal:selectlist/4, internal:convlist/4, internal:inlist/2, internal:call/2.
+
+¥ Added bagof/3.  Also added helper predicates: internal:bagof_results/3, internal:bagof_match/3.
+
 
 JScriptLog 0.4.alpha
 ====================

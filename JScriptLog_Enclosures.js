@@ -258,6 +258,57 @@ function getBoundEnclosure(encl)
  return et; 
 }
 
+// Return an array of unbound variable enclosures contained in the given encl
+function enumFinalVariableEnclosures(encl)
+{var encls_hash = new Hashtable();
+ var enclosures_hash = new Hashtable();
+ var encls = new Array();
+ var vars = new Array();
+ var e;
+ 
+ encl = getFinalEnclosure(encl);
+ encls.push(encl);
+
+ // find all final variable terms
+ while ((e = encls.pop()) != undefined)
+ {
+  if (hashGet(encls_hash,e) == undefined)
+  {var vs = enumVariables(e.term);
+   var lencls = new Array();
+   var variables;
+   var i;
+
+   hashPut(encls_hash,e,e);
+
+   if ((variables = hashGet(enclosures_hash,e.enclosure)) == undefined)
+   {
+    variables = new Array(e.enclosure.length);
+	hashPut(enclosures_hash,e.enclosure,variables);
+   }
+
+   for (i = 0; i < vs.length; i++)
+   {var idx = vs[i].children[0];
+   
+    if (variables[idx] == undefined)
+	{
+     if (e.enclosure[idx] == undefined)
+	  vars[vars.length] = newSubtermEnclosure(e.enclosure,vs[i]);
+	 else
+	  lencls.push(getFinalEnclosure(e.enclosure[idx]));
+    
+	 variables[idx] = true;
+	}
+   }
+
+   // local lencls stack trasfered to encls stack to preserve find order for variables
+   while ((e = lencls.pop()) != undefined)
+    encls.push(e);
+  }
+ }
+
+ return vars;
+}
+
 // encl is the enclosure to bind the value enclosure to
 // returns true if the value was bound, false otherwise
 function setEnclosureBinding(encl,value)

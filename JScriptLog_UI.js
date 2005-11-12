@@ -40,22 +40,6 @@ function jslog_ui_consult()
   
  // BUILTINS
  
- // member(X,[X|_]).
- // member(X,[_|Xs]) :- member(X,Xs).
- {
-  addRuleSet(jslog_kb,new RuleSet('member',2,false));
- 
-  addRule(jslog_kb,newRule(
-	t = newAtom('member',[newVariable('X'),newListPair(newVariable('X'),newVariable('_'))])),
-	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
-  addRule(jslog_kb,newRule(
-    t = newRuleTerm(
-		newAtom('member',[newVariable('X'),newListPair(newVariable('_'),newVariable('Xs'))]),
-		newAtom('member',[newVariable('X'),newVariable('Xs')]))),
-	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
- }
  // writeln(O) :- write(O), nl.
  {
   addRuleSet(jslog_kb,new RuleSet('writeln',1,false));
@@ -76,6 +60,55 @@ function jslog_ui_consult()
 		newAtom('assert',[newVariable('X')]),
 		newAtom('assertz',[newVariable('X')]))),
 	true);
+
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // ground(X) :- internal:term_variables(X,[]).
+ {
+  addRuleSet(jslog_kb,new RuleSet('ground',1,false));
+
+  addRule(jslog_kb,newRule(
+	t = newRuleTerm(
+		newAtom('ground',[newVariable('X')]),
+		newAtom('internal:term_variables',[newVariable('X'),newListNull()]))),
+	true);
+
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // term_variables(X,V) :- internal:term_variables(X,V).
+ {
+  addRuleSet(jslog_kb,new RuleSet('term_variables',2,false));
+
+  addRule(jslog_kb,newRule(
+	t = newRuleTerm(
+		newAtom('term_variables',[newVariable('X'),newVariable('V')]),
+		newAtom('internal:term_variables',[newVariable('X'),newVariable('V')]))),
+	true);
+
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // member(X,Xs) :- internal:member(X,Xs).
+ {
+  addRuleSet(jslog_kb,new RuleSet('member',2,false));
+
+  addRule(jslog_kb,newRule(
+	t = newRuleTerm(
+		newAtom('member',[newVariable('X'),newVariable('Xs')]),
+		newAtom('internal:member',[newVariable('X'),newVariable('Xs')]))),
+	true);
+
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // append(X,Y,Z) :- internal:append(X,Y,Z).
+ {
+  addRuleSet(jslog_kb,new RuleSet('append',3,false));
+
+  addRule(jslog_kb,newRule(
+	t = newRuleTerm(
+		newAtom('append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
+		newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]))),
+	true);
+
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
  // :- dynamic(p/2).
@@ -188,6 +221,23 @@ function jslog_ui_consult()
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
+ // f/2 : testing facts.
+ {
+  addRuleSet(jslog_kb,new RuleSet('f',2,false));
+ 
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(1),newNumber(1)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(1),newNumber(2)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(2),newNumber(1)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(2),newNumber(2)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(3),newNumber(1)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(4),newNumber(2)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
 
  try
  {
@@ -262,12 +312,23 @@ function jslog_ui_init_query()
  q[i++] = newAtom('compound',[newConstant('abc')]);
  q[i++] = newAtom('compound',[newNumber(42)]);
  q[i++] = newAtom('compound',[newAtom('abc',[newVariable('X')])]);
+
+ q[i++] = newAtom('ground',[newAtom('abc',[newVariable('X')])]);
+ q[i++] = newAtom('ground',[newAtom('abc',[newConstant('abc')])]);
+
+ q[i++] = newAtom('term_variables',[newAtom('a',[newVariable('X'),newConstant('b'),
+					newAtom('c',[newVariable('X'),newVariable('Y')])]),newVariable('L')]);
+ q[i++] = newConsPairsFromTerms([newAtom('=',[newVariable('A'),newAtom('a',[newVariable('X'),newVariable('Y'),newVariable('Z')])]),
+			newAtom('=',[newVariable('A'),newAtom('a',[newConstant('b'),newAtom('c',[newVariable('B'),newVariable('Z')]),newVariable('B')])]),
+			newAtom('term_variables',[newVariable('A'),newVariable('L')])]);
+ 
  q[i++] = newAtom(';',[newConstant('fail'),newConstant('true')]);
  q[i++] = newAtom('selectq',[newVariable('X'),newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),newConstant('d')]),newVariable('Y')]);
  q[i++] = newAtom('range',[newNumber(1),newNumber(4),newVariable('X')]);
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(3),newListFromTerms([newNumber(1),newNumber(4),newNumber(2)])])]);
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(1)])])]);
  q[i++] = newAtom('\\+',[newAtom('attack',[newNumber(4),newListFromTerms([newNumber(3),newNumber(1)])])]);
+ q[i++] = newAtom('arg',[newNumber(2),newAtom('a',[newConstant('a'),newConstant('b'),newConstant('c')]),newVariable('T')]);
  q[i++] = newConsPair(newAtom('=..',[newAtom('p',[newConstant('a'),newConstant('b'),newConstant('c')]),newVariable('L')]),
 					  newAtom('=..',[newVariable('X'),newVariable('L')]));
  q[i++] = newAtom('=..',[newNumber(4),newVariable('L')]);
@@ -353,6 +414,9 @@ function jslog_ui_init_query()
  q[i++] = newAtom('findall',[newVariable('X'),
 			newAtom('queens',[newNumber(4),newVariable('X')]),
 			newVariable('L')]);
+ q[i++] = newAtom('bagof',[newVariable('X'),
+			newAtom('f',[newVariable('X'),newVariable('Y')]),
+			newVariable('L')]);
  q[i++] = newAtom('assertz',[newRuleTerm(
 			newAtom('p',[newVariable('X'),newVariable('Y')]),
 			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
@@ -360,6 +424,9 @@ function jslog_ui_init_query()
  q[i++] = newAtom('asserta',[newAtom('p',[newNumber(4),newVariable('X')])]);
  q[i++] = newAtom('p',[newVariable('X'),newVariable('Y')]);
  q[i++] = newAtom('retract',[newAtom('p',[newVariable('X'),newVariable('Y')])]);
+ q[i++] = newAtom('internal:call',[newAtom('f',[newVariable('X')]),newListPair(newVariable('Y'),newListNull())]);
+ q[i++] = newAtom('internal:append',[newListFromTerms([newConstant('a'),newConstant('b')]),
+				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);
  
  for (i = 0; i < q.length; i++)
  {

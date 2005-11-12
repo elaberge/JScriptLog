@@ -236,6 +236,24 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // bagof(T,G,L) :- internal:term_variables(T,Tv), internal:term_variables(G,Gv),
+ //				internal:selectlist(internal:inlist(Tv,_),Gv,_,Dv), findall(T-Dv,G,M), 
+ //				internal:bagof_results(M,Dv,L).
+ {
+  ruleset = new RuleSet('bagof',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('bagof',[newVariable('T'),newVariable('G'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('internal:term_variables',[newVariable('T'),newVariable('Tv')]),
+			newAtom('internal:term_variables',[newVariable('G'),newVariable('Gv')]),
+			newAtom('internal:selectlist',[newAtom('internal:inlist',[newVariable('Tv')]),
+						newVariable('Gv'),newVariable('_'),newVariable('Dv')]),
+			newAtom('findall',[newAtom('-',[newVariable('T'),newVariable('Dv')]),newVariable('G'),newVariable('M')]),
+			newAtom('internal:bagof_results',[newVariable('M'),newVariable('Dv'),newVariable('L')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
  // is/2 : eval function
  {
   ruleset = new RuleSet('is',2,false);
@@ -336,6 +354,15 @@ function KB()
 		newAtom('\\+',[newAtom('==',[newVariable('X'),newVariable('Y')])]))));
  
   addRuleSet(this,ruleset);
+ }
+ // arg/3 : Nth arg term of atom
+ {
+  ruleset = new RuleSet('arg',3,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('arg',[newVariable('N'),newVariable('A'),newVariable('T')]),arg_fn));
+ 
+  addRuleSet(this,ruleset);  
  }
  // =../2 : atom to list
  {
@@ -707,6 +734,16 @@ function KB()
    
   addRuleSet(this,ruleset);
  }
+ // internal:term_variables/2 return list of unbound variables in given term
+ // internal:term_variables(T,V).  V is a list of variables in T.
+ {
+  ruleset = new RuleSet('internal:term_variables',2,false);
+  
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:term_variables',[newVariable('T'),newVariable('V')]),internal_term_variables_fn));
+   
+  addRuleSet(this,ruleset);
+ }
  // internal:findall(T,G,M) :- call(G), copy_term(T,U), internal:atom_append!(M,U), fail.
  // internal:findall(_,_,_) :- !.
  {
@@ -725,6 +762,38 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // internal:bagof_results(M,Dv,L) :- M = [_-G|_], 
+ //				internal:convlist(internal:bagof_match(G),M,Ls,Rs), !, 
+ //				(L = Ls, Dv = G ; internal:bagof_results(Rs,Dv,L)).
+ {
+  ruleset = new RuleSet('internal:bagof_results',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:bagof_results',[newVariable('M'),newVariable('Dv'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('=',[newVariable('M'),
+				newListPair(newAtom('-',[newVariable('_'),newVariable('G')]),newVariable('_'))]),
+			newAtom('internal:convlist',[newAtom('internal:bagof_match',[newVariable('G')]),
+				newVariable('M'),newVariable('Ls'),newVariable('Rs')]),
+			newConstant('!'),
+			newOrPair(
+				newConsPair(newAtom('=',[newVariable('L'),newVariable('Ls')]),
+						newAtom('=',[newVariable('Dv'),newVariable('G')])),
+				newAtom('internal:bagof_results',[newVariable('Rs'),newVariable('Dv'),newVariable('L')]))]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:bagof_match(G,T-D,T) :- G == D.
+ {
+  ruleset = new RuleSet('internal:bagof_match',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:bagof_match',[newVariable('G'),
+				newAtom('-',[newVariable('T'),newVariable('D')]),newVariable('T')]),
+		newAtom('==',[newVariable('G'),newVariable('D')]))));
+ 
+  addRuleSet(this,ruleset);
+ } 
  // internal:if(G,T,_,V) :- call(G), internal:atom_setarg!(1,V,true), call(T).
  // internal:if(_,_,F,test(fail)) :- call(F).
  {
@@ -742,6 +811,119 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // internal:selectlist(_,[],[],[]) :- !.
+ // internal:selectlist(P,[L|Ls],[L|Os],Rs) :- internal:call(P,[L]), !, internal:selectlist(P,Ls,Os,Rs). 
+ // internal:selectlist(P,[L|Ls],Os,[L|Rs]) :- internal:selectlist(P,Ls,Os,Rs). 
+ {
+  ruleset = new RuleSet('internal:selectlist',4,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:selectlist',[newVariable('_'),newListNull(),newListNull(),newListNull()]),
+				newConstant('!'))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:selectlist',[newVariable('P'),
+				newListPair(newVariable('L'),newVariable('Ls')),
+				newListPair(newVariable('L'),newVariable('Os')),
+				newVariable('Rs')]),
+		newConsPairsFromTerms([
+			newAtom('internal:call',[newVariable('P'),newListPair(newVariable('L'),newListNull())]),
+			newConstant('!'),
+			newAtom('internal:selectlist',
+				[newVariable('P'),newVariable('Ls'),newVariable('Os'),newVariable('Rs')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:selectlist',[newVariable('P'),
+				newListPair(newVariable('L'),newVariable('Ls')),
+				newVariable('Os'),
+				newListPair(newVariable('L'),newVariable('Rs'))]),
+		newConsPairsFromTerms([
+			newAtom('internal:selectlist',
+				[newVariable('P'),newVariable('Ls'),newVariable('Os'),newVariable('Rs')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:convlist(_,[],[],[]) :- !.
+ // internal:convlist(P,[L|Ls],[O|Os],Rs) :- internal:call(P,[L,O]), !, internal:convlist(P,Ls,Os,Rs). 
+ // internal:convlist(P,[L|Ls],Os,[L|Rs]) :- internal:convlist(P,Ls,Os,Rs). 
+ {
+  ruleset = new RuleSet('internal:convlist',4,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:convlist',[newVariable('_'),newListNull(),newListNull(),newListNull()]),
+				newConstant('!'))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:convlist',[newVariable('P'),
+				newListPair(newVariable('L'),newVariable('Ls')),
+				newListPair(newVariable('O'),newVariable('Os')),
+				newVariable('Rs')]),
+		newConsPairsFromTerms([
+			newAtom('internal:call',[newVariable('P'),newListFromTerms([newVariable('L'),newVariable('O')])]),
+			newConstant('!'),
+			newAtom('internal:convlist',
+				[newVariable('P'),newVariable('Ls'),newVariable('Os'),newVariable('Rs')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:convlist',[newVariable('P'),
+				newListPair(newVariable('L'),newVariable('Ls')),
+				newVariable('Os'),
+				newListPair(newVariable('L'),newVariable('Rs'))]),
+		newConsPairsFromTerms([
+			newAtom('internal:convlist',
+				[newVariable('P'),newVariable('Ls'),newVariable('Os'),newVariable('Rs')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:member(E,[E|_]).
+ // internal:member(E,[_|Es]) :- internal:member(E,Es).
+ {
+  ruleset = new RuleSet('internal:member',2,false);
+
+  ruleset.rules.push(newRule(
+		newAtom('internal:member',[newVariable('E'),newListPair(newVariable('E'),newVariable('_'))])));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:member',[newVariable('E'),newListPair(newVariable('_'),newVariable('Es'))]),
+		newAtom('internal:member',[newVariable('E'),newVariable('Es')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:append([],L,L).
+ // internal:append([E|Es],Ls,[E|Rs]) :- internal:append(Es,Ls,Rs).
+ {
+  ruleset = new RuleSet('internal:append',3,false);
+
+  ruleset.rules.push(newRule(
+		newAtom('internal:append',[newListNull(),newVariable('L'),newVariable('L')])));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:append',[newListPair(newVariable('E'),newVariable('Es')),newVariable('Ls'),newListPair(newVariable('E'),newVariable('Rs'))]),
+		newAtom('internal:append',[newVariable('Es'),newVariable('Ls'),newVariable('Rs')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:inlist(L,E) :- internal:member(X,L), E == X, !.
+ {
+  ruleset = new RuleSet('internal:inlist',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:inlist',[newVariable('L'),newVariable('E')]),
+		newConsPairsFromTerms([
+			newAtom('internal:member',[newVariable('X'),newVariable('L')]),
+			newAtom('==',[newVariable('E'),newVariable('X')]),
+			newConstant('!')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:call(P,As) :- P =.. Q, internal:append(Q,As,S), T =.. S, call(T).
+ {
+  ruleset = new RuleSet('internal:call',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:call',[newVariable('P'),newVariable('As')]),
+		newConsPairsFromTerms([
+			newAtom('=..',[newVariable('P'),newVariable('Q')]),
+			newAtom('internal:append',[newVariable('Q'),newVariable('As'),newVariable('S')]),
+			newAtom('=..',[newVariable('T'),newVariable('S')]),
+			newAtom('call',[newVariable('T')])]))));
+ 
+  addRuleSet(this,ruleset);
+ } 
 
  return this;
 }
@@ -1185,6 +1367,34 @@ function identical_fn(goal)
  return jslog_identical(lhs,rhs); 
 }
 
+function arg_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var idx = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[2]);
+
+ if (isNumber(idx.term) && (Math.round(idx.term.name) == idx.term.name))
+ {var i = idx.term.name - 1;
+ 
+  if (isAtom(lhs.term))
+  {
+   if (i >= 0 && i < lhs.term.children.length) 
+   {var t = getFinalEnclosure(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
+   
+    return jslog_unify(rhs,t,goal.bindings);  
+   }	
+   else
+    throw new Error("Index out of bounds in arg/3.");
+  }
+  else
+   throw new Error("Expected atom in arg/3.");
+ }
+ else
+  throw new Error("Expected integer in arg/3.");
+
+ return false; 
+}
+
 function atom_to_list_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
@@ -1258,6 +1468,30 @@ function internal_copy_term_fn(goal)
  var term = newDuplicateTermFromEnclosure(lhs);
 
  return jslog_unify(newTermEnclosure(term),rhs,goal.bindings);
+}
+
+function internal_term_variables_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ var vencls = enumFinalVariableEnclosures(lhs);
+ var vlist;
+ var result;
+ var i;
+
+ vlist = newListNull();
+ 
+ for (i = vencls.length - 1; i >= 0; i--)
+ {var v = newVariable('_');
+ 
+  v.children[0] = i;
+  
+  vlist = newListPair(v,vlist);
+ }
+
+ result = newSubtermEnclosure(vencls,vlist);
+ 
+ return jslog_unify(result,rhs,goal.bindings);
 }
 
 function internal_assert_fn(append,goal)

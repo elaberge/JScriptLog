@@ -297,3 +297,35 @@ function getTermArrayFromBinaryTerm(term,eval_fn)
  return terms;
 }
 
+// Return array of variables in given term
+function enumVariables(term)
+{var vars = new Array();
+ var terms_hash = new Hashtable();
+ var terms = new Array();
+ var t;
+ 
+ terms.push(term);
+
+ // find all variables
+ while ((t = terms.pop()) != undefined)
+ {
+  if (hashGet(terms_hash,t) == undefined)
+  {
+   hashPut(terms_hash,t,t);
+
+   if (isVariable(t))
+   {
+    vars[vars.length] = t;
+   }
+   else
+   {var i;
+  
+    for (i = t.children.length - 1; i >= 0; i--)
+	 terms.push(t.children[i]);
+   }
+  } 
+ }
+ 
+ return vars;
+}
+
