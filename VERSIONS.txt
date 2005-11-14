@@ -19,6 +19,13 @@ Thanks to Jeff Thompson for catching this bug!
 
 ¥ Added bagof/3.  Also added helper predicates: internal:bagof_results/3, internal:bagof_match/3.
 
+¥ Added setof/3.  Also added helper predicates: internal:merge_sort/2, internal:singleton/2, internal:length/2, internal:merge_lists/2, internal:merge_all_pairs/2, internal:merge_pair/3.
+
+¥ Added comparison operators: @</2, @=</2, @>/2, @>=/2.  Also added internal:compare/3, and comparison method jslog_compare in  JScriptLog_Unify.
+
+¥ Removed jslog_identical.  Use jslog_compare instead.
+
+
 
 JScriptLog 0.4.alpha
 ====================

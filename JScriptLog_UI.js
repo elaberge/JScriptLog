@@ -221,6 +221,7 @@ function jslog_ui_consult()
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
+ 
  // f/2 : testing facts.
  {
   addRuleSet(jslog_kb,new RuleSet('f',2,false));
@@ -236,6 +237,30 @@ function jslog_ui_consult()
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(3),newNumber(1)])),true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(4),newNumber(2)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(3),newNumber(1)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(4),newNumber(2)])),true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // throw_long(0) :- throw(err('test throw').  
+ // throw_long(N) :- N1 is N - 1, throw_long(N1). 
+ {
+  addRuleSet(jslog_kb,new RuleSet('throw_long',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('throw_long',[newNumber(0)]),
+		newAtom('throw',[newAtom('err',[newConstant('test throw')])]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('throw_long',[newVariable('N')]),
+		newConsPair(
+			newAtom('is',[newAtom('+',[newVariable('N'),newNumber(1)])]),
+			newAtom('throw_long',[newVariable('N1')])))),
+	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
 
@@ -406,6 +431,19 @@ function jslog_ui_init_query()
 			newAtom('=',[newVariable('N'),newAtom('p',[newConstant('a'),newVariable('Y'),newVariable('B')])]),
 			newAtom('=',[newVariable('M'),newVariable('N')]),
 			newAtom('==',[newVariable('M'),newVariable('N')])]); */
+ q[i++] = newAtom('@<',[newVariable('X'),newNumber(2)]);
+ q[i++] = newAtom('@>=',[newVariable('X'),newNumber(2)]);
+ q[i++] = newAtom('@>',[newConstant('a'),newNumber(1)]);
+ q[i++] = newAtom('@=<',[newConstant('a'),newNumber(1)]);
+ q[i++] = newAtom('@<',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
+				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)])]);
+ q[i++] = newAtom('@>',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
+				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)])]);
+ q[i++] = newAtom('@=<',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
+				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)])]);
+ q[i++] = newAtom('@>=',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
+				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)])]);
+
  q[i++] = newAtom('findall',[newVariable('T'),
 			newAtom('member',[newVariable('T'),
 				newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
@@ -415,8 +453,9 @@ function jslog_ui_init_query()
 			newAtom('queens',[newNumber(4),newVariable('X')]),
 			newVariable('L')]);
  q[i++] = newAtom('bagof',[newVariable('X'),
-			newAtom('f',[newVariable('X'),newVariable('Y')]),
-			newVariable('L')]);
+			newAtom('f',[newVariable('X'),newVariable('Y')]),newVariable('L')]);
+ q[i++] = newAtom('setof',[newVariable('X'),
+			newAtom('f',[newVariable('X'),newVariable('Y')]),newVariable('L')]);
  q[i++] = newAtom('assertz',[newRuleTerm(
 			newAtom('p',[newVariable('X'),newVariable('Y')]),
 			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
@@ -427,6 +466,21 @@ function jslog_ui_init_query()
  q[i++] = newAtom('internal:call',[newAtom('f',[newVariable('X')]),newListPair(newVariable('Y'),newListNull())]);
  q[i++] = newAtom('internal:append',[newListFromTerms([newConstant('a'),newConstant('b')]),
 				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);
+ q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
+				newConstant('b'),newNumber(2),newConstant('a'),newNumber(1),newNumber(2),
+				newVariable('X'),newVariable('Y'),newVariable('X'),newAtom('a',[newVariable('X'),newNumber(2)]),
+				newAtom('a',[newVariable('X'),newNumber(1)])]),newVariable('Z')]);
+ q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
+				newNumber(3),newNumber(2),newNumber(4),newNumber(1),newNumber(2)]),newVariable('Z')]);
+ q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
+				newConstant('c'),newConstant('d'),newConstant('a'),newConstant('c'),newConstant('b')]),newVariable('Z')]);
+ q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
+				newConstant('c'),newNumber(3),newConstant('c'),newNumber(2),newNumber(4),newConstant('d'),
+				newConstant('a'),newNumber(1),newConstant('b'),newNumber(2)]),newVariable('Z')]);
+ q[i++] = newAtom('internal:compare',[newVariable('X'),newNumber(2),newVariable('Z')]);
+ q[i++] = newAtom('internal:compare',[newConstant('a'),newNumber(1),newVariable('Z')]);
+ q[i++] = newAtom('internal:compare',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
+				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),newVariable('Z')]);
  
  for (i = 0; i < q.length; i++)
  {
