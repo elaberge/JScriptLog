@@ -128,6 +128,15 @@ function is_fn(goal)
  return jslog_unify(lhs,newBlankEnclosure(0,x),goal.bindings);
 }
 
+function throw_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var term = newDuplicateTermFromEnclosure(lhs);
+
+ throw new Exception(newTermEnclosure(term));
+ return false;
+}
+
 function isvar_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));

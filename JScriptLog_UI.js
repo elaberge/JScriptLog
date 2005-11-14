@@ -258,7 +258,7 @@ function jslog_ui_consult()
     t = newRuleTerm(
 		newAtom('throw_long',[newVariable('N')]),
 		newConsPair(
-			newAtom('is',[newAtom('+',[newVariable('N'),newNumber(1)])]),
+			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
 			newAtom('throw_long',[newVariable('N1')])))),
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
@@ -481,6 +481,11 @@ function jslog_ui_init_query()
  q[i++] = newAtom('internal:compare',[newConstant('a'),newNumber(1),newVariable('Z')]);
  q[i++] = newAtom('internal:compare',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
 				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),newVariable('Z')]);
+ q[i++] = newAtom('throw_long',[newNumber(10)]);
+ q[i++] = newAtom('throw',[newAtom('err',[newConstant('exception'),newVariable('X'),newNumber(1)])]);
+ q[i++] = newConstant('halt');
+ q[i++] = newAtom('halt',[newNumber(-1)]);
+ q[i++] = newAtom('halt',[newConstant('a')]);
  
  for (i = 0; i < q.length; i++)
  {

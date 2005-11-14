@@ -25,6 +25,11 @@ Thanks to Jeff Thompson for catching this bug!
 
 ¥ Removed jslog_identical.  Use jslog_compare instead.
 
+¥ Added Exception class.
+
+¥ Added halt/0 and halt/1 predicates.
+
+¥ Added throw/1 predicate (NOTE: there is no way to catch the exception within Prolog, yet).
 
 
 JScriptLog 0.4.alpha

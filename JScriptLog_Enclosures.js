@@ -42,6 +42,15 @@ function Binding(enclosure,index)
  return this;
 }
 
+function Exception(encl)
+{
+ this.encl = encl;
+ 
+ this.toString = function() { return "Exception - " + jslog_toString(this.encl); };
+ 
+ return this;
+}
+
 // Creates an enclosure of size for existing term
 function newBlankEnclosure(size,term)
 {

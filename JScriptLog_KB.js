@@ -107,6 +107,38 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // throw/1 : throw function
+ {
+  ruleset = new RuleSet('throw',1,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('throw',[newVariable('E')]),throw_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // halt :- throw(0).
+ {
+  ruleset = new RuleSet('halt',0,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newConstant('halt'),
+		newAtom('throw',[newNumber(0)]))));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // halt(N) :- I is integer(N), throw(E).
+ {
+  ruleset = new RuleSet('halt',1,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('halt',[newVariable('N')]),
+		newConsPair(
+			newAtom('is',[newVariable('I'),newAtom('integer',[newVariable('N')])]),
+			newAtom('throw',[newVariable('I')])))));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ 
  // var/1 : isvar function
  {
   ruleset = new RuleSet('var',1,false);
