@@ -38,7 +38,7 @@ function jslog_Evaluate(kb,encl)
     toeval = getBoundEnclosure(toeval);
 
     if (toeval == null)
-     throw new Error("Unbound variable in evaluated expression.");
+     throw newErrorException("Unbound variable in evaluated expression.");
    }
   
    var eval_fn = jslog_Evaluate_Function(kb,toeval.term);
@@ -60,7 +60,7 @@ function jslog_Evaluate(kb,encl)
  };
 
  if (value_terms.length != 1)
-  throw new Error("Expression did not evaluate to single value.");
+  throw newErrorException("Expression did not evaluate to single value.");
   
  return value_terms.pop();
 }

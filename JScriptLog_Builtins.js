@@ -26,15 +26,152 @@ function true_try_fn(goal,frontier,explored)
  return true;
 }
 
-// FIX: Handle case where term is a rule.
-function retract_try_fn(goal,frontier,explored)
+function internal_current_predicate_try_fn(goal,frontier,explored)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ var name;
+ var arity;
 
- goal.subgoal = newAtomGoal(lhs,goal,goal.kb);
- goal.subgoal.kb = goal.kb;
- goal.subgoal.rule_index = 0;
+ goal.bindings = new Array();
+ goal.ruleset_keys = undefined;
+
+ // test for name/arity structure
+ {var namearity = newTermEnclosure(newAtom('/',[newVariable('N'),newVariable('A')]));
+
+  if (!jslog_unify(lhs,namearity,goal.bindings))
+   throw newErrorException("Expected name/arity functor in internal:current_predicate/3.");
+ }
+
+ // do not use name or arity after calling internal_current_predicate_*_test
+ {var nlhs = getFinalEnclosure(lhs);
  
+  name = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[0]));
+  arity = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[1]));
+ }
+
+ if (isConstant(name.term) && isInteger(arity.term))
+ {var ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,arity.term.name);
+
+  if (internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset))
+  {
+   explored.push(goal);
+   return true;
+  }
+  else
+  {
+   undoGoalBindings(goal);
+   frontier.push(goal);
+   return false;
+  }
+ }
+ else if ((isConstant(name.term) || isVariable(name.term)) && 
+			(isInteger(arity.term) || isVariable(arity.term)))
+ {var property;
+  var ruleset_keys = new Array();
+
+  for (property in goal.kb.rulesets)
+   ruleset_keys[ruleset_keys.length] = property;
+
+  goal.ruleset_keys = ruleset_keys;
+  goal.ruleset_keys_index = 0;
+  
+  if (internal_current_predicate_test(lhs,rhs,rref,goal))
+  {
+   explored.push(goal);
+   return true;
+  }
+  else
+  {
+   undoGoalBindings(goal);
+   frontier.push(goal);
+   return false;
+  }
+ }
+ else
+  throw newErrorException("Expected name/arity functor in internal:current_predicate/3.");
+}
+
+// helper for internal_current_predicate_*_fn
+// assumes that name/arity of ruleset is already unified to first argument.
+// removes all goal bindings on failure.
+function internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset)
+{var rset = newTermEnclosure(newObjectReference(ruleset));
+ var dyn;
+  
+ if (ruleset == undefined)
+ {
+  removeBindings(goal.bindings);
+  return false;
+ }
+
+ if (isDynamicRuleSet(ruleset))
+  isdyn = newTermEnclosure(newConstant('true'));
+ else
+  isdyn = newTermEnclosure(newConstant('fail'));
+
+ if (jslog_unify(rhs,isdyn,goal.bindings) && jslog_unify(rref,rset,goal.bindings))
+ { 
+  return true;
+ }
+ else
+ {
+  removeBindings(goal.bindings);
+  return false;
+ }
+}
+
+// helper for internal_current_predicate_*_fn
+// assumes goal.ruleset_keys is set to an array of name/arity keys for rulesets.
+// assumes that goal.ruleset_keys_index is equal to the next ruleset key to try. 
+// removes all goal bindings on failure. sets goal.ruleset_keys = undefined on failure.
+function internal_current_predicate_test(lhs,rhs,rref,goal)
+{
+ for (; goal.ruleset_keys_index < goal.ruleset_keys.length; goal.ruleset_keys_index++)
+ {var rulekey = goal.ruleset_keys[goal.ruleset_keys_index];
+  var slashidx = rulekey.lastIndexOf('/');
+  var name = rulekey.substring(0,slashidx);
+  var arity = parseInt(rulekey.substring(slashidx+1));
+  var ruleset = getRuleSetFromNameArity(goal.kb,name,arity);
+  var namearity = newTermEnclosure(newAtom('/',[newConstant(name),newNumber(arity)]));
+
+  if (!jslog_unify(lhs,namearity,goal.bindings))
+   removeBindings(goal.bindings);
+  else if (internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset))
+   return true;
+ }
+ 
+ goal.ruleset_keys = undefined;
+ return false;
+}
+
+
+function internal_clause_try_fn(goal,frontier,explored)
+{var encl = getFinalEnclosure(goal.encl);
+ var head = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var body = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ var idx = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
+ var ruleset;
+
+ // find ruleset
+ if (isObjectReference(rref.term) && (isAtom(head.term) || isVariable(head.term)))
+  goal.subgoal = newAtomGoalFromRuleSet(head,goal,rref.term.name,goal.kb);
+ else if (isAtom(head.term))
+  goal.subgoal = newAtomGoal(head,goal,goal.kb);
+ else
+  throw newErrorException("Expected head atom or a ruleset object reference in internal:clause/5.");
+
+ if (isVariable(idx.term))
+  goal.subgoal.rule_index = 0;
+ else if (isInteger(idx.term))
+  goal.subgoal.rule_index = idx.term.name;
+ else
+  throw newErrorException("Expected variable or integer for rule index in internal:clause/5.");
+
+ goal.subgoal.kb = goal.kb;
+
  if (goal.subgoal.ruleset == undefined)
  {
   frontier.push(goal);
@@ -42,21 +179,50 @@ function retract_try_fn(goal,frontier,explored)
   return false;
  }
 
- var rule_body = nextUnifiedRuleBodyForGoal(goal.subgoal);
+ goal.bindings = new Array();
+
+ return internal_clause_test(body,rref,idx,goal,frontier,explored);
+}
+
+// helper for internal_clause_*_fn
+// removes all goal bindings on failure.
+function internal_clause_test(body,rref,idx,goal,frontier,explored)
+{var rule_body;
+
+ do
+ {
+  rule_body = nextUnifiedRuleBodyForGoal(goal.subgoal);
  
- if (rule_body != null)
+  if (rule_body != null)
+  {var rbody = getConsPairEnclosureFromEnclosureArray(rule_body);
+   var rset = newTermEnclosure(newObjectReference(goal.subgoal.ruleset));
+   var n = newTermEnclosure(newNumber(goal.subgoal.rule_index));
+
+   if (jslog_unify(body,rbody,goal.bindings) && jslog_unify(rref,rset,goal.bindings) && 
+		jslog_unify(idx,n,goal.bindings))
+   {
+    explored.push(goal);
+    return true;
+   }
+   else
+   {
+    removeBindings(goal.bindings);
+    undoGoalBindings(goal.subgoal);
+	goal.subgoal.rule_index++;
+   }
+  }
+ } while (rule_body != null && !isNumber(idx.term)) // one chance only if idx bound
+
+ // no rules matches
  {
-  removeRuleFromRuleSet(goal.subgoal.ruleset,goal.subgoal.rule_index);
-  explored.push(goal);
-  return true;
- }
- else // no rule matches
- {
+  undoGoalBindings(goal);
+  undoGoalBindings(goal.subgoal);
   frontier.push(goal);
   goal.subgoal = null;
   return false;
- } 
+ }
 }
+
 
 ///////////////////////////////////
 // *_retry_fn(goal,frontier,explored) is a traversal function called when attempting to prove
@@ -71,8 +237,6 @@ function cut_retry_fn(goal,frontier,explored)
 
  removeChildGoalsFromFrontier(goal.parent,frontier)
 
- undoGoalBindings(goal);
-
  while ((g = explored.pop()) != undefined)
  {
   undoGoalBindings(g);
@@ -86,28 +250,61 @@ function cut_retry_fn(goal,frontier,explored)
  return false;
 }
 
-// FIX: Handle case where term is a rule.
-function retract_retry_fn(goal,frontier,explored)
+function internal_current_predicate_retry_fn(goal,frontier,explored)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
- 
- undoGoalBindings(goal.subgoal);
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
 
- var rule_body = nextUnifiedRuleBodyForGoal(goal.subgoal);
- 
- if (rule_body != null)
+ if (goal.ruleset_keys == undefined)
  {
-  removeRuleFromRuleSet(goal.subgoal.ruleset,goal.subgoal.rule_index);
+  frontier.push(goal);
+  return false;
+ } 
+
+ goal.bindings = new Array();
+ goal.ruleset_keys_index++;
+
+ if (internal_current_predicate_test(lhs,rhs,rref,goal))
+ {
   explored.push(goal);
   return true;
  }
- else // no rule matches
+ else
+ {
+  undoGoalBindings(goal);
+  frontier.push(goal);
+  return false;
+ }
+}
+
+function internal_clause_retry_fn(goal,frontier,explored)
+{var encl = getFinalEnclosure(goal.encl);
+ var body = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ var idx = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
+ var doinc = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[4]));
+ 
+ undoGoalBindings(goal.subgoal);
+
+ // if idx was bound, there is no retry
+ if (isNumber(idx.term))
  {
   frontier.push(goal);
   goal.subgoal = null;
   return false;
- } 
+ }
+
+ goal.bindings = new Array();
+
+ if (isInteger(doinc.term))
+  goal.subgoal.rule_index += doinc.term.name;
+ else
+  goal.subgoal.rule_index++;
+
+ return internal_clause_test(body,rref,idx,goal,frontier,explored);
 }
+
 
 ///////////////////////////////////
 // *_fn(goal) is a function called when attempting to prove goal.  
@@ -123,7 +320,7 @@ function is_fn(goal)
  x = jslog_Evaluate(goal.kb,rhs);
  
  if (!isNumber(x))
-  throw new Error("Expected RHS to evaluate to a number in operator: is/2");
+  throw newErrorException("Expected RHS to evaluate to a number in operator: is/2");
   
  return jslog_unify(lhs,newBlankEnclosure(0,x),goal.bindings);
 }
@@ -181,7 +378,7 @@ function isinteger_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
 
- return (isNumber(lhs.term) && (Math.round(lhs.term.name) == lhs.term.name));
+ return (isInteger(lhs.term));
 }
 
 function lt_fn(goal)
@@ -196,7 +393,7 @@ function lt_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name < y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: </2");
+  throw newErrorException("Expression evaluating to Number expected in operator: </2");
 }
 
 function lte_fn(goal)
@@ -211,7 +408,7 @@ function lte_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name <= y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: =</2");
+  throw newErrorException("Expression evaluating to Number expected in operator: =</2");
 }
 
 function gt_fn(goal)
@@ -226,7 +423,7 @@ function gt_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name > y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: >/2");
+  throw newErrorException("Expression evaluating to Number expected in operator: >/2");
 }
 
 function gte_fn(goal)
@@ -241,7 +438,7 @@ function gte_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name >= y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: >=/2"); 
+  throw newErrorException("Expression evaluating to Number expected in operator: >=/2"); 
 }
 
 function eq_fn(goal)
@@ -256,7 +453,7 @@ function eq_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name == y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: =:=/2"); 
+  throw newErrorException("Expression evaluating to Number expected in operator: =:=/2"); 
 }
 
 function neq_fn(goal)
@@ -271,7 +468,7 @@ function neq_fn(goal)
  if (isNumber(x) && isNumber(y))
   return x.name != y.name;
  else
-  throw new Error("Expression evaluating to Number expected in operator: =\=/2"); 
+  throw newErrorException("Expression evaluating to Number expected in operator: =\=/2"); 
 }
 
 function unify_fn(goal)
@@ -351,7 +548,7 @@ function arg_fn(goal)
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[2]);
 
- if (isNumber(idx.term) && (Math.round(idx.term.name) == idx.term.name))
+ if (isInteger(idx.term))
  {var i = idx.term.name - 1;
  
   if (isAtom(lhs.term))
@@ -362,13 +559,13 @@ function arg_fn(goal)
     return jslog_unify(rhs,t,goal.bindings);  
    }	
    else
-    throw new Error("Index out of bounds in arg/3.");
+    throw newErrorException("Index out of bounds in arg/3.");
   }
   else
-   throw new Error("Expected atom in arg/3.");
+   throw newErrorException("Expected atom in arg/3.");
  }
  else
-  throw new Error("Expected integer in arg/3.");
+  throw newErrorException("Expected integer in arg/3.");
 
  return false; 
 }
@@ -400,7 +597,7 @@ function atom_to_list_fn(goal)
    atom = newBlankEnclosure(0,newAtom(head.term.name,[]));
   }
   else
-   throw new Error("Expected constant value in =../2.");
+   throw newErrorException("Expected constant value in =../2.");
   
   do
   {
@@ -419,14 +616,14 @@ function atom_to_list_fn(goal)
    else if (isListNull(rhs.term))
     break;
    else
-    throw new Error("Expected list pair in =../2.");
+    throw newErrorException("Expected list pair in =../2.");
     
   } while (head != null);
 
   rhs = atom;
  }
  else
-  throw new Error("Expected valid instantiated value in =../2.");
+  throw newErrorException("Expected valid instantiated value in =../2.");
 
  return jslog_unify(lhs,rhs,goal.bindings); 
 }
@@ -480,7 +677,7 @@ function internal_assert_fn(append,goal)
  var ruleset = getRuleSet(goal.kb,term);
  
  if (!isDynamicRuleSet(ruleset))
-  throw new Error("Must declare rule dynamic to modify: "+getRuleNameArity(rule));
+  throw newErrorException("Must declare rule dynamic to modify: "+getRuleNameArity(rule));
     
  addRule(goal.kb,rule,append);
  
@@ -526,7 +723,7 @@ function internal_atom_append_fn(goal)
   lhs.enclosure[ei] = rhs;
  }
  else
-  throw new Error("Expected atom in internal:atom_append!/2.");
+  throw newErrorException("Expected atom in internal:atom_append!/2.");
 
  return true; 
 }
@@ -537,7 +734,7 @@ function internal_atom_setarg_fn(goal)
  var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
 
- if (isNumber(idx.term) && (Math.round(idx.term.name) == idx.term.name))
+ if (isInteger(idx.term))
  {var i = idx.term.name - 1;
  
   if (isAtom(lhs.term))
@@ -559,16 +756,34 @@ function internal_atom_setarg_fn(goal)
 	} 
    }	
    else
-    throw new Error("Index out of bounds in internal:atom_setarg!/3.");
+    throw newErrorException("Index out of bounds in internal:atom_setarg!/3.");
   }
   else
-   throw new Error("Expected atom in internal:atom_setarg!/3.");
+   throw newErrorException("Expected atom in internal:atom_setarg!/3.");
  }
  else
-  throw new Error("Expected integer in internal:atom_setarg!/3.");
+  throw newErrorException("Expected integer in internal:atom_setarg!/3.");
  
  return true; 
 }
+
+function internal_retract_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var ruleset;
+ 
+ if (!(isObjectReference(lhs.term) && lhs.term.name != undefined))
+  throw newErrorException("Expected ruleset object reference in internal:retract/2.");
+
+ if (!isInteger(rhs.term))
+  throw newErrorException("Expected integer rule index in internal:retract/2.");
+
+ removeRuleFromRuleSet(lhs.term.name,rhs.term.name);
+
+ return true;
+} 
+
 
 ///////////////////////////////////
 // *_eval_fn(values) is a function called when evaluating an expression.  
@@ -585,7 +800,7 @@ function positive_eval_fn(values)
 {var i = values.pop();
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
   
  values.push(i);
  return i;
@@ -596,7 +811,7 @@ function negative_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(-1 * i.name);
  values.push(result);
@@ -609,7 +824,7 @@ function plus_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name + j.name);   
  values.push(result);
@@ -622,7 +837,7 @@ function minus_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name - j.name);   
  values.push(result);
@@ -635,7 +850,7 @@ function multiply_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name * j.name);   
  values.push(result);
@@ -648,7 +863,7 @@ function divide_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name / j.name);   
  values.push(result);
@@ -662,7 +877,7 @@ function intdivide_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name / j.name); 
  values.push(result);
@@ -677,7 +892,7 @@ function mod_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(i.name % j.name);   
  values.push(result);
@@ -690,7 +905,7 @@ function pow_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(Math.pow(i.name,j.name));   
  values.push(result);
@@ -702,7 +917,7 @@ function exp_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.exp(i.name));
  values.push(result);
@@ -714,7 +929,7 @@ function log_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.log(i.name));
  values.push(result);
@@ -726,7 +941,7 @@ function sqrt_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.sqrt(i.name));
  values.push(result);
@@ -738,7 +953,7 @@ function abs_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.abs(i.name));
  values.push(result);
@@ -750,7 +965,7 @@ function sin_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.sin(i.name));
  values.push(result);
@@ -762,7 +977,7 @@ function cos_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.cos(i.name));
  values.push(result);
@@ -774,7 +989,7 @@ function tan_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.tan(i.name));
  values.push(result);
@@ -786,7 +1001,7 @@ function asin_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.asin(i.name));
  values.push(result);
@@ -798,7 +1013,7 @@ function acos_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.acos(i.name));
  values.push(result);
@@ -810,7 +1025,7 @@ function atan_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber(Math.atan(i.name));
  values.push(result);
@@ -823,7 +1038,7 @@ function atan2_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber(Math.atan2(i.name,j.name));   
  values.push(result);
@@ -835,7 +1050,7 @@ function trunc_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  if (i.name < 0)
   result = newNumber(-1 * Math.floor(Math.abs(i.name)));
@@ -851,7 +1066,7 @@ function floor_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  result = newNumber(Math.floor(i.name));
  values.push(result);
@@ -863,7 +1078,7 @@ function ceiling_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  result = newNumber(Math.ceil(i.name));
  values.push(result);
@@ -875,7 +1090,7 @@ function round_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  result = newNumber(Math.round(i.name));
  values.push(result);
@@ -887,7 +1102,7 @@ function sign_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  if (i.name > 0)
   result = newNumber(1);
@@ -906,7 +1121,7 @@ function fractional_part_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
 
  v = i.name;
 
@@ -926,7 +1141,7 @@ function bitwise_and_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber((i.name & j.name));   
  values.push(result);
@@ -939,7 +1154,7 @@ function bitwise_or_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber((i.name | j.name));   
  values.push(result);
@@ -952,7 +1167,7 @@ function bitwise_xor_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber((i.name ^ j.name));   
  values.push(result);
@@ -964,7 +1179,7 @@ function bitwise_negate_eval_fn(values)
  var result;
 
  if (i == undefined || !isNumber(i)) 
-  throw new Error("Expected Number value.");
+  throw newErrorException("Expected Number value.");
  
  result = newNumber((~ i.name));   
  values.push(result);
@@ -977,7 +1192,7 @@ function bitwise_lshift_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber((i.name << j.name));   
  values.push(result);
@@ -990,7 +1205,7 @@ function bitwise_rshift_eval_fn(values)
  var result;
 
  if (i == undefined || j == undefined || !isNumber(i) || !isNumber(j)) 
-  throw new Error("Expected Number values.");
+  throw newErrorException("Expected Number values.");
  
  result = newNumber((i.name >> j.name));   
  values.push(result);

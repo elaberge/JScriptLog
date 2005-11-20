@@ -64,6 +64,12 @@ function newSubtermEnclosure(encl,term)
  return new Enclosure(encl,term);
 }
 
+// Creates an Exception term from the given string
+function newErrorException(str)
+{
+ return new Exception(newBlankEnclosure(0,newAtom('Error',[newConstant(str)])));
+}
+
 // Creates a duplicate enclosure via a deep copy.  The terms in encl remain unchanged
 // but all enclosures in the enclosure tree are copied.
 function newDuplicateEnclosure(encl)
@@ -265,6 +271,22 @@ function getBoundEnclosure(encl)
    break;
 
  return et; 
+}
+
+// body is an ArrayEnclosure
+function getConsPairEnclosureFromEnclosureArray(body)
+{var bterm;
+ var i;
+
+ if (body.terms.length >= 1)
+  bterm = body.terms[body.terms.length - 1];
+ else
+  bterm = newConstant('true');
+  
+ for (i = body.terms.length - 2; i >= 0; i--)
+  bterm = newConsPair(body.terms[i],bterm);
+ 
+ return newSubtermEnclosure(body.enclosure,bterm);
 }
 
 // Return an array of unbound variable enclosures contained in the given encl

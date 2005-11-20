@@ -480,13 +480,49 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
- // FIX: build retract/1 from internal predicates which support both abolish/1 and clause/2.
- // retract/1
+ // retract(T) :- internal:rule(T,H,B), internal:clause(H,B,R,N,0), internal:retract(R,N).
  {
   ruleset = new RuleSet('retract',1,false);
 
-  ruleset.rules.push(newTraversalRule(newAtom('retract',[newVariable('A')]),
-		retract_try_fn,retract_retry_fn));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('retract',[newVariable('T')]),
+		newConsPairsFromTerms([
+			newAtom('internal:rule',[newVariable('T'),newVariable('H'),newVariable('B')]),
+			newAtom('internal:clause',[newVariable('H'),newVariable('B'),newVariable('R'),newVariable('N'),newNumber(0)]),
+			newAtom('internal:retract',[newVariable('R'),newVariable('N')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // clause(H,B) :- internal:clause(H,B,_,_,_).
+ {
+  ruleset = new RuleSet('clause',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('clause',[newVariable('H'),newVariable('B')]),
+		newAtom('internal:clause',[newVariable('H'),newVariable('B'),newVariable('_'),newVariable('_'),newVariable('_')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // abolish(F) :- internal:current_predicate(F,true,R), internal:clause(_,_,R,N,0), internal:retract(R,N).
+ {
+  ruleset = new RuleSet('abolish',1,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('abolish',[newVariable('F')]),
+		newConsPairsFromTerms([
+			newAtom('internal:current_predicate',[newVariable('F'),newConstant('true'),newVariable('R')]),
+			newAtom('internal:clause',[newVariable('_'),newVariable('_'),newVariable('R'),newVariable('N'),newNumber(0)]),
+			newAtom('internal:retract',[newVariable('R'),newVariable('N')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // current_predicate(F) :- internal:current_predicate(F,_,_).
+ {
+  ruleset = new RuleSet('current_predicate',1,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('current_predicate',[newVariable('F')]),
+		newAtom('internal:current_predicate',[newVariable('F'),newVariable('_'),newVariable('_')]))));
  
   addRuleSet(this,ruleset);
  }
@@ -561,14 +597,6 @@ function KB()
   ruleset = new RuleSet('//',2,false);
   
   setEvaluateFunctionForRuleSet(ruleset,intdivide_eval_fn);
-   
-  addRuleSet(this,ruleset);
- }
- // mod/2 eval function
- {
-  ruleset = new RuleSet('mod',2,false);
-  
-  setEvaluateFunctionForRuleSet(ruleset,mod_eval_fn);
    
   addRuleSet(this,ruleset);
  }
@@ -1037,6 +1065,54 @@ function KB()
  
   addRuleSet(this,ruleset);
  } 
+ // internal:current_predicate/3 enumerates available rules.
+ // internal:current_predicate(F,D,R) R is a rule reference for functor F (name/arity). D=true
+ // matches dynamic rules, D=fail matches static rules. Leave D unbound for any rule type.
+ {
+  ruleset = new RuleSet('internal:current_predicate',3,false);
+  
+  ruleset.rules.push(newTraversalRule(newAtom('internal:current_predicate',[
+				newVariable('F'),newVariable('D'),newVariable('R')]),
+				internal_current_predicate_try_fn,internal_current_predicate_retry_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:clause/5 enumerates clauses in ruleset.
+ // internal:clause(H,B,R,N,X) H is head of rule, B is body of rule (true for a fact), 
+ // R is a rule reference and N is the rule number for (H :- B).
+ // X is the increment counter on retries (defaults to 1 - use 0 for no increment)
+ {
+  ruleset = new RuleSet('internal:clause',5,false);
+  
+  ruleset.rules.push(newTraversalRule(newAtom('internal:clause',[
+				newVariable('H'),newVariable('B'),newVariable('R'),newVariable('N'),newVariable('X')]),
+				internal_clause_try_fn,internal_clause_retry_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:retract/2 retract rule of given rule reference and index number.
+ {
+  ruleset = new RuleSet('internal:retract',2,false);
+  
+  ruleset.rules.push(newFunctionRule(newAtom('internal:retract',[
+				newVariable('R'),newVariable('N')]),internal_retract_fn));
+   
+  addRuleSet(this,ruleset);
+ }
+ // internal:rule(:-(H,B),H,B) :- !.
+ // internal:rule(H,H,true) :- !.
+ {
+  ruleset = new RuleSet('internal:rule',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:rule',[newRuleTerm(newVariable('H'),newVariable('B')),newVariable('H'),newVariable('B')]),
+		newConstant('!'))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:rule',[newVariable('H'),newVariable('H'),newConstant('true')]),
+		newConstant('!'))));
+ 
+  addRuleSet(this,ruleset);
+ }
  // internal:merge_sort(L,S) :- internal:convlist(internal:singleton,L,M,[]), internal:merge_lists(M,N,S).
  {
   ruleset = new RuleSet('internal:merge_sort',2,false);
@@ -1171,7 +1247,7 @@ function newRule(term)
  {var t = term.children[0];
 
   if (!isAtom(t))
-   throw Error("Rule LHS must be atom.");
+   throw newErrorException("Rule LHS must be atom.");
   
   rule = new Rule(t.name,t.children.length,encl.enclosure,t);
   rule.body = getTermArrayFromBinaryTerm(term.children[1],isConsPair);
@@ -1183,7 +1259,7 @@ function newRule(term)
   return rule;
  }
  else
-  throw Error("Rule LHS must be atom.");
+  throw newErrorException("Rule LHS must be atom.");
 }
 
 function newFunctionRule(term,fn)
@@ -1191,7 +1267,7 @@ function newFunctionRule(term,fn)
  var rule;
   
  if (!isAtom(term))
-  throw Error("Rule LHS must be atom.");
+  throw newErrorException("Rule LHS must be atom.");
  
  rule = new Rule(term.name,term.children.length,encl.enclosure,encl.term);
  rule.body = null;
@@ -1205,7 +1281,7 @@ function newTraversalRule(term,try_fn,retry_fn)
  var rule;
   
  if (!isAtom(term))
-  throw Error("Rule LHS must be atom.");
+  throw newErrorException("Rule LHS must be atom.");
  
  rule = new Rule(term.name,term.children.length,encl.enclosure,encl.term);
  rule.body = null;
@@ -1249,7 +1325,7 @@ function addRule(kb,rule,append)
 {var ruleset;
 
  if ((ruleset = kb.rulesets[getRuleNameArity(rule)]) == null)
-  throw new Error("Must declare rule dynamic to add: "+getRuleNameArity(rule));
+  throw newErrorException("Must declare rule dynamic to add: "+getRuleNameArity(rule));
  
  if (append)
   ruleset.rules.push(rule);
@@ -1261,7 +1337,7 @@ function addRule(kb,rule,append)
 function removeRuleFromRuleSet(ruleset,index)
 {
  if (!isDynamicRuleSet(ruleset))
-  throw new Error("Must declare rule dynamic to remove: "+getRuleNameArity(ruleset));
+  throw newErrorException("Must declare rule dynamic to remove: "+getRuleNameArity(ruleset));
  
  ruleset.rules.splice(index,1);
 }
@@ -1270,6 +1346,12 @@ function removeRuleFromRuleSet(ruleset,index)
 function getRuleSet(kb,term)
 {
  return kb.rulesets[getTermNameArity(term)];
+}
+
+// Get ruleset for given name and arity.
+function getRuleSetFromNameArity(kb,name,arity)
+{
+ return kb.rulesets[getTermNameArityFromNameArity(name,arity)];
 }
 
 function getRuleNameArityFromTerm(term)

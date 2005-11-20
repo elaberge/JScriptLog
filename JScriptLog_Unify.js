@@ -174,7 +174,7 @@ function jslog_compare(encl1,encl2)
     if (lhs.term.name == rhs.term.name)
 	{// do nothing, object references are equal
 	}
-    if (lhs.term.name < rhs.term.name)
+    else if (lhs.term.name < rhs.term.name)
 	 return -1;
     else 
 	 return 1;
@@ -191,5 +191,5 @@ function jslog_compare(encl1,encl2)
  if (lhs_encls.length == 0 && rhs_encls.length == 0)
   return 0;
 
- throw new Error("Error comparing terms in jslog_compare.");
+ throw newErrorException("Error comparing terms in jslog_compare.");
 }

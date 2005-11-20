@@ -1,3 +1,27 @@
+JScriptLog 0.6.0.alpha
+====================
+
+¥ Added newErrorException method.  Changed new Error("") statements, to newErrorException("") -- (so these exceptions can be caught in catch/3).
+
+¥ Added isInteger and getTermArityFromNameArity convenience methods to JScriptLog_Types.js, updated isinteger_fn, arg_fn, and internal_atom_setarg_fn.
+
+¥ Added getRuleSetFromNameArity convenience method to the JScriptLog_KB.js file.
+
+¥ Added newAtomGoalFromRuleSet convenience method to JScriptLog_Goals.js file.
+
+¥ Added getConsPairEnclosureFromEnclosureArray convenience method to JScriptLog_Enclosures.js file.
+
+¥ Added clause/2, abolish/1, current_predicate/1.  Added support predicates: internal:current_predicate/3, internal:clause/5, internal:retract/2, and internal:rule/3.  Added try_fn and retry_fn traversal functions for internal:current_predicate/3, and internal:clause/5.  
+
+¥ Fixed retract/1 to support removing rules too.  Changed the traversal functions for retract/1 to a single function for internal:retract.
+
+¥ Removed duplicate call to undoGoalBindings for the goal in cut_retry_fn, since this should already be done in retryGoal.
+
+¥ Fixed jslog_compare to work correctly with object reference terms.  Affects internal:compare/3, ==/2, and the @*/2 comparison operators.
+
+¥ Removed duplicate mod/2 definition in KB (thanks Jeff!).
+
+
 JScriptLog 0.5.0.alpha
 ====================
 
@@ -24,6 +48,8 @@ Thanks to Jeff Thompson for catching this bug!
 ¥ Added comparison operators: @</2, @=</2, @>/2, @>=/2.  Also added internal:compare/3, and comparison method jslog_compare in  JScriptLog_Unify.
 
 ¥ Removed jslog_identical.  Use jslog_compare instead.
+
+¥ Split out *_fn functions from JScriptLog_KB.js into JScriptLog_Builtins.js file. 
 
 ¥ Added Exception class.
 

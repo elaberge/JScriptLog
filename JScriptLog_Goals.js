@@ -30,6 +30,8 @@ function Goal(type,encl,parent)
  // this.kb : the KB used to try the goal
  // this.ruleset :
  // this.rule_index : 
+ // this.ruleset_keys : array of 'name/arity' properties from kb.rulesets 
+ // this.ruleset_keys_index : 
  // this.fn : the goal function
  // this.try_fn : the try traversal function
  // this.retry_fn : the retry traversal function
@@ -63,6 +65,17 @@ function newAtomGoal(encl,parent,kb)
   goal.ruleset = encl.term.ruleset;
  else
   goal.ruleset = getRuleSet(kb,encl.term);
+  
+ return goal;
+}
+
+// isAtom(encl.term) or isVariable(encl.term) must be true
+function newAtomGoalFromRuleSet(encl,parent,ruleset,kb)
+{var goal = new Goal(TYPE_ATOM_GOAL,encl,parent);
+
+ goal.rule_index = 0;
+ 
+ goal.ruleset = ruleset;
   
  return goal;
 }
@@ -138,7 +151,7 @@ function tryGoal(goal,kb,frontier,explored)
 	 if (!isAtom(encl.term))
 	 {
 	  frontier.push(goal); 
-      throw new Error("Variable must be bound to atom.");
+      throw newErrorException("Variable must be bound to atom.");
      }
 	 
      if (encl.term.ruleset != null)
@@ -151,7 +164,7 @@ function tryGoal(goal,kb,frontier,explored)
      if (goal.ruleset == null)
 	 {
 	  frontier.push(goal);
-      throw new Error("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
+      throw newErrorException("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
      }
 
 	 goal.retry_fn = null;

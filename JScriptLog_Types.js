@@ -223,6 +223,11 @@ function isNumber(term)
  return (term.type == TYPE_NUMBER);
 }
 
+function isInteger(term)
+{
+ return (term.type == TYPE_NUMBER && (Math.round(term.name) == term.name));
+}
+
 function isVariable(term)
 {
  return (term.type == TYPE_VARIABLE);
@@ -274,6 +279,11 @@ function getTermNameArity(term)
   throw new Error("Expected atom.");
   
  return (term.name.toString()+"/"+term.children.length.toString());
+}
+
+function getTermNameArityFromNameArity(name,arity)
+{
+ return (name.toString()+"/"+arity.toString());
 }
 
 // term should be Terms
