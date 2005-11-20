@@ -11,7 +11,7 @@ JScriptLog 0.6.0.alpha
 
 ¥ Added getConsPairEnclosureFromEnclosureArray convenience method to JScriptLog_Enclosures.js file.
 
-¥ Added clause/2, abolish/1, current_predicate/1.  Added support predicates: internal:current_predicate/3, internal:clause/5, internal:retract/2, and internal:rule/3.  Added try_fn and retry_fn traversal functions for internal:current_predicate/3, and internal:clause/5.  
+¥ Added clause/2, abolish/1, current_predicate/1.  Added support predicates: internal:current_predicate/3, internal:clause/5, internal:retract/2, internal:abolish/1, and internal:rule/3.  Added try_fn and retry_fn traversal functions for internal:current_predicate/3, and internal:clause/5.  
 
 ¥ Fixed retract/1 to support removing rules too.  Changed the traversal functions for retract/1 to a single function for internal:retract.
 

@@ -287,32 +287,6 @@ function jslog_ui_init_query()
 {var q = new Array();
  var i = 0;
 
-///////////////////
-
- q[i++] = newConsPairsFromTerms([
-			newAtom('=',[
-				newVariable('Z'),
-				newRuleTerm(
-					newAtom('p',[newVariable('X'),newVariable('Y')]),
-					newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
-					newAtom('is',[newVariable('X'),newAtom('+',[newVariable('A'),newNumber(2)])])))]),
-			newAtom('internal:rule',[newVariable('Z'),newVariable('H'),newVariable('B1')]),
-			newAtom('internal:clause',[newVariable('H'),newVariable('B2'),newVariable('R2'),newVariable('N2'),newVariable('_')]),
-			newAtom('=',[newVariable('B1'),newVariable('B2')])]);
- q[i++] = newAtom('assertz',[newRuleTerm(
-			newAtom('p',[newVariable('X'),newVariable('Y')]),
-			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
-						newAtom('is',[newVariable('X'),newAtom('+',[newVariable('A'),newNumber(2)])])))]);
-
-/* q[i++] = newAtom('internal:rule',[newRuleTerm(
-			newAtom('p',[newVariable('X'),newVariable('Y')]),
-			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
-						newAtom('is',[newVariable('X'),newAtom('+',[newVariable('A'),newNumber(2)])]))),
-						newVariable('Head'),newVariable('Body')]);
- q[i++] = newAtom('clause',[newAtom('f',[newVariable('X'),newVariable('Y')]),newVariable('B')]);
-*/
-
-///////////////////
 
  q[i++] = newAtom('member',[newVariable('Y'),
 		newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
@@ -523,6 +497,7 @@ function jslog_ui_init_query()
 			newAtom('p',[newVariable('X'),newVariable('Y')]),
 			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),
 						newAtom('is',[newVariable('X'),newAtom('+',[newVariable('A'),newNumber(2)])])))]);
+ q[i++] = newAtom('abolish',[newAtom('/',[newConstant('f'),newNumber(2)])]);
  q[i++] = newAtom('internal:rule',[newRuleTerm(
 			newAtom('p',[newVariable('X'),newVariable('Y')]),
 			newConsPair(newAtom('p',[newVariable('A'),newVariable('Y')]),

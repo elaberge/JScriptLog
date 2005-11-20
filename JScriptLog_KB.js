@@ -503,7 +503,7 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
- // abolish(F) :- internal:current_predicate(F,true,R), internal:clause(_,_,R,N,0), internal:retract(R,N).
+ // abolish(F) :- internal:current_predicate(F,true,R), internal:abolish(R).
  {
   ruleset = new RuleSet('abolish',1,false);
 
@@ -511,8 +511,7 @@ function KB()
 		newAtom('abolish',[newVariable('F')]),
 		newConsPairsFromTerms([
 			newAtom('internal:current_predicate',[newVariable('F'),newConstant('true'),newVariable('R')]),
-			newAtom('internal:clause',[newVariable('_'),newVariable('_'),newVariable('R'),newVariable('N'),newNumber(0)]),
-			newAtom('internal:retract',[newVariable('R'),newVariable('N')])]))));
+			newAtom('internal:abolish',[newVariable('R')])]))));
  
   addRuleSet(this,ruleset);
  }
@@ -1099,6 +1098,21 @@ function KB()
    
   addRuleSet(this,ruleset);
  }
+ // internal:abolish(R) :- internal:clause(_,_,R,N,0), internal:retract(R,N), fail.
+ // internal:abolish(_).
+ {
+  ruleset = new RuleSet('internal:abolish',1,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:abolish',[newVariable('R')]),
+		newConsPairsFromTerms([
+			newAtom('internal:clause',[newVariable('_'),newVariable('_'),newVariable('R'),newVariable('N'),newNumber(0)]),
+			newAtom('internal:retract',[newVariable('R'),newVariable('N')]),
+			newConstant('fail')]))));
+  ruleset.rules.push(newRule(newAtom('internal:abolish',[newVariable('_')])));
+ 
+  addRuleSet(this,ruleset);
+ } 
  // internal:rule(:-(H,B),H,B) :- !.
  // internal:rule(H,H,true) :- !.
  {
