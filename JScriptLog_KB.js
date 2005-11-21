@@ -1356,7 +1356,7 @@ function removeRuleFromRuleSet(ruleset,index)
  ruleset.rules.splice(index,1);
 }
 
-// Get ruleset used to prove term.
+// Get ruleset used to prove term. 
 function getRuleSet(kb,term)
 {
  return kb.rulesets[getTermNameArity(term)];

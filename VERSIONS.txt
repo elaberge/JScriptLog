@@ -21,6 +21,8 @@ JScriptLog 0.6.0.alpha
 
 ¥ Removed duplicate mod/2 definition in KB (thanks Jeff!).
 
+¥ Fixed issue with internal_assert_fn that could could affect the addition of rule terms, possibly bypassing the check for dynamic rulesets (thanks Jeff!).
+
 
 JScriptLog 0.5.0.alpha
 ====================

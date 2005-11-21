@@ -674,7 +674,7 @@ function internal_assert_fn(append,goal)
  var orig = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var term = newDuplicateTermFromEnclosure(orig);
  var rule = newRule(term);
- var ruleset = getRuleSet(goal.kb,term);
+ var ruleset = getRuleSetFromNameArity(goal.kb,rule.name,rule.arity);
  
  if (!isDynamicRuleSet(ruleset))
   throw newErrorException("Must declare rule dynamic to modify: "+getRuleNameArity(rule));
