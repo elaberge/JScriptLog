@@ -479,6 +479,14 @@ function unify_fn(goal)
  return jslog_unify(lhs,rhs,goal.bindings); 
 }
 
+function unify_with_occurs_check_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ 
+ return jslog_unify_with_occurs_check(lhs,rhs,goal.bindings); 
+}
+
 function identical_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
@@ -626,6 +634,117 @@ function atom_to_list_fn(goal)
   throw newErrorException("Expected valid instantiated value in =../2.");
 
  return jslog_unify(lhs,rhs,goal.bindings); 
+}
+
+function atom_length_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ var l;
+ 
+ if (!isConstant(lhs.term))
+  throw newErrorException("Expected constant atom in atom_lenth/2.");
+
+ l = newSubtermEnclosure(encl.enclosure,newNumber(lhs.term.name.length)); 
+
+ return jslog_unify(rhs,l,goal.bindings);  
+}
+
+function char_code_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var c;
+ 
+ if (isConstant(lhs.term))
+ {
+  if (lhs.term.name.length != 1)
+   throw newErrorException("Expected single character atom in char_code/2.");
+
+  c = newSubtermEnclosure(encl.enclosure,newNumber(lhs.term.name.charCodeAt(0))); 
+  
+  return jslog_unify(rhs,c,goal.bindings);  
+ }
+ else if (isInteger(rhs.term))
+ {
+  c = newSubtermEnclosure(encl.enclosure,newConstant(String.fromCharCode(rhs.term.name))); 
+  
+  return jslog_unify(lhs,c,goal.bindings);  
+ }
+ else
+  throw newErrorException("Expected either atom or integer in char_code/2.");
+  
+ return false;
+}
+
+function atom_chars_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var c;
+ 
+ if (isConstant(lhs.term))
+ {var i;
+  var cp = newListNull();
+
+  for (i = lhs.term.name.length - 1; i >= 0; i--)
+   cp = newListPair(newConstant(lhs.term.name.charAt(i)),cp);
+  
+  c = newSubtermEnclosure(encl.enclosure,cp); 
+  
+  return jslog_unify(rhs,c,goal.bindings);  
+ }
+ else
+ {var s = "";
+  var cp;
+ 
+  while (!isListNull(rhs.term))
+  {
+   if (!isListPair(rhs.term))
+    throw newErrorException("Expected either atom constant or character list in atom_chars/2.");
+
+   cp = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[0]));
+	 
+   if (isConstant(cp.term) && cp.term.name.length == 1)
+   {
+    s += cp.term.name;
+   }
+   else
+    throw newErrorException("Expected single character atoms in character list in atom_chars/2.");
+   
+   rhs = getFinalEnclosure(newSubtermEnclosure(rhs.enclosure,rhs.term.children[1]));
+  }
+  
+  c = newSubtermEnclosure(encl.enclosure,newConstant(s)); 
+  
+  return jslog_unify(lhs,c,goal.bindings);
+ }
+}
+
+function internal_number_atom_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var c;
+ 
+ if (isNumber(lhs.term))
+ {
+  c = newSubtermEnclosure(encl.enclosure,newConstant(lhs.term.name.toString()));
+  return jslog_unify(rhs,c,goal.bindings);
+ }
+ else if (isConstant(rhs.term))
+ {var n = parseFloat(rhs.term.name);
+ 
+  if (isNaN(n))
+   throw newErrorException("Expected atom representing number in internal:number_atom/2.");
+
+  c = newSubtermEnclosure(encl.enclosure,newNumber(n));
+  return jslog_unify(lhs,c,goal.bindings);
+ }
+ else
+  throw newErrorException("Expected number or atom constant in internal:number_atom/2.");
+
+ return false;  
 }
 
 function copy_term_fn(goal)

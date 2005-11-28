@@ -380,6 +380,15 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
+ // unify_with_occurs_check/2 : unify with occurs check function
+ {
+  ruleset = new RuleSet('unify_with_occurs_check',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('unify_with_occurs_check',[newVariable('L'),newVariable('R')]),unify_with_occurs_check_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
  // ==/2 : identical function
  {
   ruleset = new RuleSet('==',2,false);
@@ -453,6 +462,165 @@ function KB()
  
   addRuleSet(this,ruleset);  
  }
+ // atom_length/2 : atom name length
+ {
+  ruleset = new RuleSet('atom_length',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('atom_length',[newVariable('A'),newVariable('L')]),atom_length_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // char_code/2 : character codes
+ {
+  ruleset = new RuleSet('char_code',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('char_code',[newVariable('C'),newVariable('N')]),char_code_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // atom_chars/2 : constant atom to characters converter
+ {
+  ruleset = new RuleSet('atom_chars',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('atom_chars',[newVariable('A'),newVariable('C')]),atom_chars_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ // number_chars(N,C) :- \+ var(N), !, internal:number_atom(N,A), atom_chars(A,C).
+ // number_chars(N,C) :- atom_chars(A,C), internal:number_atom(N,A).
+ {
+  ruleset = new RuleSet('number_chars',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('number_chars',[newVariable('N'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('N')])]),
+			newConstant('!'),
+			newAtom('internal:number_atom',[newVariable('N'),newVariable('A')]),
+			newAtom('atom_chars',[newVariable('A'),newVariable('C')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('number_chars',[newVariable('N'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('atom_chars',[newVariable('A'),newVariable('C')]),
+			newAtom('internal:number_atom',[newVariable('N'),newVariable('A')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // atom_codes(A,C) :- \+ var(A), !, atom_chars(A,Z), internal:convlist(char_code,Z,C,[]).
+ // atom_codes(A,C) :- \+ var(C), !, internal:convlist(internal:code_char,C,Z,[]), atom_chars(A,Z).
+ {
+  ruleset = new RuleSet('atom_codes',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_codes',[newVariable('A'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('A')])]),
+			newConstant('!'),
+			newAtom('atom_chars',[newVariable('A'),newVariable('Z')]),
+			newAtom('internal:convlist',[newConstant('char_code'),newVariable('Z'),newVariable('C'),newListNull()])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_codes',[newVariable('A'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('C')])]),
+			newConstant('!'),
+			newAtom('internal:convlist',[newConstant('internal:code_char'),newVariable('C'),newVariable('Z'),newListNull()]),
+			newAtom('atom_chars',[newVariable('A'),newVariable('Z')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // number_codes(A,C) :- \+ var(A), !, number_chars(A,Z), internal:convlist(char_code,Z,C,[]).
+ // number_codes(A,C) :- \+ var(C), !, internal:convlist(internal:code_char,C,Z,[]), number_chars(A,Z).
+ {
+  ruleset = new RuleSet('number_codes',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('number_codes',[newVariable('A'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('A')])]),
+			newConstant('!'),
+			newAtom('number_chars',[newVariable('A'),newVariable('Z')]),
+			newAtom('internal:convlist',[newConstant('char_code'),newVariable('Z'),newVariable('C'),newListNull()])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('number_codes',[newVariable('A'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('C')])]),
+			newConstant('!'),
+			newAtom('internal:convlist',[newConstant('internal:code_char'),newVariable('C'),newVariable('Z'),newListNull()]),
+			newAtom('number_chars',[newVariable('A'),newVariable('Z')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // atom_concat(A,B,C) :- \+ var(A), \+ var(B), !, atom_chars(A,X), atom_chars(B,Y), internal:append(X,Y,Z), atom_chars(C,Z).
+ // atom_concat(A,B,C) :- \+ var(B), \+ var(C), !, atom_chars(B,Y), atom_chars(C,Z), internal:append(X,Y,Z), atom_chars(A,X).
+ // atom_concat(A,B,C) :- \+ var(A), \+ var(C), !, atom_chars(A,X), atom_chars(C,Z), internal:append(X,Y,Z), atom_chars(B,Y).
+ // atom_concat(A,B,C) :- \+ var(C), !, atom_chars(C,Z), internal:append(X,Y,Z), atom_chars(A,X), atom_chars(B,Y).
+ {
+  ruleset = new RuleSet('atom_concat',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_concat',[newVariable('A'),newVariable('B'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('A')])]),
+			newAtom('\\+',[newAtom('var',[newVariable('B')])]),
+			newConstant('!'),
+			newAtom('atom_chars',[newVariable('A'),newVariable('X')]),
+			newAtom('atom_chars',[newVariable('B'),newVariable('Y')]),
+			newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
+			newAtom('atom_chars',[newVariable('C'),newVariable('Z')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_concat',[newVariable('A'),newVariable('B'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('B')])]),
+			newAtom('\\+',[newAtom('var',[newVariable('C')])]),
+			newConstant('!'),
+			newAtom('atom_chars',[newVariable('B'),newVariable('Y')]),
+			newAtom('atom_chars',[newVariable('C'),newVariable('Z')]),
+			newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
+			newAtom('atom_chars',[newVariable('A'),newVariable('X')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_concat',[newVariable('A'),newVariable('B'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('A')])]),
+			newAtom('\\+',[newAtom('var',[newVariable('C')])]),
+			newConstant('!'),
+			newAtom('atom_chars',[newVariable('A'),newVariable('X')]),
+			newAtom('atom_chars',[newVariable('C'),newVariable('Z')]),
+			newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
+			newAtom('atom_chars',[newVariable('B'),newVariable('Y')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('atom_concat',[newVariable('A'),newVariable('B'),newVariable('C')]),
+		newConsPairsFromTerms([
+			newAtom('\\+',[newAtom('var',[newVariable('C')])]),
+			newConstant('!'),
+			newAtom('atom_chars',[newVariable('C'),newVariable('Z')]),
+			newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
+			newAtom('atom_chars',[newVariable('A'),newVariable('X')]),
+			newAtom('atom_chars',[newVariable('B'),newVariable('Y')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // sub_atom(A,B,S,E,Z) :- atom(A), !, atom_concat(X,Y,A), atom_concat(Z,W,Y), 
+ //							atom_length(Z,S), atom_length(X,B), atom_length(W,E).
+ {
+  ruleset = new RuleSet('sub_atom',5,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('sub_atom',[newVariable('A'),newVariable('B'),newVariable('S'),newVariable('E'),newVariable('Z')]),
+		newConsPairsFromTerms([
+			newAtom('atom',[newVariable('A')]),
+			newConstant('!'),
+			newAtom('atom_concat',[newVariable('X'),newVariable('Y'),newVariable('A')]),
+			newAtom('atom_concat',[newVariable('Z'),newVariable('W'),newVariable('Y')]),
+			newAtom('atom_length',[newVariable('Z'),newVariable('S')]),
+			newAtom('atom_length',[newVariable('X'),newVariable('B')]),
+			newAtom('atom_length',[newVariable('W'),newVariable('E')])]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+
  // copy_term/2 : copy term function
  {
   ruleset = new RuleSet('copy_term',2,false);
@@ -831,6 +999,26 @@ function KB()
    
   addRuleSet(this,ruleset);
  }
+ // internal:code_char(N,A) :- char_code(A,N).
+ {
+  ruleset = new RuleSet('internal:code_char',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:code_char',[newVariable('N'),newVariable('A')]),
+			newAtom('char_code',[newVariable('A'),newVariable('N')]))));
+ 
+  addRuleSet(this,ruleset);
+ }
+ // internal:number_atom/2 : number atom converter
+ {
+  ruleset = new RuleSet('internal:number_atom',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:number_atom',[newVariable('N'),newVariable('A')]),internal_number_atom_fn));
+ 
+  addRuleSet(this,ruleset);  
+ }
+ 
  // internal:copy_term/2 copy term so that term is copied, not just the enclosures
  // internal:copy_term(T,C).  C is a copy of T.
  {

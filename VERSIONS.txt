@@ -23,6 +23,13 @@ JScriptLog 0.6.0.alpha
 
 ¥ Fixed issue with internal_assert_fn that could could affect the addition of rule terms, possibly bypassing the check for dynamic rulesets (thanks Jeff!).
 
+¥ Added atom_length/2, atom_chars/2, char_code/2, internal:code_char/2, internal:number_atom/2, number_chars/2, atom_codes/2, number_codes/2, atom_concat/3, sub_atom/5.
+
+¥ Modified newListFromTerms method to remove an unnecessary test case.
+
+¥ Added unify_with_occurs_check/2. Added jslog_unify_with_occurs_check and jslog_occurs_check functions to JScriptLog_Unify.js file.
+
+
 
 JScriptLog 0.5.0.alpha
 ====================

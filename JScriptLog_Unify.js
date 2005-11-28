@@ -193,3 +193,97 @@ function jslog_compare(encl1,encl2)
 
  throw newErrorException("Error comparing terms in jslog_compare.");
 }
+
+// Same as jslog_unify, 
+// except that unification fails if the binding variable appears in the bound term.
+// NOTE: do not maintain separately from jslog_unify -- if jslog_unify is modified,
+// copy it, then add the two jslog_occurs_check tests.
+function jslog_unify_with_occurs_check(encl1,encl2,bindings)
+{var lhs_encls = new Array(1);
+ var rhs_encls = new Array(1);
+ var lhs, rhs;
+
+ lhs_encls[0] = encl1;
+ rhs_encls[0] = encl2;
+
+ while ((lhs = lhs_encls.pop()) != undefined && (rhs = rhs_encls.pop()) != undefined)
+ {
+  lhs = getFinalEnclosure(lhs);
+  rhs = getFinalEnclosure(rhs);
+  
+  if (isVariable(lhs.term))
+  {
+   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure && 
+		lhs.term.children[0] == rhs.term.children[0])
+   {
+    // do nothing, variables are equal
+   }
+   else
+   {
+    if (jslog_occurs_check(lhs,rhs))
+	{
+     bindings.push(new Binding(lhs.enclosure,lhs.term.children[0],rhs));
+     lhs.enclosure[lhs.term.children[0]] = rhs;
+    }
+	else
+    {
+     removeBindings(bindings);			
+     return false;
+    }
+   }
+  }
+  else if (isVariable(rhs.term))
+  {
+   if (jslog_occurs_check(rhs,lhs))
+   {
+    bindings.push(new Binding(rhs.enclosure,rhs.term.children[0],lhs));
+    rhs.enclosure[rhs.term.children[0]] = lhs;
+   }
+   else
+   {
+    removeBindings(bindings);			
+    return false;
+   }   
+  }
+  else if ((lhs.term.type != rhs.term.type) || (lhs.term.name != rhs.term.name) ||
+			(lhs.term.children.length != rhs.term.children.length))
+  {
+   removeBindings(bindings);			
+   return false;
+  }
+  else
+  {
+   for (i = lhs.term.children.length - 1; i >= 0; i--)
+   {
+    lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
+    rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));
+   }
+  }
+ };
+
+ if (lhs_encls.length == 0 && rhs_encls.length == 0)
+  return true;
+
+ removeBindings(bindings);
+ return false;
+}
+
+// Performs the occurs check (determine if variable v_encl is unbound in t_encl).
+// returns true if the occurs check succeeds (i.e., v_encl is not in t_encl), 
+// returns false otherwise (i.e., v_encl occurs in t_encl).
+// isVariable(v_encl.term) must be true.
+function jslog_occurs_check(v_encl,t_encl)
+{var v_encls = enumFinalVariableEnclosures(t_encl);
+ var i;
+ var e;
+ 
+ for (i = 0; i < v_encls.length; i++)
+ {
+  e = v_encls[i];
+  
+  if (v_encl.enclosure == e.enclosure && v_encl.term.children[0] == e.term.children[0])
+   return false;
+ }
+
+ return true;
+}

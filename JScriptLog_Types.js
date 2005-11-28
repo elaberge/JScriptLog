@@ -108,9 +108,6 @@ function newListNull()
 function newListFromTerms(terms)
 {var cp = newListNull();
 
- if (terms.length == 0)
-  return newListNull();
-
  for (i = terms.length - 1; i >= 0; i--)
   cp = newListPair(terms[i],cp);
   

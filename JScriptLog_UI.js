@@ -364,6 +364,46 @@ function jslog_ui_init_query()
  q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
 						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
  q[i++] = newAtom('=',[newVariable('A'),newVariable('A')]);
+ q[i++] = newAtom('unify_with_occurs_check',[
+				newAtom('a',[newNumber(1),newConstant('b'),newVariable('Z')]),
+				newAtom('a',[newVariable('A'),newVariable('B'),newAtom('c',[newVariable('Y')])])]);
+ q[i++] = newAtom('unify_with_occurs_check',[
+				newAtom('a',[newNumber(1),newConstant('b'),newVariable('Z')]),
+				newAtom('a',[newVariable('A'),newVariable('B'),newAtom('c',[newVariable('Z')])])]);
+
+/* q[i++] = newConsPair(newAtom('=',[
+				newAtom('a',[newNumber(1),newConstant('b'),newVariable('Z')]),
+				newAtom('a',[newVariable('A'),newVariable('B'),newAtom('c',[newVariable('Z')])])]),
+			newAtom('writeln',[newConstant('unified... but hangs on display of cyclic term.')]));
+*/
+
+ q[i++] = newAtom('atom_length',[newAtom('abc',[newVariable('X')]),newVariable('Y')]);
+ q[i++] = newAtom('atom_length',[newConstant('abc'),newVariable('Y')]);
+ q[i++] = newAtom('char_code',[newConstant('a'),newVariable('Y')]);
+ q[i++] = newAtom('char_code',[newVariable('Y'),newNumber(98)]);
+ q[i++] = newAtom('atom_chars',[newConstant('abcd134'),newVariable('Y')]);
+ q[i++] = newAtom('atom_chars',[newVariable('Y'),newListFromTerms([newConstant('a'),newConstant('b'),newConstant('1'),newConstant('2')])]);
+ q[i++] = newAtom('atom_codes',[newConstant('abcd134'),newVariable('Y')]);
+ q[i++] = newAtom('atom_codes',[newVariable('Y'),newListFromTerms([newNumber(97),newNumber(98),newNumber(99),newNumber(42)])]);
+ q[i++] = newAtom('number_chars',[newNumber(1.2e3),newVariable('Y')]);
+ q[i++] = newConsPair(
+			newAtom('number_chars',[newVariable('Y'),newListFromTerms([newConstant('1'),newConstant('2'),newConstant('.'),newConstant('3')])]),
+			newAtom('number',[newVariable('Y')]));
+ q[i++] = newAtom('number_codes',[newNumber(1.2e3),newVariable('Y')]);
+ q[i++] = newConsPair(
+			newAtom('number_codes',[newVariable('Y'),newListFromTerms([newNumber(49),newNumber(50),newNumber(51),newNumber(52)])]),
+			newAtom('number',[newVariable('Y')]));
+ q[i++] = newAtom('atom_concat',[newConstant('abc'),newVariable('Y'),newConstant('abc123')]);
+ q[i++] = newAtom('atom_concat',[newVariable('Y'),newConstant('123'),newConstant('abc123')]);
+ q[i++] = newAtom('atom_concat',[newConstant('abc'),newConstant('123'),newVariable('Y')]);
+ q[i++] = newAtom('atom_concat',[newVariable('Y'),newVariable('Z'),newConstant('abc123')]);
+ q[i++] = newAtom('sub_atom',[newConstant('abc123'),newVariable('A'),newVariable('B'),newVariable('C'),newVariable('D')]);
+ q[i++] = newAtom('sub_atom',[newConstant('abc123'),newVariable('A'),newNumber(3),newVariable('C'),newVariable('D')]);
+ q[i++] = newAtom('internal:number_atom',[newNumber(123),newVariable('Y')]);
+ q[i++] = newAtom('internal:number_atom',[newNumber(123.123),newVariable('Y')]);
+ q[i++] = newAtom('internal:number_atom',[newVariable('Y'),newConstant('98')]);
+ q[i++] = newAtom('internal:number_atom',[newVariable('Y'),newConstant('98.98')]);
+ q[i++] = newAtom('internal:number_atom',[newVariable('Y'),newConstant('1.2e3')]);
 
  q[i++] = newAtom('if',[newAtom('queens',[newNumber(4),newVariable('X')]),
 			newAtom('queens',[newNumber(4),newVariable('Y')]),
@@ -515,6 +555,8 @@ function jslog_ui_init_query()
  q[i++] = newAtom('internal:call',[newAtom('f',[newVariable('X')]),newListPair(newVariable('Y'),newListNull())]);
  q[i++] = newAtom('internal:append',[newListFromTerms([newConstant('a'),newConstant('b')]),
 				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);
+ q[i++] = newAtom('internal:append',[newVariable('X'),newVariable('Y'),
+				newListFromTerms([newConstant('a'),newConstant('b'),newNumber(1),newNumber(2)])]);
  q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
 				newConstant('b'),newNumber(2),newConstant('a'),newNumber(1),newNumber(2),
 				newVariable('X'),newVariable('Y'),newVariable('X'),newAtom('a',[newVariable('X'),newNumber(2)]),
