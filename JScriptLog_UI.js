@@ -470,37 +470,7 @@ function jslog_ui_init_query()
 			newAtom('=',[newVariable('M'),newAtom('p',[newVariable('X'),newConstant('b')])]),
 			newAtom('=',[newVariable('N'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
 			newAtom('\\==',[newVariable('M'),newVariable('N')])]);
-/* q[i++] = newConsPairsFromTerms([
-			newAtom('=',[newVariable('M'),newAtom('p',[newVariable('X'),newConstant('b'),newVariable('A')])]),
-			newAtom('=',[newVariable('N'),newAtom('p',[newConstant('a'),newVariable('Y'),newVariable('B')])]),
-			newAtom('=',[newVariable('M'),newVariable('N')]),
-			newAtom('==',[newVariable('M'),newVariable('N')])]); 
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('Y')]),
-			newAtom('=',[newVariable('X'),newVariable('Y')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('Y')]),
-			newAtom('==',[newVariable('X'),newVariable('Y')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('=',[newVariable('X'),newVariable('X')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('==',[newVariable('X'),newVariable('X')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('internal:compare',[newVariable('X'),newVariable('X'),newVariable('Z')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('p'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('Y')]),
-			newAtom('=',[newVariable('X'),newVariable('Y')])]);
- q[i++] = newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('p'),newNumber(2)]),newVariable('_'),newVariable('X')]),
-			newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('_'),newVariable('Y')]),
-			newAtom('==',[newVariable('X'),newVariable('Y')])]);
-*/			
+
  q[i++] = newAtom('@<',[newVariable('X'),newNumber(2)]);
  q[i++] = newAtom('@>=',[newVariable('X'),newNumber(2)]);
  q[i++] = newAtom('@>',[newConstant('a'),newNumber(1)]);
@@ -548,10 +518,9 @@ function jslog_ui_init_query()
  q[i++] = newAtom('internal:clause',[newAtom('internal:length',[newVariable('X'),newVariable('Y')]),newVariable('B'),newVariable('R'),newVariable('N'),newVariable('_')]);
  q[i++] = newAtom('internal:clause',[newAtom('p',[newVariable('X'),newVariable('Y')]),newVariable('B'),newVariable('R'),newVariable('N'),newVariable('_')]);
  q[i++] = newAtom('current_predicate',[newVariable('F')]);
- q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('D'),newVariable('R')]);
- q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newVariable('X'),newNumber(2)]),newVariable('D'),newVariable('R')]);
- q[i++] = newAtom('internal:current_predicate',[newVariable('F'),newConstant('true'),newVariable('R')]);
- q[i++] = newAtom('internal:current_predicate',[newVariable('F'),newVariable('D'),newVariable('R')]);
+ q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('L')]);
+ q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newVariable('X'),newNumber(2)]),newVariable('L')]);
+ q[i++] = newAtom('internal:current_predicate',[newVariable('F'),newVariable('L')]);
  q[i++] = newAtom('internal:call',[newAtom('f',[newVariable('X')]),newListPair(newVariable('Y'),newListNull())]);
  q[i++] = newAtom('internal:append',[newListFromTerms([newConstant('a'),newConstant('b')]),
 				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);

@@ -671,25 +671,31 @@ function KB()
  
   addRuleSet(this,ruleset);
  }
- // abolish(F) :- internal:current_predicate(F,true,R), internal:abolish(R).
+ // abolish(F) :- internal:current_predicate(F,L), internal:member(rs(F,true,R),L), internal:abolish(R).
  {
   ruleset = new RuleSet('abolish',1,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('abolish',[newVariable('F')]),
 		newConsPairsFromTerms([
-			newAtom('internal:current_predicate',[newVariable('F'),newConstant('true'),newVariable('R')]),
+			newAtom('internal:current_predicate',[newVariable('F'),newVariable('L')]),
+			newAtom('internal:member',[
+				newAtom('rs',[newVariable('F'),newConstant('true'),newVariable('R')]),
+				newVariable('L')]),
 			newAtom('internal:abolish',[newVariable('R')])]))));
  
   addRuleSet(this,ruleset);
  }
- // current_predicate(F) :- internal:current_predicate(F,_,_).
+ // current_predicate(F) :- internal:current_predicate(F,L), internal:member(rs(F,_,_),L).
  {
   ruleset = new RuleSet('current_predicate',1,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('current_predicate',[newVariable('F')]),
-		newAtom('internal:current_predicate',[newVariable('F'),newVariable('_'),newVariable('_')]))));
+		newConsPair(newAtom('internal:current_predicate',[newVariable('F'),newVariable('L')]),
+			newAtom('internal:member',[
+				newAtom('rs',[newVariable('F'),newVariable('_'),newVariable('_')]),
+				newVariable('L')])))));
  
   addRuleSet(this,ruleset);
  }
@@ -1252,15 +1258,15 @@ function KB()
  
   addRuleSet(this,ruleset);
  } 
- // internal:current_predicate/3 enumerates available rules.
- // internal:current_predicate(F,D,R) R is a rule reference for functor F (name/arity). D=true
- // matches dynamic rules, D=fail matches static rules. Leave D unbound for any rule type.
+ // internal:current_predicate/2 enumerates available rules in a list.
+ // internal:current_predicate(F,L) L is a list of rulesets matching functor F (name/arity).
+ // L is of the form [rs(F,D,R)|...] where R is a rule reference for bound functor F. 
+ // D=true for dynamic rules, D=fail for static rules.
  {
-  ruleset = new RuleSet('internal:current_predicate',3,false);
-  
-  ruleset.rules.push(newTraversalRule(newAtom('internal:current_predicate',[
-				newVariable('F'),newVariable('D'),newVariable('R')]),
-				internal_current_predicate_try_fn,internal_current_predicate_retry_fn));
+  ruleset = new RuleSet('internal:current_predicate',2,false);
+
+  ruleset.rules.push(newFunctionRule(newAtom('internal:current_predicate',[
+				newVariable('F'),newVariable('L')]),internal_current_predicate_fn));
    
   addRuleSet(this,ruleset);
  }

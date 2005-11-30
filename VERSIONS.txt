@@ -1,6 +1,20 @@
 JScriptLog 0.6.0.alpha
 ====================
 
+¥ Changed internal:current_predicate/3 to internal:current_predicate/2 using a single function rule.  abolish/1 and current_predicate/1 rules were re-writen to accommodate changed.  Removed unnecessary code (the internal_current_predicate_*_fn) and updated Goals property documentation to reflect that some properties were no longer needed.
+
+¥ Updated prover protocol, regarding goal.bindings for tryGoal and retryGoal, to preserve the goal.bindings array (to save from creating new copies).  goal.bindings must be empty on fail, but should not be removed (i.e., made null).  goal.bindings are assumed to be empty, if not null, for tryGoal.  try_fn functions can assume that goal.bindings is an empty array (they are responsible for the subgoal, however).  retry_fn functions can assume an empty array (same responsibility for subgoals, where they must remove bindings).
+
+¥ Changed nextUnifiedRuleBodyForGoal method so that is only creates a new array for goal.bindings if goal.bindings == null (otherwise the array must be empty).
+
+
+WORKING ON:
+
+
+
+JScriptLog 0.5.5.alpha
+====================
+
 ¥ Added newErrorException method.  Changed new Error("") statements, to newErrorException("") -- (so these exceptions can be caught in catch/3).
 
 ¥ Added isInteger and getTermArityFromNameArity convenience methods to JScriptLog_Types.js, updated isinteger_fn, arg_fn, and internal_atom_setarg_fn.
@@ -21,7 +35,7 @@ JScriptLog 0.6.0.alpha
 
 ¥ Removed duplicate mod/2 definition in KB (thanks Jeff!).
 
-¥ Fixed issue with internal_assert_fn that could could affect the addition of rule terms, possibly bypassing the check for dynamic rulesets (thanks Jeff!).
+¥ Fixed issue with internal_assert_fn that could affect the addition of rule terms, possibly bypassing the check for dynamic rulesets (thanks Jeff!).
 
 ¥ Added atom_length/2, atom_chars/2, char_code/2, internal:code_char/2, internal:number_atom/2, number_chars/2, atom_codes/2, number_codes/2, atom_concat/3, sub_atom/5.
 

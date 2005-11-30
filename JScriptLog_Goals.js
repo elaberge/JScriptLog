@@ -30,8 +30,6 @@ function Goal(type,encl,parent)
  // this.kb : the KB used to try the goal
  // this.ruleset :
  // this.rule_index : 
- // this.ruleset_keys : array of 'name/arity' properties from kb.rulesets 
- // this.ruleset_keys_index : 
  // this.fn : the goal function
  // this.try_fn : the try traversal function
  // this.retry_fn : the retry traversal function
@@ -138,10 +136,12 @@ function isTraversalGoal(goal)
 
 // tryGoal(goal,kb,frontier,explored) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
-// goal.bindings must be null if fail, or no unification occured.
+// goal.bindings must be empty, if fail, or no unification occured.
 function tryGoal(goal,kb,frontier,explored)
 {
  goal.kb = kb;
+ if (goal.bindings == null)
+  goal.bindings = new Array();
  
  switch (goal.type)
  {
@@ -236,10 +236,10 @@ function tryGoal(goal,kb,frontier,explored)
 // retryGoal(goal,frontier,explored) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
 // goal.kb must be set to the current KB.
-// goal.bindings must be null if fail, or no unification occured.
+// goal.bindings must be non-null on start, empty on fail.
 function retryGoal(goal,frontier,explored)
 {
- undoGoalBindings(goal);
+ removeBindings(goal.bindings);
 
  switch (goal.type)
  {
@@ -310,14 +310,15 @@ function removeChildGoalsFromFrontier(parent,frontier)
  };
 }
 
-// returns an ArrayEnclosure for the next matching Rule, startng from goal.rule_index (inclusive).
-// goal.binding is mutated to an array (empty if fail).
+// returns an ArrayEnclosure for the next matching Rule, starting from goal.rule_index (inclusive).
+// goal.bindings must be null or an empty array when passed in, may be mutated (empty if fail).
 // returns null if no rules match.  goal.rule_index equals the index for the matched rule.
 function nextUnifiedRuleBodyForGoal(goal)
 {var rule;
  var enclosure;
 
- goal.bindings = new Array();
+ if (goal.bindings == null)
+  goal.bindings = new Array();
  
  while (goal.rule_index < goal.ruleset.rules.length)
  {

@@ -26,126 +26,6 @@ function true_try_fn(goal,frontier,explored)
  return true;
 }
 
-function internal_current_predicate_try_fn(goal,frontier,explored)
-{var encl = getFinalEnclosure(goal.encl);
- var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
- var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
- var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
- var name;
- var arity;
-
- goal.bindings = new Array();
- goal.ruleset_keys = undefined;
-
- // test for name/arity structure
- {var namearity = newTermEnclosure(newAtom('/',[newVariable('N'),newVariable('A')]));
-
-  if (!jslog_unify(lhs,namearity,goal.bindings))
-   throw newErrorException("Expected name/arity functor in internal:current_predicate/3.");
- }
-
- // do not use name or arity after calling internal_current_predicate_*_test
- {var nlhs = getFinalEnclosure(lhs);
- 
-  name = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[0]));
-  arity = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[1]));
- }
-
- if (isConstant(name.term) && isInteger(arity.term))
- {var ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,arity.term.name);
-
-  if (internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset))
-  {
-   explored.push(goal);
-   return true;
-  }
-  else
-  {
-   undoGoalBindings(goal);
-   frontier.push(goal);
-   return false;
-  }
- }
- else if ((isConstant(name.term) || isVariable(name.term)) && 
-			(isInteger(arity.term) || isVariable(arity.term)))
- {var property;
-  var ruleset_keys = new Array();
-
-  for (property in goal.kb.rulesets)
-   ruleset_keys[ruleset_keys.length] = property;
-
-  goal.ruleset_keys = ruleset_keys;
-  goal.ruleset_keys_index = 0;
-  
-  if (internal_current_predicate_test(lhs,rhs,rref,goal))
-  {
-   explored.push(goal);
-   return true;
-  }
-  else
-  {
-   undoGoalBindings(goal);
-   frontier.push(goal);
-   return false;
-  }
- }
- else
-  throw newErrorException("Expected name/arity functor in internal:current_predicate/3.");
-}
-
-// helper for internal_current_predicate_*_fn
-// assumes that name/arity of ruleset is already unified to first argument.
-// removes all goal bindings on failure.
-function internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset)
-{var rset = newTermEnclosure(newObjectReference(ruleset));
- var dyn;
-  
- if (ruleset == undefined)
- {
-  removeBindings(goal.bindings);
-  return false;
- }
-
- if (isDynamicRuleSet(ruleset))
-  isdyn = newTermEnclosure(newConstant('true'));
- else
-  isdyn = newTermEnclosure(newConstant('fail'));
-
- if (jslog_unify(rhs,isdyn,goal.bindings) && jslog_unify(rref,rset,goal.bindings))
- { 
-  return true;
- }
- else
- {
-  removeBindings(goal.bindings);
-  return false;
- }
-}
-
-// helper for internal_current_predicate_*_fn
-// assumes goal.ruleset_keys is set to an array of name/arity keys for rulesets.
-// assumes that goal.ruleset_keys_index is equal to the next ruleset key to try. 
-// removes all goal bindings on failure. sets goal.ruleset_keys = undefined on failure.
-function internal_current_predicate_test(lhs,rhs,rref,goal)
-{
- for (; goal.ruleset_keys_index < goal.ruleset_keys.length; goal.ruleset_keys_index++)
- {var rulekey = goal.ruleset_keys[goal.ruleset_keys_index];
-  var slashidx = rulekey.lastIndexOf('/');
-  var name = rulekey.substring(0,slashidx);
-  var arity = parseInt(rulekey.substring(slashidx+1));
-  var ruleset = getRuleSetFromNameArity(goal.kb,name,arity);
-  var namearity = newTermEnclosure(newAtom('/',[newConstant(name),newNumber(arity)]));
-
-  if (!jslog_unify(lhs,namearity,goal.bindings))
-   removeBindings(goal.bindings);
-  else if (internal_current_predicate_dynamic_test(rhs,rref,goal,ruleset))
-   return true;
- }
- 
- goal.ruleset_keys = undefined;
- return false;
-}
-
 
 function internal_clause_try_fn(goal,frontier,explored)
 {var encl = getFinalEnclosure(goal.encl);
@@ -207,7 +87,7 @@ function internal_clause_test(body,rref,idx,goal,frontier,explored)
    else
    {
     removeBindings(goal.bindings);
-    undoGoalBindings(goal.subgoal);
+    removeBindings(goal.subgoal.bindings);
 	goal.subgoal.rule_index++;
    }
   }
@@ -215,7 +95,7 @@ function internal_clause_test(body,rref,idx,goal,frontier,explored)
 
  // no rules matches
  {
-  undoGoalBindings(goal);
+  removeBindings(goal.bindings);
   undoGoalBindings(goal.subgoal);
   frontier.push(goal);
   goal.subgoal = null;
@@ -239,7 +119,7 @@ function cut_retry_fn(goal,frontier,explored)
 
  while ((g = explored.pop()) != undefined)
  {
-  undoGoalBindings(g);
+  removeBindings(g.bindings);
   if (g == goal.parent)
   {
    frontier.push(g);
@@ -250,33 +130,6 @@ function cut_retry_fn(goal,frontier,explored)
  return false;
 }
 
-function internal_current_predicate_retry_fn(goal,frontier,explored)
-{var encl = getFinalEnclosure(goal.encl);
- var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
- var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
- var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
-
- if (goal.ruleset_keys == undefined)
- {
-  frontier.push(goal);
-  return false;
- } 
-
- goal.bindings = new Array();
- goal.ruleset_keys_index++;
-
- if (internal_current_predicate_test(lhs,rhs,rref,goal))
- {
-  explored.push(goal);
-  return true;
- }
- else
- {
-  undoGoalBindings(goal);
-  frontier.push(goal);
-  return false;
- }
-}
 
 function internal_clause_retry_fn(goal,frontier,explored)
 {var encl = getFinalEnclosure(goal.encl);
@@ -285,7 +138,7 @@ function internal_clause_retry_fn(goal,frontier,explored)
  var idx = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
  var doinc = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[4]));
  
- undoGoalBindings(goal.subgoal);
+ removeBindings(goal.subgoal.bindings);
 
  // if idx was bound, there is no retry
  if (isNumber(idx.term))
@@ -786,6 +639,73 @@ function internal_term_variables_fn(goal)
  result = newSubtermEnclosure(vencls,vlist);
  
  return jslog_unify(result,rhs,goal.bindings);
+}
+
+function internal_current_predicate_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ var lterm = newListNull();
+ var ruleset;
+ var name;
+ var arity;
+ 
+ // test for name/arity structure
+ {var namearity = newTermEnclosure(newAtom('/',[newVariable('N'),newVariable('A')]));
+
+  if (!jslog_unify(lhs,namearity,goal.bindings))
+   throw newErrorException("Expected name/arity functor in internal:current_predicate/2.");
+ }
+
+ {var nlhs = getFinalEnclosure(lhs);
+ 
+  name = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[0]));
+  arity = getFinalEnclosure(newSubtermEnclosure(nlhs.enclosure,nlhs.term.children[1]));
+ }
+
+ if (isConstant(name.term) && isInteger(arity.term))
+ {var functor = newAtom('/',[name.term,arity.term]);
+  var isdyn;
+  var rref;
+  
+  ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,arity.term.name);
+  
+  if (ruleset == undefined)
+  {
+   removeBindings(goal.bindings);
+   return false;
+  }
+  
+  isdyn = newConstant(isDynamicRuleSet(ruleset) ? 'true' : 'fail' );
+  rref = newObjectReference(ruleset);
+  
+  lterm = newListPair(newAtom('rs',[functor,isdyn,rref]),lterm);
+ }
+ else if ((isConstant(name.term) || isVariable(name.term)) && 
+			(isInteger(arity.term) || isVariable(arity.term)))
+ {var rulekey
+
+  for (rulekey in goal.kb.rulesets)
+  {var slashidx = rulekey.lastIndexOf('/');
+   var rname = rulekey.substring(0,slashidx);
+   var rarity = parseInt(rulekey.substring(slashidx+1));
+   
+   ruleset = getRuleSetFromNameArity(goal.kb,rname,rarity);
+  
+   if ((isVariable(name.term) || name.term.name == ruleset.name) &&
+		(isVariable(arity.term) || arity.term.name == ruleset.arity))
+   {var functor = newAtom('/',[newConstant(ruleset.name),newNumber(ruleset.arity)]);
+    var isdyn = newConstant(isDynamicRuleSet(ruleset) ? 'true' : 'fail' );
+    var rref = newObjectReference(ruleset);
+  
+    lterm = newListPair(newAtom('rs',[functor,isdyn,rref]),lterm);
+   }
+  } 
+ }
+ else
+  throw newErrorException("Expected name/arity functor in internal:current_predicate/2.");
+
+ return jslog_unify(rhs,newSubtermEnclosure(encl.enclosure,lterm),goal.bindings); 
 }
 
 function internal_assert_fn(append,goal)
