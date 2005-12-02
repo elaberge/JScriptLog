@@ -14,20 +14,20 @@
 ///////////////////////////////////
 
 ///////////////////////////////////
-// *_try_fn(goal,frontier,explored) is a traversal function called when attempting to prove
+// *_try_fn(goal) is a traversal function called when attempting to prove
 // goal.  goal was just removed from frontier, but is not on either frontier or explored stack.
 // goal will need to be placed on one of either the frontier or explored stack.
 // Returns true if the goal can be explored further, false if not.
 ///////////////////////////////////
 
-function true_try_fn(goal,frontier,explored)
+function true_try_fn(goal,prover)
 {
- explored.push(goal);
+ prover.explored.push(goal);
  return true;
 }
 
 
-function internal_clause_try_fn(goal,frontier,explored)
+function internal_clause_try_fn(goal,prover)
 {var encl = getFinalEnclosure(goal.encl);
  var head = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
  var body = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
@@ -54,19 +54,19 @@ function internal_clause_try_fn(goal,frontier,explored)
 
  if (goal.subgoal.ruleset == undefined)
  {
-  frontier.push(goal);
+  prover.frontier.push(goal);
   goal.subgoal = null;
   return false;
  }
 
  goal.bindings = new Array();
 
- return internal_clause_test(body,rref,idx,goal,frontier,explored);
+ return internal_clause_test(body,rref,idx,goal,prover);
 }
 
 // helper for internal_clause_*_fn
 // removes all goal bindings on failure.
-function internal_clause_test(body,rref,idx,goal,frontier,explored)
+function internal_clause_test(body,rref,idx,goal,prover)
 {var rule_body;
 
  do
@@ -81,7 +81,7 @@ function internal_clause_test(body,rref,idx,goal,frontier,explored)
    if (jslog_unify(body,rbody,goal.bindings) && jslog_unify(rref,rset,goal.bindings) && 
 		jslog_unify(idx,n,goal.bindings))
    {
-    explored.push(goal);
+    prover.explored.push(goal);
     return true;
    }
    else
@@ -97,7 +97,7 @@ function internal_clause_test(body,rref,idx,goal,frontier,explored)
  {
   removeBindings(goal.bindings);
   undoGoalBindings(goal.subgoal);
-  frontier.push(goal);
+  prover.frontier.push(goal);
   goal.subgoal = null;
   return false;
  }
@@ -105,24 +105,24 @@ function internal_clause_test(body,rref,idx,goal,frontier,explored)
 
 
 ///////////////////////////////////
-// *_retry_fn(goal,frontier,explored) is a traversal function called when attempting to prove
+// *_retry_fn(goal,prover) is a traversal function called when attempting to prove
 // goal again (i.e., a goal retry).  goal was just removed from explored, but is not on either 
 // frontier or explored stack.
 // goal will need to be placed on one of either the frontier or explored stack.
 // Returns true if the goal can be explored further, false if not.
 ///////////////////////////////////
 
-function cut_retry_fn(goal,frontier,explored)
+function cut_retry_fn(goal,prover)
 {var g;
 
- removeChildGoalsFromFrontier(goal.parent,frontier)
+ removeChildGoalsFromFrontier(goal.parent,prover.frontier)
 
- while ((g = explored.pop()) != undefined)
+ while ((g = prover.explored.pop()) != undefined)
  {
   removeBindings(g.bindings);
   if (g == goal.parent)
   {
-   frontier.push(g);
+   prover.frontier.push(g);
    break;
   }
  };
@@ -131,7 +131,7 @@ function cut_retry_fn(goal,frontier,explored)
 }
 
 
-function internal_clause_retry_fn(goal,frontier,explored)
+function internal_clause_retry_fn(goal,prover)
 {var encl = getFinalEnclosure(goal.encl);
  var body = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
@@ -143,7 +143,7 @@ function internal_clause_retry_fn(goal,frontier,explored)
  // if idx was bound, there is no retry
  if (isNumber(idx.term))
  {
-  frontier.push(goal);
+  prover.frontier.push(goal);
   goal.subgoal = null;
   return false;
  }
@@ -155,7 +155,7 @@ function internal_clause_retry_fn(goal,frontier,explored)
  else
   goal.subgoal.rule_index++;
 
- return internal_clause_test(body,rref,idx,goal,frontier,explored);
+ return internal_clause_test(body,rref,idx,goal,prover);
 }
 
 

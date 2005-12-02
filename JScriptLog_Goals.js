@@ -134,12 +134,12 @@ function isTraversalGoal(goal)
 ///////////////////////////////////
 
 
-// tryGoal(goal,kb,frontier,explored) returns true if succeeds, false otherwise
+// tryGoal(goal,prover) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
 // goal.bindings must be empty, if fail, or no unification occured.
-function tryGoal(goal,kb,frontier,explored)
+function tryGoal(goal,prover)
 {
- goal.kb = kb;
+ goal.kb = prover.kb;
  if (goal.bindings == null)
   goal.bindings = new Array();
  
@@ -150,20 +150,20 @@ function tryGoal(goal,kb,frontier,explored)
      
 	 if (!isAtom(encl.term))
 	 {
-	  frontier.push(goal); 
+	  prover.frontier.push(goal); 
       throw newErrorException("Variable must be bound to atom.");
      }
 	 
      if (encl.term.ruleset != null)
       goal.ruleset = encl.term.ruleset;
      else
-	  goal.ruleset = getRuleSet(kb,encl.term);
+	  goal.ruleset = getRuleSet(prover.kb,encl.term);
   case TYPE_ATOM_GOAL:
      var rule_body;
 
      if (goal.ruleset == null)
 	 {
-	  frontier.push(goal);
+	  prover.frontier.push(goal);
       throw newErrorException("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
      }
 
@@ -173,13 +173,13 @@ function tryGoal(goal,kb,frontier,explored)
 	 
 	 if (rule_body == null)
 	 {
-	  frontier.push(goal);
+	  prover.frontier.push(goal);
 	  return false;
 	 }
 	 else if (rule_body.terms != null)
 	 {
-	  explored.push(goal);
-      addBodyGoalsToFrontier(goal,rule_body,kb,frontier);
+	  prover.explored.push(goal);
+      addBodyGoalsToFrontier(goal,rule_body,prover.kb,prover.frontier);
 	  return true;
 	 }
 	 else // handle FUNCTION and TRAVERSAL
@@ -188,23 +188,23 @@ function tryGoal(goal,kb,frontier,explored)
 	  {
 	   if (rule_body.fn(goal))
        {
-	   	explored.push(goal);
+	   	prover.explored.push(goal);
         return true;
        }
 	   else
 	   {
-	    frontier.push(goal);
+	    prover.frontier.push(goal);
 		return false;
 	   }
 	  }
 	  else if (rule_body.try_fn != null)
 	  {
 	   goal.retry_fn = rule_body.retry_fn;
-	   return rule_body.try_fn(goal,frontier,explored);
+	   return rule_body.try_fn(goal,prover);
 	  }
 	  else
 	  {
-	   frontier.push(goal);
+	   prover.frontier.push(goal);
 	   return false;
 	  }
 	 }
@@ -212,32 +212,31 @@ function tryGoal(goal,kb,frontier,explored)
   case TYPE_FUNCTION_GOAL:
 	 if (goal.fn(goal))
      {
-	  explored.push(goal);
+	  prover.explored.push(goal);
       return true;
      }
 	 else
 	 {
-	  frontier.push(goal);
+	  prover.frontier.push(goal);
 	  return false;
 	 }
    break;
   case TYPE_TRAVERSAL_GOAL:
 	if (goal.try_fn != null)
-	 return goal.try_fn(goal,frontier,explored);
+	 return goal.try_fn(goal,prover);
     else
 	{
-	 frontier.push(goal);
+	 prover.frontier.push(goal);
 	 return false;
 	} 
    break;
  }
 }
 
-// retryGoal(goal,frontier,explored) returns true if succeeds, false otherwise
+// retryGoal(goal,prover) returns true if succeeds, false otherwise
 // goal must be placed on appropriate stack (frontier if fail or explored if true).
-// goal.kb must be set to the current KB.
 // goal.bindings must be non-null on start, empty on fail.
-function retryGoal(goal,frontier,explored)
+function retryGoal(goal,prover)
 {
  removeBindings(goal.bindings);
 
@@ -247,41 +246,41 @@ function retryGoal(goal,frontier,explored)
   case TYPE_ATOM_GOAL:
      var rule_body;
 
-	 removeChildGoalsFromFrontier(goal,frontier);
+	 removeChildGoalsFromFrontier(goal,prover.frontier);
 
 	 // handle TRAVERSAL retry
      if (goal.retry_fn != null)
-	  return goal.retry_fn(goal,frontier,explored);
+	  return goal.retry_fn(goal,prover);
 	 
 	 goal.rule_index++;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
 	 
 	 if (rule_body == null)
 	 {
-	  frontier.push(goal);
+	  prover.frontier.push(goal);
 	  return false;
 	 }
 	 else if (rule_body.terms != null)
 	 {
-	  explored.push(goal);
-      addBodyGoalsToFrontier(goal,rule_body,goal.kb,frontier);
+	  prover.explored.push(goal);
+      addBodyGoalsToFrontier(goal,rule_body,goal.kb,prover.frontier);
 	  return true;
 	 }
 	 else
 	 {
-	  frontier.push(goal);
+	  prover.frontier.push(goal);
 	  return false;
 	 }
    break; 
   case TYPE_FUNCTION_GOAL:
-	frontier.push(goal);
+	prover.frontier.push(goal);
     return false;
    break;
   case TYPE_TRAVERSAL_GOAL:
 	if (goal.retry_fn != null)
-	 return goal.retry_fn(goal,frontier,explored);
+	 return goal.retry_fn(goal,prover);
     else
-	 frontier.push(goal);
+	 prover.frontier.push(goal);
 
     return false;
    break;

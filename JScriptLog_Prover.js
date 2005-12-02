@@ -10,75 +10,109 @@
 *******/
 
 ///////////////////////////////////
-// jslog_prove 
+// Prover Object 
 ///////////////////////////////////
 
-// The Goals and Proving Stacks.
-var jslog_frontier = new Array();
-var jslog_explored = new Array();
+var PROVER_PHASE_CONSULT = 1;
+var PROVER_PHASE_QUERY = 2;
+
+var QUERY_STATE_INITIAL = 1;
+var QUERY_STATE_PROVING = 2;
+var QUERY_STATE_WAITING = 3;
+var QUERY_STATE_DONE = 4;
 
 
-///////////////////////////////////
-// jslog_user_* functions for User Initiated Queries
-///////////////////////////////////
-
-function jslog_user_prove(query)
-{var terms;
-
- jslog_frontier = new Array();
- jslog_explored = new Array();
-
- terms = getTermArrayFromBinaryTerm(query.term,isConsPair); 
- addBodyGoalsToFrontier(null,new ArrayEnclosure(query.enclosure,terms),jslog_kb,jslog_frontier);
-
- return jslog_prove(jslog_kb,jslog_frontier,jslog_explored);
+// kb is the KB object associated with this prover
+// mode is one of the PROVER_MODE_* constants
+function Prover(kb,phase)
+{
+ this.kb = kb;
+ this.phase = phase; 
+ this.state = QUERY_STATE_INITIAL;
+ this.frontier = new Array();
+ this.explored = new Array();
+ 
+ //// Other Properties (document here):
+ // this.query : the given query encl
+  
+ return this;
 }
 
-function jslog_user_retry()
-{ 
- return jslog_prove_retry(jslog_kb,jslog_frontier,jslog_explored);
+function newQueryProver(kb,query)
+{var prover = new Prover(kb,PROVER_PHASE_QUERY);
+ var terms = getTermArrayFromBinaryTerm(query.term,isConsPair);
+ 
+ prover.query = query;
+ 
+ addBodyGoalsToFrontier(null,new ArrayEnclosure(query.enclosure,terms),prover.kb,prover.frontier);
+
+ return prover; 
 }
 
-function jslog_user_stop()
-{ 
- // FIX: doesn't really stop existing proof, just allows a new one to start
- jslog_frontier = new Array();
- jslog_explored = new Array();
+function newCommandProver(kb,query)
+{var prover = newQueryProver(kb,query);
+
+ prover.phase = PROVER_PHASE_CONSULT;
+
+ return prover; 
 }
 
+
 ///////////////////////////////////
-// jslog_prove_* functions for Prolog Prover
+// * Prover proof functions
 ///////////////////////////////////
 
-// proves all enclosures on the goals stack.
-// kb is the KnowledgeBase to use for the proof.
-function jslog_prove(kb,frontier,explored)
+// proves all enclosures on the frontier stack.
+function proveProver(prover)
 {var goal;
 
- while ((goal = frontier.pop()) != undefined)
+ if (prover.state == QUERY_STATE_DONE)
+  return false;
+
+ prover.state = QUERY_STATE_PROVING;
+ 
+ while ((goal = prover.frontier.pop()) != undefined)
  {
-  if (!tryGoal(goal,kb,frontier,explored))
+  if (!tryGoal(goal,prover))
   {
    do
    {
-    if ((goal = explored.pop()) == undefined)
+    if ((goal = prover.explored.pop()) == undefined)
+	{
+     prover.state = QUERY_STATE_DONE;
 	 return false;
-   } while (!retryGoal(goal,frontier,explored));
+	} 
+   } while (!retryGoal(goal,prover));
   }
  }
  
+ prover.state = QUERY_STATE_WAITING;
  return true;
 }
 
-
-function jslog_prove_retry(kb,frontier,explored)
+function retryProver(prover)
 {
+ if (prover.state == QUERY_STATE_DONE)
+  return false;
+
+ prover.state = QUERY_STATE_PROVING;
+
  do
  {
-  if ((goal = explored.pop()) == undefined)
+  if ((goal = prover.explored.pop()) == undefined)
+  {
+   prover.state = QUERY_STATE_DONE;
    return false;
- } while (!retryGoal(goal,frontier,explored));
+  } 
+ } while (!retryGoal(goal,prover));
 
- return jslog_prove(kb,frontier,explored);
+ return proveProver(prover);
 }
 
+function stopProver(prover)
+{ 
+ // FIX: doesn't really stop existing proof immediately
+ prover.frontier = new Array();
+ prover.explored = new Array();
+ prover.state = QUERY_STATE_DONE;
+}

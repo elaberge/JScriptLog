@@ -13,13 +13,8 @@
 // jslog_ui_* functions are controllers user interface functionality
 ///////////////////////////////////
 
-var jslog_query = null;
-
-var QUERY_STATE_INITIAL = 1;
-var QUERY_STATE_PROVING = 2;
-var QUERY_STATE_WAITING = 3;
-
-var jslog_query_state = QUERY_STATE_INITIAL;
+var jslog_kb = new KB();
+var jslog_prover = null;
 
 function jslog_ui_clear()
 {
@@ -27,7 +22,7 @@ function jslog_ui_clear()
 }
 
 // FIX: N-Queens predicates are for demo purposes only.  Remove.
-// FIX: member/2, writeln/1, assert/1, etc. are non-ISO builtins.  Move to builtins library.
+// FIX: member/2, writeln/1, assert/1, etc. are non-ISO builtins.  Move to utility library.
 // FIX: jslog_ui_init_query is for demo purposes only.  Remove.
 // FIX: needs to parse kb source, update KB, and perform post-consult optimizations.
 function jslog_ui_consult()
@@ -560,70 +555,56 @@ function jslog_ui_query()
 {var query_str = window.document.formUI.query.value;
  var query_term;
  
- if (jslog_query_state == QUERY_STATE_WAITING)
+ if (jslog_prover != null && jslog_prover.state != QUERY_STATE_DONE)
   jslog_ui_stop();
 
- if (jslog_query_state == QUERY_STATE_INITIAL)
- {
-  //FIX: until parser is working, use builtin queries.
-  query_term = jslog_premade_queries[window.document.formUI.premade_queries.selectedIndex];
+ //FIX: until parser is working, use builtin queries.
+ query_term = jslog_premade_queries[window.document.formUI.premade_queries.selectedIndex];
     
-  jslog_query = newTermEnclosure(query_term); 
+ try
+ {
+  jslog_prover = newQueryProver(jslog_kb,newTermEnclosure(query_term)); 
 
-  window.document.formUI.output.value += "?- " + jslog_toString(jslog_query) + "\n";
+  window.document.formUI.output.value += "?- " + jslog_toString(jslog_prover.query) + "\n";
   
-  jslog_query_state = QUERY_STATE_PROVING;
-  
-  try
+  if (proveProver(jslog_prover))
   {
-   if (jslog_user_prove(jslog_query))
-   {
-    jslog_query_state = QUERY_STATE_WAITING;
-    window.document.formUI.output.value += jslog_toString(jslog_query);
-   }
-   else
-   {
-    jslog_query_state = QUERY_STATE_INITIAL;
-    jslog_query = null;
-    window.document.formUI.output.value += "No";
-   }
+   window.document.formUI.output.value += jslog_toString(jslog_prover.query);
   }
-  catch (err)
+  else
   {
-   jslog_query_state = QUERY_STATE_INITIAL;
-   jslog_query = null;
-   window.document.formUI.output.value += err.toString();
-  } 
-  window.document.formUI.output.value += "\n";  
+   jslog_prover = null;
+   window.document.formUI.output.value += "No";
+  }
  }
- else
-  alert("Stop running query first.");
+ catch (err)
+ {
+  jslog_prover = null;
+  window.document.formUI.output.value += err.toString();
+ } 
+
+ window.document.formUI.output.value += "\n";  
 }
 
 function jslog_ui_retry()
 {
- if (jslog_query_state == QUERY_STATE_WAITING)
+ if (jslog_prover != null && jslog_prover.state == QUERY_STATE_WAITING)
  {
-  jslog_query_state = QUERY_STATE_PROVING;
-  
   try
   {
-   if (jslog_user_retry())
+   if (retryProver(jslog_prover))
    {
-    jslog_query_state = QUERY_STATE_WAITING;
-    window.document.formUI.output.value += jslog_toString(jslog_query);
+    window.document.formUI.output.value += jslog_toString(jslog_prover.query);
    }
    else
    {
-    jslog_query_state = QUERY_STATE_INITIAL;
-    jslog_query = null;
+    jslog_prover = null;
     window.document.formUI.output.value += "No";
    }
   } 
   catch (err)
   {
-   jslog_query_state = QUERY_STATE_INITIAL;
-   jslog_query = null;
+   jslog_prover = null;
    window.document.formUI.output.value += err.toString();
   } 
   window.document.formUI.output.value += "\n";
@@ -634,9 +615,10 @@ function jslog_ui_retry()
 
 function jslog_ui_stop()
 {
- if (jslog_query_state != QUERY_STATE_INITIAL)
+ if (jslog_prover != null)
  {
-  jslog_query_state = QUERY_STATE_INITIAL;
+  stopProver(jslog_prover);
+  jslog_prover = null;
   window.document.formUI.output.value += "stopped query.\n";
  }
  

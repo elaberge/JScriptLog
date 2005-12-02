@@ -16,10 +16,6 @@
 
 // FIX: RuleSets should denote operator information (if it represents an operator).
 
-// The KnowledgeBase (array of prolog rule clauses).
-var jslog_kb = new KB();
-
-
 function KB()
 {var ruleset;
  var rule;

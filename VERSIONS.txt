@@ -1,12 +1,15 @@
 JScriptLog 0.6.0.alpha
 ====================
 
-¥ Changed internal:current_predicate/3 to internal:current_predicate/2 using a single function rule.  abolish/1 and current_predicate/1 rules were re-writen to accommodate changed.  Removed unnecessary code (the internal_current_predicate_*_fn) and updated Goals property documentation to reflect that some properties were no longer needed.
+¥ Changed internal:current_predicate/3 to internal:current_predicate/2 using a single function rule.  abolish/1 and current_predicate/1 rules were re-writen to accommodate changes.  Removed unnecessary code (the internal_current_predicate_*_fn) and updated Goals property documentation to reflect that some properties were no longer needed.
 
-¥ Updated prover protocol, regarding goal.bindings for tryGoal and retryGoal, to preserve the goal.bindings array (to save from creating new copies).  goal.bindings must be empty on fail, but should not be removed (i.e., made null).  goal.bindings are assumed to be empty, if not null, for tryGoal.  try_fn functions can assume that goal.bindings is an empty array (they are responsible for the subgoal, however).  retry_fn functions can assume an empty array (same responsibility for subgoals, where they must remove bindings).
+¥ Updated prover protocol, regarding goal.bindings for tryGoal and retryGoal, to preserve the goal.bindings array (to save from creating new copies).  goal.bindings must be empty on fail, but should not be removed (i.e., made null).  goal.bindings are assumed to be empty, if not null, for tryGoal.  try_fn functions can assume that goal.bindings is an empty array (they are responsible for creating the subgoal, however).  retry_fn functions can assume empty arrays.
 
-¥ Changed nextUnifiedRuleBodyForGoal method so that is only creates a new array for goal.bindings if goal.bindings == null (otherwise the array must be empty).
+¥ Changed nextUnifiedRuleBodyForGoal method so that it only creates a new array for goal.bindings if goal.bindings == null (otherwise the array must be empty).
 
+¥ Changes to JScriptLog_Prover.js source.  Added Prover class, which encapsulates proof queries, and maintains the prover state, phase, associated KB, and goal sets.  Replaced jslog_user_* and jslog_prove* functions with proveProver, retryProver, and stopProver methods.  Updated JScriptLog_UI.js to reflect prover changes.  As a user of the Prolog Prover, it no longer needs to keep track of the QUERY_STATE_* values.  Move jslog_kb declaration out of JScriptLog_KB.js and into JScriptLog_UI.js (the user of the JScriptLog Prolog engine should construct the KB they want to use).  Modified tryGoal and retryGoal to take a Prover object (instead of kb, frontier, explored).
+
+¥ Modified protocol for try_fn and retry_fn traversal functions so that they take a prover parameter, instead of the two stacks (this gives traversal functions more information, hence greater control).
 
 WORKING ON:
 
