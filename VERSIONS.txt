@@ -7,12 +7,33 @@ JScriptLog 0.6.0.alpha
 
 ¥ Changed nextUnifiedRuleBodyForGoal method so that it only creates a new array for goal.bindings if goal.bindings == null (otherwise the array must be empty).
 
-¥ Changes to JScriptLog_Prover.js source.  Added Prover class, which encapsulates proof queries, and maintains the prover state, phase, associated KB, and goal sets.  Replaced jslog_user_* and jslog_prove* functions with proveProver, retryProver, and stopProver methods.  Updated JScriptLog_UI.js to reflect prover changes.  As a user of the Prolog Prover, it no longer needs to keep track of the QUERY_STATE_* values.  Move jslog_kb declaration out of JScriptLog_KB.js and into JScriptLog_UI.js (the user of the JScriptLog Prolog engine should construct the KB they want to use).  Modified tryGoal and retryGoal to take a Prover object (instead of kb, frontier, explored).
+¥ Changes to JScriptLog_Prover.js source.  Added Prover class, which encapsulates proof queries, and maintains the prover state, phase, associated KB, and goal sets.  Replaced jslog_user_* and jslog_prove* functions with proveProver, retryProver, stopProver, and haltProver methods.  Updated JScriptLog_UI.js to reflect prover changes.  As a user of the Prolog Prover, it no longer needs to keep track of the QUERY_STATE_* values. Added isProverState* test methods.  Moved jslog_kb declaration out of JScriptLog_KB.js and into JScriptLog_UI.js (the user of the JScriptLog Prolog engine should construct the KB they want to use).  Modified tryGoal and retryGoal to take a Prover object (instead of kb, frontier, explored).
 
 ¥ Modified protocol for try_fn and retry_fn traversal functions so that they take a prover parameter, instead of the two stacks (this gives traversal functions more information, hence greater control).
 
-WORKING ON:
+¥ Changed stopProver to perform an proper stop by undoing the explored goals.  haltProver now performs an immediate stop without performing goal cleanup.
 
+¥ Added undoGoal to perform unbinding for a goal.  Traversal rules can now have a undo_fn to handle special unbinding cases.  newTraversalFunction method now takes an extra undo_fn argument (null if there is no special case).  Added internal_clause_undo_fn to handle unbinding of subgoal property.  Updated tryGoal, retryGoal, and cut_retry_fn to use undoGoal. 
+
+¥ Fixed issue where cut (!) internal:clause/4 could interact to leave variables bound on the retry (because of the subgoal.bindings).  The addition of undoGoal solved the problem.
+
+¥ Updated comment documentation of protocols for try_fn, retry_fn, undo_fn, and fn type functions.
+
+¥ Added internal:sumlist/4 for performing a Pred operation on a list and accumulator, returning the final accumulator value.
+
+¥ Added support for exceptions with catch/3 and internal:catch/3.  Added internal_catch_try_fn, internal_catch_retry_fn, internal_catch_undo_fn, and internal_catch_handle_catch functions to implement internal:catch/3.
+
+¥ Added try/catch blocks to proverProver, retryProver, and stopProver methods to capture exceptions, undo the current goal (if possible) and re-throw the error.  Updated protocol documentation for traversal functions (try_fn, retry_fn, and undo_fn functions) on handling exceptions.
+
+¥ Added phase property to KB to determine if the KB is in the middle of consulting or is ready for a query.
+
+¥ Added newKB constructor to create a KB with all builtin and internal predicates.  The KB class now just creates an empty KB.  Added loadKBLibrary to load pre-defined predicates.
+
+¥ Added JScriptLog_Utilities.js file containing non-standard, but useful predicates (e.g., writeln/1, assert/1, ground/1, term_variables/2, member/2, append/3, select/3, etc.).  The JScriptLog.html file now indicates, via comments, which *.js source files are part of the core JScriptLog Prolog Engine, which are part of the extras, and which are controllers for the provided JScriptLog User Interface.
+
+¥ Added newInternalErrorException to denote serious internal errors which might leave the system in an inconsistent state.  While these can be caught with catch/3, it is not recommended where logical consistency is required.
+
+¥ Added the pprove/1 Prolog meta-interpreter to the demo / testing predicates.  pprove/1 can handle meta-interpeting the cut (!) correctly too. A demo query illustrates meta-interpreting a queens/2 query.
 
 
 JScriptLog 0.5.5.alpha

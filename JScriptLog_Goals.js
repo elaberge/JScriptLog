@@ -33,7 +33,9 @@ function Goal(type,encl,parent)
  // this.fn : the goal function
  // this.try_fn : the try traversal function
  // this.retry_fn : the retry traversal function
- 
+ // this.undo_fn : the undo special bindings function
+ // this.prover : a sub-prover
+  
  return this;
 }
 
@@ -158,6 +160,10 @@ function tryGoal(goal,prover)
       goal.ruleset = encl.term.ruleset;
      else
 	  goal.ruleset = getRuleSet(prover.kb,encl.term);
+
+	 goal.retry_fn = null;
+	 goal.undo_fn = null;
+
   case TYPE_ATOM_GOAL:
      var rule_body;
 
@@ -167,7 +173,6 @@ function tryGoal(goal,prover)
       throw newErrorException("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
      }
 
-	 goal.retry_fn = null;
 	 goal.rule_index = 0;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
 	 
@@ -200,6 +205,7 @@ function tryGoal(goal,prover)
 	  else if (rule_body.try_fn != null)
 	  {
 	   goal.retry_fn = rule_body.retry_fn;
+	   goal.undo_fn = rule_body.undo_fn;
 	   return rule_body.try_fn(goal,prover);
 	  }
 	  else
@@ -238,7 +244,7 @@ function tryGoal(goal,prover)
 // goal.bindings must be non-null on start, empty on fail.
 function retryGoal(goal,prover)
 {
- removeBindings(goal.bindings);
+ undoGoal(goal,true);
 
  switch (goal.type)
  {
@@ -287,12 +293,15 @@ function retryGoal(goal,prover)
  }
 }
 
-function undoGoalBindings(goal)
+// undoGoal(goal,retry) undoes the binding for goal.
+// retry is true if a retry will follow, false if not.
+function undoGoal(goal,retry)
 {
  if (goal.bindings != null)
   removeBindings(goal.bindings);
 
- goal.bindings = null;
+ if (goal.undo_fn != null)
+  goal.undo_fn(goal,retry);
 }
 
 // removes the contiguous top-most goals from frontier which are children of the parent goal

@@ -18,6 +18,11 @@
 // goal.  goal was just removed from frontier, but is not on either frontier or explored stack.
 // goal will need to be placed on one of either the frontier or explored stack.
 // Returns true if the goal can be explored further, false if not.
+// If false, then all bindings must be undone.
+// If an exception is thrown, only the bindings for goal are undone externally. If the *_try_fn
+// has caused any bindings for another goal, it must try / catch for exceptions and clean up
+// before re-throwing.
+// Assumes goal.bindings == new Array()
 ///////////////////////////////////
 
 function true_try_fn(goal,prover)
@@ -59,8 +64,6 @@ function internal_clause_try_fn(goal,prover)
   return false;
  }
 
- goal.bindings = new Array();
-
  return internal_clause_test(body,rref,idx,goal,prover);
 }
 
@@ -87,7 +90,7 @@ function internal_clause_test(body,rref,idx,goal,prover)
    else
    {
     removeBindings(goal.bindings);
-    removeBindings(goal.subgoal.bindings);
+    internal_clause_undo_fn(goal);
 	goal.subgoal.rule_index++;
    }
   }
@@ -96,10 +99,72 @@ function internal_clause_test(body,rref,idx,goal,prover)
  // no rules matches
  {
   removeBindings(goal.bindings);
-  undoGoalBindings(goal.subgoal);
+  internal_clause_undo_fn(goal);
   prover.frontier.push(goal);
   goal.subgoal = null;
   return false;
+ }
+}
+
+
+function internal_catch_try_fn(goal,prover)
+{var encl = getFinalEnclosure(goal.encl);
+ var g = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var t3 = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+
+ goal.prover = newQueryProver(prover.kb,g);
+ 
+ try
+ {var t = newSubtermEnclosure(encl.enclosure,newConstant('true'));
+ 
+  if (proveProver(goal.prover) && jslog_unify(t3,t,goal.bindings))
+  {
+   prover.explored.push(goal);
+   return true;
+  }
+
+  removeBindings(goal.bindings);
+  stopProver(goal.prover);
+  prover.frontier.push(goal);
+  return false;
+ }
+ catch (err)
+ {
+  return internal_catch_handle_catch(encl,err,t3,goal,prover);
+ }
+}
+
+function internal_catch_handle_catch(encl,err,t3,goal,prover)
+{var e;
+ var ex = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+
+ stopProver(goal.prover);  
+ 
+ if (err.constructor == Exception)
+  e = err.encl;
+ else
+ {
+  err = newInternalErrorException(err.toString())
+  e = err.encl;
+ }
+   
+ if (jslog_unify(e,ex,goal.bindings))
+ {var f = newSubtermEnclosure(encl.enclosure,newConstant('fail'));
+
+  if (jslog_unify(t3,f,goal.bindings))
+  {
+   prover.explored.push(goal);
+   return true;
+  }
+   
+  removeBindings(goal.bindings);
+  prover.frontier.push(goal);
+  return false;
+ }
+ else
+ {
+  removeBindings(goal.bindings);
+  throw err;
  }
 }
 
@@ -110,6 +175,11 @@ function internal_clause_test(body,rref,idx,goal,prover)
 // frontier or explored stack.
 // goal will need to be placed on one of either the frontier or explored stack.
 // Returns true if the goal can be explored further, false if not.
+// If false, then all bindings must be undone.
+// If an exception is thrown, only the bindings for goal are undone externally. If the *_try_fn
+// has caused any bindings for another goal, it must try / catch for exceptions and clean up
+// before re-throwing.
+// Assumes goal.bindings == new Array()
 ///////////////////////////////////
 
 function cut_retry_fn(goal,prover)
@@ -119,7 +189,7 @@ function cut_retry_fn(goal,prover)
 
  while ((g = prover.explored.pop()) != undefined)
  {
-  removeBindings(g.bindings);
+  undoGoal(g,false);
   if (g == goal.parent)
   {
    prover.frontier.push(g);
@@ -138,8 +208,6 @@ function internal_clause_retry_fn(goal,prover)
  var idx = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
  var doinc = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[4]));
  
- removeBindings(goal.subgoal.bindings);
-
  // if idx was bound, there is no retry
  if (isNumber(idx.term))
  {
@@ -147,8 +215,6 @@ function internal_clause_retry_fn(goal,prover)
   goal.subgoal = null;
   return false;
  }
-
- goal.bindings = new Array();
 
  if (isInteger(doinc.term))
   goal.subgoal.rule_index += doinc.term.name;
@@ -159,9 +225,64 @@ function internal_clause_retry_fn(goal,prover)
 }
 
 
+function internal_catch_retry_fn(goal,prover)
+{var encl = getFinalEnclosure(goal.encl);
+ var t3 = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ 
+ if (isProverStateDone(goal.prover))
+ {
+  prover.frontier.push(goal);
+  return false;
+ }
+ 
+ try
+ {var t = newSubtermEnclosure(encl.enclosure,newConstant('true'));
+ 
+  if (retryProver(goal.prover) && jslog_unify(t3,t,goal.bindings))
+  {
+   prover.explored.push(goal);
+   return true;
+  }
+
+  removeBindings(goal.bindings);
+  stopProver(goal.prover);
+  prover.frontier.push(goal);
+  return false;
+ }
+ catch (err)
+ {
+  return internal_catch_handle_catch(encl,err,t3,goal,prover);
+ }
+}
+
+
+///////////////////////////////////
+// *_undo_fn(goal,retry) is a binding undo function called when undoing or retrying traversal goal.
+// If retry is true, then a retry attempt will follow, if retry if false, undo completely.
+// Only needs to undo bindings other than goal.bindings.
+// It is important that *_undo_fn functions never fail to undo their bindings, even if called
+// multiple times for the same goal, and they should never throw exceptions -- except if system
+// integrity is compromised.
+///////////////////////////////////
+
+function internal_clause_undo_fn(goal,retry)
+{
+ if (goal.subgoal != null && goal.subgoal.bindings != null)
+  removeBindings(goal.subgoal.bindings);
+}
+
+function internal_catch_undo_fn(goal,retry)
+{
+ if (!retry && goal.prover != null)
+  stopProver(goal.prover);
+}
+
+
 ///////////////////////////////////
 // *_fn(goal) is a function called when attempting to prove goal.  
 // Returns true if the goal succeeds, false if not.
+// If false, then all bindings must be undone.  Only use goal.bindings to register bindings.
+// Assumes goal.bindings == new Array()
 ///////////////////////////////////
 
 function is_fn(goal)

@@ -70,6 +70,14 @@ function newErrorException(str)
  return new Exception(newBlankEnclosure(0,newAtom('Error',[newConstant(str)])));
 }
 
+// Creates an InternalError Exception term from the given string
+// InternalError exceptions denote possibly serious errors affecting internal operations.
+// They can be caught, however, the system may be in an inconsistent, or unknown, state.
+function newInternalErrorException(str)
+{
+ return new Exception(newBlankEnclosure(0,newAtom('InternalError',[newConstant(str)])));
+}
+
 // Creates a duplicate enclosure via a deep copy.  The terms in encl remain unchanged
 // but all enclosures in the enclosure tree are copied.
 function newDuplicateEnclosure(encl)
