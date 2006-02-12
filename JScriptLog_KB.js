@@ -232,7 +232,7 @@ function newKB()
  {
   ruleset = new RuleSet('!',0,false);
 
-  ruleset.rules.push(newTraversalRule(newConstant('!'),true_try_fn,cut_retry_fn,null));
+  ruleset.rules.push(newTraversalRule(newConstant('!'),cut_try_fn,cut_retry_fn,null));
  
   addRuleSet(kb,ruleset);
  }

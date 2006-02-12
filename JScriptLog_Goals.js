@@ -182,9 +182,20 @@ function tryGoal(goal,prover)
 	  return false;
 	 }
 	 else if (rule_body.terms != null)
-	 {
-	  prover.explored.push(goal);
-      addBodyGoalsToFrontier(goal,rule_body,prover.kb,prover.frontier);
+	 {// if deterministic, or last-try
+	  if (goal.parent != null && // entails prover.explored.length >= 1
+			(goal.ruleset.rules.length == 1 || 
+			(goal.rule_index == goal.ruleset.rules.length - 1 && 
+			 prover.explored[prover.explored.length - 1] == goal.parent)))
+	  {
+	   mergeGoalBindings(goal,goal.parent);
+	   addBodyGoalsToFrontier(goal.parent,rule_body,prover.kb,prover.frontier);
+	  }
+	  else
+	  {
+	   prover.explored.push(goal);
+       addBodyGoalsToFrontier(goal,rule_body,prover.kb,prover.frontier);
+	  }
 	  return true;
 	 }
 	 else // handle FUNCTION and TRAVERSAL
@@ -193,7 +204,12 @@ function tryGoal(goal,prover)
 	  {
 	   if (rule_body.fn(goal))
        {
-	   	prover.explored.push(goal);
+	    if (goal.parent != null && // entails prover.explored.length >= 1
+			prover.explored[prover.explored.length - 1] == goal.parent)
+	     mergeGoalBindings(goal,goal.parent);
+		else
+	   	 prover.explored.push(goal);
+
         return true;
        }
 	   else
@@ -218,7 +234,11 @@ function tryGoal(goal,prover)
   case TYPE_FUNCTION_GOAL:
 	 if (goal.fn(goal))
      {
-	  prover.explored.push(goal);
+	  if (goal.parent != null && // entails prover.explored.length >= 1
+			prover.explored[prover.explored.length - 1] == goal.parent)
+	   mergeGoalBindings(goal,goal.parent);
+	  else
+	   prover.explored.push(goal);
       return true;
      }
 	 else
@@ -267,9 +287,20 @@ function retryGoal(goal,prover)
 	  return false;
 	 }
 	 else if (rule_body.terms != null)
-	 {
-	  prover.explored.push(goal);
-      addBodyGoalsToFrontier(goal,rule_body,goal.kb,prover.frontier);
+	 {// if deterministic, or last-try
+	  if (goal.parent != null && // entails prover.explored.length >= 1
+			(goal.ruleset.rules.length == 1 || 
+			(goal.rule_index == goal.ruleset.rules.length - 1 && 
+			 prover.explored[prover.explored.length - 1] == goal.parent)))
+	  {
+	   mergeGoalBindings(goal,goal.parent);
+	   addBodyGoalsToFrontier(goal.parent,rule_body,prover.kb,prover.frontier);
+	  }
+	  else
+	  {
+	   prover.explored.push(goal);
+       addBodyGoalsToFrontier(goal,rule_body,goal.kb,prover.frontier);
+	  }
 	  return true;
 	 }
 	 else
@@ -333,8 +364,10 @@ function nextUnifiedRuleBodyForGoal(goal)
   rule = goal.ruleset.rules[goal.rule_index];
 
   if ((enclosure = getUnifiedRuleEnclosure(rule,goal.encl,goal.bindings)) != undefined)
+  {
+   enclosure.goal = goal;
    return newRuleBodyArrayEnclosure(enclosure,rule);
-
+  }
   goal.rule_index++;
  }
  return null;
@@ -353,3 +386,21 @@ function addBodyGoalsToFrontier(parent,body,kb,frontier)
   frontier.push(goal);
  }
 }
+
+// merge bindings from sgoal to dgoal
+// dgoal should be a predecessor of sgoal
+function mergeGoalBindings(sgoal,dgoal)
+{var b;
+ 
+ while ((b = sgoal.bindings.pop()) != undefined)
+ {
+  if (b.enclosure.goal == sgoal)
+  {
+   b.enclosure.goal = dgoal; 
+   b.enclosure.is_pred_goal = true; 
+  }
+  else if (b.enclosure.goal != dgoal || b.enclosure.is_pred_goal != true)
+   dgoal.bindings.push(b);
+ }; 
+}
+

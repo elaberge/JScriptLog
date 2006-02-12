@@ -180,3 +180,52 @@ function isProverStateDone(prover)
  return (prover.state == QUERY_STATE_DONE);
 }
 
+
+///////////////////////////////////
+// * ProverStatistics
+///////////////////////////////////
+
+// prover is the Prover object associated with these statistics
+function ProverStatistics(prover)
+{
+ this.prover = prover;
+ this.frontier_goals_count = 0;
+ this.frontier_bindings_count = 0;
+ this.explored_goals_count = 0;
+ this.explored_bindings_count = 0;
+ 
+ //// Other Properties (document here):
+ 
+ this.toString = function() 
+ {  
+  return "EXPLORED - goals:" + this.explored_goals_count.toString() + 
+					" bindings:" + this.explored_bindings_count.toString() + " ; " +
+		 "FRONTIER - goals:" + this.frontier_goals_count.toString() + 
+					" bindings:" + this.frontier_bindings_count.toString(); 
+ };
+  
+ return this;
+}
+
+
+///////////////////////////////////
+// * Prover Statistics functions
+///////////////////////////////////
+
+function calculateStatistics(prover)
+{var stats = new ProverStatistics(prover);
+ var i;
+ 
+ stats.frontier_goals_count = prover.frontier.length;
+ stats.explored_goals_count = prover.explored.length;
+
+ for (i = 0; i < prover.frontier.length; ++i)
+  if (prover.frontier[i] != null && prover.frontier[i].bindings != null)
+   stats.frontier_bindings_count += prover.frontier[i].bindings.length;  
+
+ for (i = 0; i < prover.explored.length; ++i)
+  if (prover.explored[i] != null && prover.explored[i].bindings != null)
+   stats.explored_bindings_count += prover.explored[i].bindings.length;  
+ 
+ return stats;
+}

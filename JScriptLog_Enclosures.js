@@ -21,6 +21,10 @@ function Enclosure(enclosure,term)
  this.enclosure = enclosure;
  this.term = term;
 
+ //// Other Properties (document here):
+ // this.enclosure.goal : the single top goal node the enclosure array exists at, or below
+ // this.enclosure.is_pred_goal : true if goal is a predecessor of the goal which created enclosure
+
  return this;
 }
 

@@ -32,6 +32,59 @@ function true_try_fn(goal,prover)
 }
 
 
+function cut_try_fn(goal,prover)
+{var g;
+ var gs_with_undo_fn = null;
+ 
+ while ((g = prover.explored.pop()) != undefined)
+ {
+  if (g == goal.parent) // cutoff parent found -- break
+  {
+   if (gs_with_undo_fn != null) // non-mergeable goals to return to explored stack
+   {
+    prover.explored.push(g);
+
+    while ((g = gs_with_undo_fn.pop()) != undefined)
+     prover.explored.push(g);
+	 
+    prover.explored.push(goal);
+   }
+   else if (g.parent != null && prover.explored[prover.explored.length - 1] == g.parent)
+   {var i = prover.frontier.length - 1;
+
+	while (i >= 0 && prover.frontier[i].parent == g)
+	{
+	 prover.frontier[i].parent = g.parent;
+	 --i;
+	}
+
+	mergeGoalBindings(g,g.parent);
+   }
+   else
+   {
+    prover.explored.push(g);
+    prover.explored.push(goal);
+   }
+
+   return true;
+  }
+  else if (g.undo_fn != undefined) // goal with unmergeable bindings (must wait for retry to undo)
+  {
+   if (gs_with_undo_fn == null)
+    gs_with_undo_fn = new Array();
+   gs_with_undo_fn.push(g);
+  }
+  else // sub-goal with mergeable bindings
+  {
+   mergeGoalBindings(g,g.parent);
+  }
+ };
+ 
+ prover.explored.push(goal);
+ return true;
+}
+
+
 function internal_clause_try_fn(goal,prover)
 {var encl = getFinalEnclosure(goal.encl);
  var head = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));

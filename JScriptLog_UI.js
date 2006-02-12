@@ -310,6 +310,64 @@ function jslog_ui_consult()
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
+ // dtest1(0).  
+ // dtest1(N) :- N1 is N - 1, dtest1(N1). 
+ {
+  addRuleSet(jslog_kb,new RuleSet('dtest1',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newAtom('dtest1',[newNumber(0)])),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('dtest1',[newVariable('N')]),
+		newConsPair(
+			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
+			newAtom('dtest1',[newVariable('N1')])))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // dtest2(N) :- N > 0, N1 is N - 1, dtest2(N1). 
+ // dtest2(0).  
+ {
+  addRuleSet(jslog_kb,new RuleSet('dtest2',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('dtest2',[newVariable('N')]),
+		newConsPairsFromTerms([
+			newAtom('>',[newVariable('N'),newNumber(0)]),
+			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
+			newAtom('dtest2',[newVariable('N1')])]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newAtom('dtest2',[newNumber(0)])),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // dtest3(N) :- N > 0, dtest2(N), N1 is N - 1, !, dtest3(N1). 
+ // dtest3(0).  
+ {
+  addRuleSet(jslog_kb,new RuleSet('dtest3',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('dtest3',[newVariable('N')]),
+		newConsPairsFromTerms([
+			newAtom('>',[newVariable('N'),newNumber(0)]),
+			newAtom('dtest2',[newVariable('N')]),
+			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
+			newConstant('!'),
+			newAtom('dtest3',[newVariable('N1')])]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newAtom('dtest3',[newNumber(0)])),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
 
  try
  {
@@ -341,10 +399,23 @@ function jslog_ui_init_query()
  q[i++] = newAtom('queens',[newNumber(6),newVariable('X')]);
  q[i++] = newAtom('queens',[newNumber(7),newVariable('X')]);
  q[i++] = newAtom('queens',[newNumber(8),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(9),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(10),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(11),newVariable('X')]);
+ q[i++] = newAtom('queens',[newNumber(12),newVariable('X')]);
 
  q[i++] = newAtom('pprove',[newAtom('queens',[newNumber(4),newVariable('X')])]);
+ q[i++] = newAtom('pprove',[newAtom('queens',[newNumber(8),newVariable('X')])]);
 
+ q[i++] = newConstant('!');
+ q[i++] = newAtom('dtest1',[newNumber(10)]);
+ q[i++] = newAtom('dtest1',[newNumber(50)]);
+ q[i++] = newAtom('dtest1',[newNumber(100)]);
+ q[i++] = newAtom('dtest1',[newNumber(500)]);
+ q[i++] = newAtom('dtest2',[newNumber(100)]);
+ q[i++] = newAtom('dtest3',[newNumber(100)]);
  q[i++] = newAtom('\\+',[newConstant('true')]);
+ q[i++] = newAtom('\\+',[newConstant('fail')]);
  q[i++] = newAtom('call',[newConstant('true')]);
  q[i++] = newAtom('once',[newAtom('queens',[newNumber(4),newVariable('X')])]);
  q[i++] = newConsPair(newConstant('repeat'),newAtom('writeln',[newConstant('hi there.')]));
@@ -638,6 +709,9 @@ function jslog_ui_query()
   if (proveProver(jslog_prover))
   {
    window.document.formUI.output.value += jslog_toString(jslog_prover.query);
+   
+   // DEBUGGING STATISTICS INFORMATION
+   window.document.formUI.output.value += "\n" + calculateStatistics(jslog_prover).toString();
   }
   else
   {
@@ -663,6 +737,9 @@ function jslog_ui_retry()
    if (retryProver(jslog_prover))
    {
     window.document.formUI.output.value += jslog_toString(jslog_prover.query);
+
+    // DEBUGGING STATISTICS INFORMATION
+    window.document.formUI.output.value += "\n" + calculateStatistics(jslog_prover).toString();
    }
    else
    {

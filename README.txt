@@ -10,7 +10,7 @@ The available built-in predicates are the Control, Meta, Comparison, Arithmetic,
 It has some shortcomings, and room for improvement.
 
 
-CRITIAL SHORTCOMINGS:
+SHORTCOMINGS:
 
 * There is no parser.  It is possible to construct the terms directly (see existing code and queries for N-Queens).  See patch #1311136 for the writeJSLog/1 converter tool, which constructs the terms directly from the given Prolog source code, using an external Prolog interpreter, such as JLog.  A future goal is to write the parser for JScriptLog in Prolog itself.
 
