@@ -182,26 +182,54 @@ function isProverStateDone(prover)
 
 
 ///////////////////////////////////
-// * ProverStatistics
+// * ProverStatistic
 ///////////////////////////////////
 
 // prover is the Prover object associated with these statistics
-function ProverStatistics(prover)
+function ProverStatistic(prover)
 {
  this.prover = prover;
+ 
+ // properties for the last statistic calculation for this object
  this.frontier_goals_count = 0;
  this.frontier_bindings_count = 0;
  this.explored_goals_count = 0;
  this.explored_bindings_count = 0;
+
+ // properties summarized all statistic calculations for this object
+ this.max_frontier_goals_count = 0;
+ this.max_frontier_bindings_count = 0;
+ this.max_explored_goals_count = 0;
+ this.max_explored_bindings_count = 0;
  
  //// Other Properties (document here):
  
  this.toString = function() 
- {  
-  return "EXPLORED - goals:" + this.explored_goals_count.toString() + 
-					" bindings:" + this.explored_bindings_count.toString() + " ; " +
-		 "FRONTIER - goals:" + this.frontier_goals_count.toString() + 
-					" bindings:" + this.frontier_bindings_count.toString(); 
+ {var s;
+ 
+  s = "EXPLORED - goals:" + this.explored_goals_count.toString();
+  
+  if (this.max_explored_goals_count > this.explored_goals_count)
+   s += " (max:" + this.max_explored_goals_count.toString() + ")";
+   
+  s += " bindings:" + this.explored_bindings_count.toString(); 
+  
+  if (this.max_explored_bindings_count > this.explored_bindings_count)
+   s += " (max:" + this.max_explored_bindings_count.toString() + ")";
+
+  s += " ; "
+		 
+  s += "FRONTIER - goals:" + this.frontier_goals_count.toString(); 
+					
+  if (this.max_frontier_goals_count > this.frontier_goals_count)
+   s += " (max:" + this.max_frontier_goals_count.toString() + ")";
+
+  s += " bindings:" + this.frontier_bindings_count.toString(); 
+
+  if (this.max_frontier_bindings_count > this.frontier_bindings_count)
+   s += " (max:" + this.max_frontier_bindings_count.toString() + ")";
+
+  return s;
  };
   
  return this;
@@ -209,23 +237,34 @@ function ProverStatistics(prover)
 
 
 ///////////////////////////////////
-// * Prover Statistics functions
+// * Prover Statistic functions
 ///////////////////////////////////
 
-function calculateStatistics(prover)
-{var stats = new ProverStatistics(prover);
- var i;
+// stats is a ProverStatistic object
+function calculateStatistics(stats)
+{var i;
  
- stats.frontier_goals_count = prover.frontier.length;
- stats.explored_goals_count = prover.explored.length;
+ stats.frontier_goals_count = stats.prover.frontier.length;
+ stats.explored_goals_count = stats.prover.explored.length;
+ stats.frontier_bindings_count = 0;
+ stats.explored_bindings_count = 0;
 
- for (i = 0; i < prover.frontier.length; ++i)
-  if (prover.frontier[i] != null && prover.frontier[i].bindings != null)
-   stats.frontier_bindings_count += prover.frontier[i].bindings.length;  
+ for (i = 0; i < stats.prover.frontier.length; ++i)
+  if (stats.prover.frontier[i] != null && stats.prover.frontier[i].bindings != null)
+   stats.frontier_bindings_count += stats.prover.frontier[i].bindings.length;  
 
- for (i = 0; i < prover.explored.length; ++i)
-  if (prover.explored[i] != null && prover.explored[i].bindings != null)
-   stats.explored_bindings_count += prover.explored[i].bindings.length;  
+ for (i = 0; i < stats.prover.explored.length; ++i)
+  if (stats.prover.explored[i] != null && stats.prover.explored[i].bindings != null)
+   stats.explored_bindings_count += stats.prover.explored[i].bindings.length;
+   
+ stats.max_frontier_goals_count = Math.max(stats.max_frontier_goals_count,
+											stats.frontier_goals_count);
+ stats.max_frontier_bindings_count = Math.max(stats.max_frontier_bindings_count,
+											stats.frontier_bindings_count);
+ stats.max_explored_goals_count = Math.max(stats.max_explored_goals_count,
+											stats.explored_goals_count);
+ stats.max_explored_bindings_count = Math.max(stats.max_explored_bindings_count,
+											stats.explored_bindings_count);
  
  return stats;
 }

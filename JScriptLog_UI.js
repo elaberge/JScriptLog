@@ -15,6 +15,7 @@
 
 var jslog_kb = new KB();
 var jslog_prover = null;
+var jslog_proverstats = null;
 
 function jslog_ui_clear()
 {
@@ -711,7 +712,8 @@ function jslog_ui_query()
    window.document.formUI.output.value += jslog_toString(jslog_prover.query);
    
    // DEBUGGING STATISTICS INFORMATION
-   window.document.formUI.output.value += "\n" + calculateStatistics(jslog_prover).toString();
+   jslog_proverstats = new ProverStatistic(jslog_prover);
+   window.document.formUI.output.value += "\n" + calculateStatistics(jslog_proverstats).toString();
   }
   else
   {
@@ -739,7 +741,7 @@ function jslog_ui_retry()
     window.document.formUI.output.value += jslog_toString(jslog_prover.query);
 
     // DEBUGGING STATISTICS INFORMATION
-    window.document.formUI.output.value += "\n" + calculateStatistics(jslog_prover).toString();
+    window.document.formUI.output.value += "\n" + calculateStatistics(jslog_proverstats).toString();
    }
    else
    {

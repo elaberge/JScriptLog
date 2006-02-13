@@ -35,6 +35,7 @@ function Goal(type,encl,parent)
  // this.retry_fn : the retry traversal function
  // this.undo_fn : the undo special bindings function
  // this.prover : a sub-prover
+ // this.noretry : if true, the next retry must fail.
   
  return this;
 }
@@ -173,6 +174,8 @@ function tryGoal(goal,prover)
       throw newErrorException("Unknown predicate: "+getTermNameArity(getBoundEnclosure(goal.encl).term)); 
      }
 
+	 goal.noretry = undefined;
+	 
 	 goal.rule_index = 0;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
 	 
@@ -270,7 +273,7 @@ function retryGoal(goal,prover)
  {
   case TYPE_VARIABLE_GOAL:
   case TYPE_ATOM_GOAL:
-     var rule_body;
+     var rule_body = null;
 
 	 removeChildGoalsFromFrontier(goal,prover.frontier);
 
@@ -279,7 +282,8 @@ function retryGoal(goal,prover)
 	  return goal.retry_fn(goal,prover);
 	 
 	 goal.rule_index++;
-	 rule_body = nextUnifiedRuleBodyForGoal(goal);
+	 if (goal.noretry != true)
+	  rule_body = nextUnifiedRuleBodyForGoal(goal);
 	 
 	 if (rule_body == null)
 	 {
@@ -397,9 +401,9 @@ function mergeGoalBindings(sgoal,dgoal)
   if (b.enclosure.goal == sgoal)
   {
    b.enclosure.goal = dgoal; 
-   b.enclosure.is_pred_goal = true; 
+   b.enclosure.transferred = true; 
   }
-  else if (b.enclosure.goal != dgoal || b.enclosure.is_pred_goal != true)
+  else if (b.enclosure.goal != dgoal || b.enclosure.transferred != true)
    dgoal.bindings.push(b);
  }; 
 }

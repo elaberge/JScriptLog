@@ -62,8 +62,9 @@ function cut_try_fn(goal,prover)
    }
    else
    {
+    g.noretry = true;
     prover.explored.push(g);
-    prover.explored.push(goal);
+//    prover.explored.push(goal);
    }
 
    return true;

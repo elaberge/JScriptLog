@@ -23,7 +23,7 @@ function Enclosure(enclosure,term)
 
  //// Other Properties (document here):
  // this.enclosure.goal : the single top goal node the enclosure array exists at, or below
- // this.enclosure.is_pred_goal : true if goal is a predecessor of the goal which created enclosure
+ // this.enclosure.transferred : true if bindings were transferred from original goal
 
  return this;
 }
