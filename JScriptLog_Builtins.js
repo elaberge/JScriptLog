@@ -935,6 +935,8 @@ function internal_atom_append_fn(goal)
   v.children[0] = ei;
   lhs.term.children[ci] = v;
   lhs.enclosure[ei] = rhs;
+  
+  lhs.ruleset = undefined;
  }
  else
   throw newErrorException("Expected atom in internal:atom_append!/2.");

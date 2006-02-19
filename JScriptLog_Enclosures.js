@@ -35,6 +35,12 @@ function ArrayEnclosure(enclosure,terms)
  this.enclosure = enclosure;
  this.terms = terms;
 
+ //// Other Properties (document here):
+ // this.fn : rule.fn;
+ // this.try_fn : rule.try_fn;
+ // this.retry_fn : rule.retry_fn;
+ // this.undo_fn : rule.undo_fn;
+
  return this;
 }
 

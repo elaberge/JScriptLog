@@ -31,6 +31,7 @@ function jslog_ui_consult()
  jslog_kb = newKB(); 
  
  loadKBLibrary(jslog_kb,jslog_library_utilities);
+ loadKBLibrary(jslog_kb,jslog_library_parser);
 
  // PRE-MADE QUERIES
  jslog_ui_init_query(); 
@@ -373,6 +374,7 @@ function jslog_ui_consult()
  try
  {
 //  jslog_kb = jslog_parse(window.document.formUI.kb.value);
+  optimizeKB(jslog_kb);
   window.document.formUI.output.value += "Consulted KB.";  
  }
  catch (ex)
@@ -643,6 +645,13 @@ function jslog_ui_init_query()
 				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);
  q[i++] = newAtom('internal:append',[newVariable('X'),newVariable('Y'),
 				newListFromTerms([newConstant('a'),newConstant('b'),newNumber(1),newNumber(2)])]);
+ q[i++] = newAtom('internal:flatten',[
+				newListFromTerms([newConstant('a'),newVariable('X'),newNumber(1),
+					newListPair(newVariable('Y'),newVariable('Ys')),
+					newListPair(newConstant('y'),newVariable('Zs')),
+					newListFromTerms([newConstant('b'),newNumber(3)]),
+					newNumber(2)]),
+				newVariable('F')]);
  q[i++] = newAtom('internal:merge_sort',[newListFromTerms([
 				newConstant('b'),newNumber(2),newConstant('a'),newNumber(1),newNumber(2),
 				newVariable('X'),newVariable('Y'),newVariable('X'),newAtom('a',[newVariable('X'),newNumber(2)]),

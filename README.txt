@@ -16,7 +16,7 @@ SHORTCOMINGS:
 
 * Some notable missing predicates are: miscellaneous (op/3, dynamic/1, current_op/3, current_prolog_flag/2, set_prolog_flag/2), term display and input predicates (write_term/1, write_canonical/1, writeq/1, read_term/1, read/1), consulting predicates (consult/1, include/1, ensure_loaded/1), DCG predicates (e.g., -->), and the stream based I/O predicates.
 
-* There is no post-consult optimization phase (e.g., pre-binding).  There is room for performance improvement.
+* The post-consult optimization phase (e.g., pre-binding) is incomplete.  It doesn't perform constant propagation, and it is limited in the nested-depth of terms in the KB  (i.e., not terms constructed during runtime).
 
 
 OTHER ISSUES:

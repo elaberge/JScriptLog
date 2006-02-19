@@ -14,14 +14,13 @@
 ///////////////////////////////////
 
 function jslog_library_utilities(kb)
-{var t;
-
+{
  // writeln(O) :- write(O), nl.
  {
   addRuleSet(kb,new RuleSet('writeln',1,false));
 
   addRule(kb,newRule(
-    t = newRuleTerm(
+		newRuleTerm(
 		newAtom('writeln',[newVariable('O')]),
 		newConsPair(newAtom('write',[newVariable('O')]),newConstant('nl')))),
 	true);
@@ -31,7 +30,7 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('assert',1,false));
 
   addRule(kb,newRule(
-	t = newRuleTerm(
+		newRuleTerm(
 		newAtom('assert',[newVariable('X')]),
 		newAtom('assertz',[newVariable('X')]))),
 	true);
@@ -41,7 +40,7 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('ground',1,false));
 
   addRule(kb,newRule(
-	t = newRuleTerm(
+		newRuleTerm(
 		newAtom('ground',[newVariable('X')]),
 		newAtom('internal:term_variables',[newVariable('X'),newListNull()]))),
 	true);
@@ -51,7 +50,7 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('term_variables',2,false));
 
   addRule(kb,newRule(
-	t = newRuleTerm(
+		newRuleTerm(
 		newAtom('term_variables',[newVariable('X'),newVariable('V')]),
 		newAtom('internal:term_variables',[newVariable('X'),newVariable('V')]))),
 	true);
@@ -61,7 +60,7 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('member',2,false));
 
   addRule(kb,newRule(
-	t = newRuleTerm(
+		newRuleTerm(
 		newAtom('member',[newVariable('X'),newVariable('Xs')]),
 		newAtom('internal:member',[newVariable('X'),newVariable('Xs')]))),
 	true);
@@ -71,7 +70,7 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('append',3,false));
 
   addRule(kb,newRule(
-	t = newRuleTerm(
+		newRuleTerm(
 		newAtom('append',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
 		newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]))),
 	true);
@@ -82,10 +81,10 @@ function jslog_library_utilities(kb)
   addRuleSet(kb,new RuleSet('select',3,false));
  
   addRule(kb,newRule(
-	t = newAtom('select',[newVariable('X'),newListPair(newVariable('X'),newVariable('Xs')),newVariable('Xs')])),
+		newAtom('select',[newVariable('X'),newListPair(newVariable('X'),newVariable('Xs')),newVariable('Xs')])),
 	true);
   addRule(kb,newRule(
-    t = newRuleTerm(
+		newRuleTerm(
 		newAtom('select',[newVariable('X'),newListPair(newVariable('Y'),newVariable('Ys')),newListPair(newVariable('Y'),newVariable('Zs'))]),
 		newAtom('select',[newVariable('X'),newVariable('Ys'),newVariable('Zs')]))),
 	true);

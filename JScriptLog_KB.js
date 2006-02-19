@@ -16,7 +16,14 @@
 var KB_PHASE_CONSULT = 1;
 var KB_PHASE_READY = 2;
 
-// FIX: RuleSets should denote operator information (if it represents an operator).
+var OP_TYPE_XFX = 1;
+var OP_TYPE_XFY = 2;
+var OP_TYPE_YFX = 3;
+var OP_TYPE_FX = 4;
+var OP_TYPE_FY = 5;
+var OP_TYPE_XF = 6;
+var OP_TYPE_YF = 7;
+
 
 function KB()
 {var ruleset;
@@ -49,11 +56,24 @@ function newKB()
  
   addRuleSet(kb,ruleset);
  }
+ // :-/2 and :-/1 : entry exists to establish op precedence
+ {
+  ruleset = new RuleSet(':-',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,1200);
+ 
+  addRuleSet(kb,ruleset);
+
+  ruleset = new RuleSet(':-',1,false);
+  setOperatorInfo(ruleset,OP_TYPE_FX,1200);
+ 
+  addRuleSet(kb,ruleset);
+ }
  // \+(X) :- X, !, fail.
  // \+(_).
  {
   ruleset = new RuleSet('\\+',1,false);
-
+  setOperatorInfo(ruleset,OP_TYPE_FY,900);
+  
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('\\+',[newVariable('X')]),
 		newConsPair(newVariable('X'),
@@ -66,6 +86,7 @@ function newKB()
  // ;(_,X) :- Y.
  {
   ruleset = new RuleSet(';',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFY,1100);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newOrPair(newVariable('X'),newVariable('_')),
@@ -79,6 +100,7 @@ function newKB()
  // ,(X,Y) :- X,Y.
  {
   ruleset = new RuleSet(',',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFY,1000);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newConsPair(newVariable('X'),newVariable('Y')),
@@ -239,6 +261,7 @@ function newKB()
  // ->(G,T) :- call(G), !, call(T).
  {
   ruleset = new RuleSet('->',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFY,1050);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('->',[newVariable('G'),newVariable('T')]),
@@ -324,6 +347,7 @@ function newKB()
  // is/2 : eval function
  {
   ruleset = new RuleSet('is',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('is',[newVariable('X'),newVariable('E')]),is_fn));
@@ -333,6 +357,7 @@ function newKB()
  // </2 : compare function
  {
   ruleset = new RuleSet('<',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('<',[newVariable('L'),newVariable('R')]),lt_fn));
@@ -342,6 +367,7 @@ function newKB()
  // =</2 : compare function
  {
   ruleset = new RuleSet('=<',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('=<',[newVariable('L'),newVariable('R')]),lte_fn));
@@ -351,6 +377,7 @@ function newKB()
  // >/2 : compare function
  {
   ruleset = new RuleSet('>',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('>',[newVariable('L'),newVariable('R')]),gt_fn));
@@ -360,6 +387,7 @@ function newKB()
  // >=/2 : compare function
  {
   ruleset = new RuleSet('>=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('>=',[newVariable('L'),newVariable('R')]),gte_fn));
@@ -369,6 +397,7 @@ function newKB()
  // =:=/2 : compare function
  {
   ruleset = new RuleSet('=:=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('=:=',[newVariable('L'),newVariable('R')]),eq_fn));
@@ -378,6 +407,7 @@ function newKB()
  // =\=/2 : compare function
  {
   ruleset = new RuleSet('=\\=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('=\\=',[newVariable('L'),newVariable('R')]),neq_fn));
@@ -387,6 +417,7 @@ function newKB()
  // =/2 : unify function
  {
   ruleset = new RuleSet('=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('=',[newVariable('L'),newVariable('R')]),unify_fn));
@@ -396,6 +427,7 @@ function newKB()
  // \=(X,Y) :- \+(=(X,Y)).
  {
   ruleset = new RuleSet('\\=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('\\=',[newVariable('X'),newVariable('Y')]),
@@ -415,6 +447,7 @@ function newKB()
  // ==/2 : identical function
  {
   ruleset = new RuleSet('==',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('==',[newVariable('L'),newVariable('R')]),identical_fn));
@@ -424,6 +457,7 @@ function newKB()
  // \==(X,Y) :- \+(==(X,Y)).
  {
   ruleset = new RuleSet('\\==',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('\\==',[newVariable('X'),newVariable('Y')]),
@@ -434,6 +468,7 @@ function newKB()
  // @</2 : compare less than function
  {
   ruleset = new RuleSet('@<',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('@<',[newVariable('L'),newVariable('R')]),compare_lt_fn));
@@ -443,6 +478,7 @@ function newKB()
  // @=</2 : compare less than equal function
  {
   ruleset = new RuleSet('@=<',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('@=<',[newVariable('L'),newVariable('R')]),compare_lte_fn));
@@ -452,6 +488,7 @@ function newKB()
  // @>/2 : compare greater than function
  {
   ruleset = new RuleSet('@>',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('@>',[newVariable('L'),newVariable('R')]),compare_gt_fn));
@@ -461,6 +498,7 @@ function newKB()
  // @>=/2 : compare greater than equal function
  {
   ruleset = new RuleSet('@>=',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('@>=',[newVariable('L'),newVariable('R')]),compare_gte_fn));
@@ -479,6 +517,7 @@ function newKB()
  // =../2 : atom to list
  {
   ruleset = new RuleSet('=..',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,700);
 
   ruleset.rules.push(newFunctionRule(
   		newAtom('=..',[newVariable('L'),newVariable('R')]),atom_to_list_fn));
@@ -743,6 +782,7 @@ function newKB()
  // +/1 eval function
  {
   ruleset = new RuleSet('+',1,false);
+  setOperatorInfo(ruleset,OP_TYPE_FX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,positive_eval_fn);
    
@@ -751,6 +791,7 @@ function newKB()
  // -/1 eval function 
  {
   ruleset = new RuleSet('-',1,false);
+  setOperatorInfo(ruleset,OP_TYPE_FX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,negative_eval_fn);
    
@@ -759,6 +800,7 @@ function newKB()
  // +/2 eval function
  {
   ruleset = new RuleSet('+',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,plus_eval_fn);
    
@@ -767,6 +809,7 @@ function newKB()
  // -/2 eval function
  {
   ruleset = new RuleSet('-',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,minus_eval_fn);
    
@@ -775,6 +818,7 @@ function newKB()
  // */2 eval function
  {
   ruleset = new RuleSet('*',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,multiply_eval_fn);
    
@@ -783,6 +827,7 @@ function newKB()
  // //2 eval function
  {
   ruleset = new RuleSet('/',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,divide_eval_fn);
    
@@ -791,6 +836,7 @@ function newKB()
  // ///2 eval function
  {
   ruleset = new RuleSet('//',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,intdivide_eval_fn);
    
@@ -799,6 +845,7 @@ function newKB()
  // mod/2 eval function
  {
   ruleset = new RuleSet('mod',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,300);
   
   setEvaluateFunctionForRuleSet(ruleset,mod_eval_fn);
    
@@ -807,6 +854,7 @@ function newKB()
  // **/2 eval function
  {
   ruleset = new RuleSet('**',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_XFY,200);
   
   setEvaluateFunctionForRuleSet(ruleset,pow_eval_fn);
    
@@ -962,7 +1010,8 @@ function newKB()
  // /\/2 eval function
  {
   ruleset = new RuleSet('/\\',2,false);
-  
+  setOperatorInfo(ruleset,OP_TYPE_YFX,500);
+ 
   setEvaluateFunctionForRuleSet(ruleset,bitwise_and_eval_fn);
    
   addRuleSet(kb,ruleset);
@@ -970,6 +1019,7 @@ function newKB()
  // \//2 eval function
  {
   ruleset = new RuleSet('\\/',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_or_eval_fn);
    
@@ -978,6 +1028,7 @@ function newKB()
  // #/2 eval function
  {
   ruleset = new RuleSet('#',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_xor_eval_fn);
    
@@ -986,6 +1037,7 @@ function newKB()
  // \\/1 eval function
  {
   ruleset = new RuleSet('\\',1,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_negate_eval_fn);
    
@@ -994,6 +1046,7 @@ function newKB()
  // <</2 eval function
  {
   ruleset = new RuleSet('<<',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_lshift_eval_fn);
    
@@ -1002,6 +1055,7 @@ function newKB()
  // >>/2 eval function
  {
   ruleset = new RuleSet('>>',2,false);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_rshift_eval_fn);
    
@@ -1263,6 +1317,33 @@ function newKB()
  
   addRuleSet(kb,ruleset);
  }
+ // internal:flatten([],F) :- !, F = [].
+ // internal:flatten([X|Xs],F) :- internal:flatten(X,F1), internal:flatten(Xs,F2), !, internal:append(F1,F2,F).
+ // internal:flatten(L,F) :- nonvar(L), !, F = [L].
+ {
+  ruleset = new RuleSet('internal:flatten',2,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:flatten',[newListNull(),newVariable('F')]),
+		newConsPairsFromTerms([
+			newConstant('!'),
+			newAtom('=',[newVariable('F'),newListNull()])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:flatten',[newListPair(newVariable('X'),newVariable('Xs')),newVariable('F')]),
+		newConsPairsFromTerms([
+			newAtom('internal:flatten',[newVariable('X'),newVariable('F1')]),
+			newAtom('internal:flatten',[newVariable('Xs'),newVariable('F2')]),
+			newConstant('!'),
+			newAtom('internal:append',[newVariable('F1'),newVariable('F2'),newVariable('F')])]))));
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:flatten',[newVariable('L'),newVariable('F')]),
+		newConsPairsFromTerms([
+			newAtom('nonvar',[newVariable('L')]),
+			newConstant('!'),
+			newAtom('=',[newVariable('F'),newListPair(newVariable('L'),newListNull())])]))));
+ 
+  addRuleSet(kb,ruleset);
+ }
  // internal:inlist(L,E) :- internal:member(X,L), E == X, !.
  {
   ruleset = new RuleSet('internal:inlist',2,false);
@@ -1514,6 +1595,10 @@ function RuleSet(name,arity,dynamic)
  this.arity = arity;
  this.dynamic = dynamic;
  this.rules = new Array();
+
+ //// Other Properties (document here):
+ // this.op_type : the OP_TYPE_* if this rule represents an operator.
+ // this.op_precedence : operator precedence in the range 1..1200;
  
  return this;
 }
@@ -1525,6 +1610,12 @@ function Rule(name,arity,enclosure,head)
  this.enclosure = enclosure;
  this.head = head;
  this.body = new Array();
+
+ //// Other Properties (document here):
+ // this.fn : rule.fn;
+ // this.try_fn : rule.try_fn;
+ // this.retry_fn : rule.retry_fn;
+ // this.undo_fn : rule.undo_fn;
 
  return this;
 }
@@ -1671,6 +1762,25 @@ function getUnifiedRuleEnclosure(rule,encl,binding)
  return null;
 }
 
+// returns undefined if ruleset does not represent an operator
+function getOperatorType(ruleset)
+{
+ return ruleset.op_type;
+}
+
+// returns undefined if ruleset does not represent an operator
+function getOperatorPrecedence(ruleset)
+{
+ return ruleset.op_precedence;
+}
+
+// returns undefined if ruleset does not represent an operator
+function setOperatorInfo(ruleset,type,precedence)
+{
+ ruleset.op_type = type;
+ ruleset.op_precedence = precedence;
+}
+
 function setEvaluateFunctionForRuleSet(ruleset,eval_fn)
 {
  ruleset.eval_fn = eval_fn;
@@ -1683,3 +1793,74 @@ function isDynamicRuleSet(ruleset)
  return (ruleset == undefined || ruleset.dynamic);
 }
 
+
+///////////////////////////////////
+// * KB / RuleSet / Rule optimization functions
+///////////////////////////////////
+// NOTE: the following is exploratory code...
+// FIX: Optimiztion should be based on general term re-writing (a transform engine).
+// FIX: Could fail for deeply nested terms.  Should use stack to track terms to optimize.
+// FIX: Add constant propagation (i.e., evaluate constant expressions). 
+
+// do not call directly
+function optimizeTerm(term,kb)
+{
+ if (isVariable(term))
+ {
+  term.ruleset = undefined;
+  term.goal_type = TYPE_VARIABLE_GOAL;
+ }
+ else if (isAtom(term))
+ {
+  term.ruleset = getRuleSet(kb,term);
+  term.goal_type = TYPE_ATOM_GOAL;
+  if (term.ruleset != undefined)
+   term.name = term.ruleset.name;
+ }
+}
+
+// do not call directly
+function optimizeTerms(term,kb)
+{
+ optimizeTerm(term,kb);
+
+ if (isAtom(term))
+ {var i;
+ 
+  for (i = 0; i < term.children.length; i++)
+   optimizeTerms(term.children[i],kb);
+ }
+}
+
+// do not call directly
+function optimizeRule(rule,ruleset,kb)
+{
+ rule.name = ruleset.name;
+ optimizeTerm(rule.head,kb);
+ if (rule.body != null)
+ {var i;
+ 
+  for (i = 0; i < rule.body.length; i++)
+   optimizeTerms(rule.body[i],kb);
+ }
+}
+
+// do not call directly
+function optimizeRuleSet(ruleset,kb)
+{var i;
+ 
+ for (i = 0; i < ruleset.rules.length; i++)
+  optimizeRule(ruleset.rules[i],ruleset,kb);
+}
+
+// call at the end of the consult phase.
+function optimizeKB(kb)
+{var phase = kb.phase;
+ 
+ kb.phase = KB_PHASE_CONSULT;
+
+ for (var i in kb.rulesets)
+  optimizeRuleSet(kb.rulesets[i],kb);
+
+ kb.phase = phase;
+}

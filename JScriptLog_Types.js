@@ -26,6 +26,11 @@ function Term(type, name)
  this.type = type;
  this.name = name;
  this.children = new Array();
+ 
+ //// Other Properties (document here):
+ // this.ruleset : the ruleset ruleset associated with the term
+ // this.goal_type : the TYPE_*_GOAL associated with the term
+
  return this;
 }
 
