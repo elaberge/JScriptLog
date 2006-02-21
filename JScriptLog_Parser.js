@@ -18,19 +18,6 @@
 // parse string in_src, which represents a sequence of Prolog clauses
 function jslog_parse(in_src)
 {
- throw jslog_parse_token(in_src);
-}
-
-// returns the next token
-function jslog_parse_token(in_src)
-{
- var clause = /(\w+\.)|(\w+\(\w+(\,\w+)*\)\.)/g;
- var nonclause = /(?!(\w+\.)|(\w+\(\w+(\,\w+)*\)\.))/g;
- var pos = in_src.search(clause); 
-
- return in_src.match(clause);
-// return in_src.match(nonclause);
-// RegExp
 }
 
 
@@ -163,9 +150,10 @@ function jslog_library_parser(kb)
  jslog_plog_range_token('hexx',['x','X'],null,kb);
  jslog_plog_range_token('sign',['+','-'],null,kb);
 
- jslog_plog_token('linecomment_start','%',kb);
- jslog_plog_token('comment_start',['/','*'],kb);
- jslog_plog_token('comment_end',['*','/'],kb);
+ jslog_plog_token('start_linecomment','%',kb);
+ jslog_plog_token('end_linecomment','\n',kb);
+ jslog_plog_token('start_blockcomment',['/','*'],kb);
+ jslog_plog_token('end_blockcomment',['*','/'],kb);
 
  jslog_plog_range_token('digit','0','9',kb);
 
@@ -189,6 +177,7 @@ function jslog_library_parser(kb)
  jslog_plog_zero_or_more_token('symbol_char',kb); // plog:token:symbol_char*
  jslog_plog_one_or_more_token('symbol_char',kb); // plog:token:symbol_char+
  jslog_plog_zero_or_more_token('whitespace',kb); // plog:token:whitespace*
+ jslog_plog_one_or_more_token('whitespace',kb); // plog:token:whitespace+
 
  // plog:token:variable(I,O,V) :- plog:token:var_start(I,S,N1), !, plog:token:name_char*(S,O,N2), 
  //		internal:append(N1,N2,N), !, atom_chars(V,N).
@@ -570,4 +559,91 @@ function jslog_library_parser(kb)
 	true);
  }
 
+ // plog:token:blank(I,O,[]) :- plog:token:whitespace+(I,O1,_), !, plog:token:blank(O1,O,_).
+ // plog:token:blank(I,O,[]) :- plog:token:start_linecomment(I,O1,_), !, 
+ //		plog:token:linecomment(O1,O2,_), !, plog:token:blank(O2,O,_).
+ // plog:token:blank(I,O,[]) :- plog:token:start_blockcomment(I,O1,_), !, 
+ //		plog:token:blockcomment(O1,O2,_), !, plog:token:blank(O2,O,_).
+ // plog:token:blank(I,I,[]).
+ {
+  addRuleSet(kb,new RuleSet('plog:token:blank',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:blank',[newVariable('I'),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newAtom('plog:token:whitespace+',[newVariable('I'),newVariable('O1'),newVariable('_')]),
+			newConstant('!'),
+			newAtom('plog:token:blank',[newVariable('O1'),newVariable('O'),newVariable('_')])]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:blank',[newVariable('I'),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newAtom('plog:token:start_linecomment',[newVariable('I'),newVariable('O1'),newVariable('_')]),
+			newConstant('!'),
+			newAtom('plog:token:linecomment',[newVariable('O1'),newVariable('O2'),newVariable('_')]),
+			newConstant('!'),
+			newAtom('plog:token:blank',[newVariable('O2'),newVariable('O'),newVariable('_')])]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:blank',[newVariable('I'),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newAtom('plog:token:start_blockcomment',[newVariable('I'),newVariable('O1'),newVariable('_')]),
+			newConstant('!'),
+			newAtom('plog:token:blockcomment',[newVariable('O1'),newVariable('O2'),newVariable('_')]),
+			newConstant('!'),
+			newAtom('plog:token:blank',[newVariable('O2'),newVariable('O'),newVariable('_')])]))),
+	true); 
+  addRule(kb,newRule(
+		newAtom('plog:token:blank',[newVariable('I'),newVariable('I'),newListNull()])),
+	true); 
+ }
+ // plog:token:linecomment(I,O,[]) :- plog:token:end_linecomment(I,O,_), !.
+ // plog:token:linecomment([],[],[]) :- !.
+ // plog:token:linecomment([_|I],O,[]) :- !, plog:token:linecomment(I,O,_).
+ {
+  addRuleSet(kb,new RuleSet('plog:token:linecomment',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:linecomment',[newVariable('I'),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newAtom('plog:token:end_linecomment',[newVariable('I'),newVariable('O'),newVariable('_')]),
+			newConstant('!')]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:linecomment',[newListNull(),newListNull(),newListNull()]),
+		newConstant('!'))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:linecomment',[newListPair(newVariable('_'),newVariable('I')),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newConstant('!'),
+			newAtom('plog:token:linecomment',[newVariable('I'),newVariable('O'),newVariable('_')])]))),
+	true); 
+ }
+ // plog:token:blockcomment(I,O,[]) :- plog:token:end_blockcomment(I,O,_), !.
+ // plog:token:blockcomment([_|I],O,[]) :- !, plog:token:blockcomment(I,O,_).
+ {
+  addRuleSet(kb,new RuleSet('plog:token:blockcomment',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:blockcomment',[newVariable('I'),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newAtom('plog:token:end_blockcomment',[newVariable('I'),newVariable('O'),newVariable('_')]),
+			newConstant('!')]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:token:blockcomment',[newListPair(newVariable('_'),newVariable('I')),newVariable('O'),newListNull()]),
+		newConsPairsFromTerms([
+			newConstant('!'),
+			newAtom('plog:token:blockcomment',[newVariable('I'),newVariable('O'),newVariable('_')])]))),
+	true); 
+ }
 }

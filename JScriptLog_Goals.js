@@ -30,6 +30,7 @@ function Goal(type,encl,parent)
  // this.rule_index : 
  // this.prover : a sub-prover
  // this.noretry : if true, the next retry must fail.
+ // this.isgrandparent : true if parent set to grand+-parent (ancestor).
   
  return this;
 }
@@ -168,12 +169,12 @@ function tryGoal(goal,prover)
 			 prover.explored[prover.explored.length - 1] == goal.parent)))
 	  {
 	   mergeGoalBindings(goal,goal.parent);
-	   addBodyGoalsToFrontier(goal.parent,rule_body,prover.kb,prover.frontier);
+	   addBodyGoalsToFrontier(goal.parent,true,rule_body,prover.kb,prover.frontier);
 	  }
 	  else
 	  {
 	   prover.explored.push(goal);
-       addBodyGoalsToFrontier(goal,rule_body,prover.kb,prover.frontier);
+       addBodyGoalsToFrontier(goal,undefined,rule_body,prover.kb,prover.frontier);
 	  }
 	  return true;
 	 }
@@ -245,12 +246,12 @@ function retryGoal(goal,prover)
 		 prover.explored[prover.explored.length - 1] == goal.parent)))
   {
    mergeGoalBindings(goal,goal.parent);
-   addBodyGoalsToFrontier(goal.parent,rule_body,prover.kb,prover.frontier);
+   addBodyGoalsToFrontier(goal.parent,true,rule_body,prover.kb,prover.frontier);
   }
   else
   {
    prover.explored.push(goal);
-   addBodyGoalsToFrontier(goal,rule_body,goal.kb,prover.frontier);
+   addBodyGoalsToFrontier(goal,undefined,rule_body,goal.kb,prover.frontier);
   }
   return true;
  }
@@ -311,7 +312,8 @@ function nextUnifiedRuleBodyForGoal(goal)
 }
 
 // body is an ArrayEnclosure
-function addBodyGoalsToFrontier(parent,body,kb,frontier)
+// isgp is true if parent is actually the grandparent for the added body.
+function addBodyGoalsToFrontier(parent,isgp,body,kb,frontier)
 {var encl;
  var goal;
  var i;
@@ -320,6 +322,7 @@ function addBodyGoalsToFrontier(parent,body,kb,frontier)
  {
   encl = newSubtermEnclosure(body.enclosure,body.terms[i]);
   goal = newGoal(getFinalEnclosure(encl),parent,kb);
+  goal.isgrandparent = isgp;
   frontier.push(goal);
  }
 }

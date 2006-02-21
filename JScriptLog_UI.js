@@ -371,6 +371,40 @@ function jslog_ui_consult()
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
 
+ // rtest1a(X) :- rtest1b(X), fail.
+ // rtest1a(X) :- X = 2.  
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest1a',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest1a',[newVariable('X')]),
+		newConsPairsFromTerms([
+			newAtom('rtest1b',[newVariable('X')]),
+			newConstant('fail')]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest1a',[newVariable('X')]),
+		newAtom('=',[newVariable('X'),newNumber(2)]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // rtest1b(X) :- X = 1.  
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest1b',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest1b',[newVariable('X')]),
+		newConsPair(
+			newAtom('=',[newVariable('X'),newNumber(1)]),
+			newConstant('!')))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+
  try
  {
 //  jslog_kb = jslog_parse(window.document.formUI.kb.value);
@@ -417,6 +451,7 @@ function jslog_ui_init_query()
  q[i++] = newAtom('dtest1',[newNumber(500)]);
  q[i++] = newAtom('dtest2',[newNumber(100)]);
  q[i++] = newAtom('dtest3',[newNumber(100)]);
+ q[i++] = newAtom('rtest1a',[newVariable('A')]);
  q[i++] = newAtom('\\+',[newConstant('true')]);
  q[i++] = newAtom('\\+',[newConstant('fail')]);
  q[i++] = newAtom('call',[newConstant('true')]);

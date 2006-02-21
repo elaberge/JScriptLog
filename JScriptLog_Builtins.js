@@ -35,7 +35,7 @@ function true_try_fn(goal,prover)
 function cut_try_fn(goal,prover)
 {var g;
  var gs_with_undo_fn = null;
- 
+
  while ((g = prover.explored.pop()) != undefined)
  {
   if (g == goal.parent) // cutoff parent found -- break
@@ -48,6 +48,10 @@ function cut_try_fn(goal,prover)
      prover.explored.push(g);
 	 
     prover.explored.push(goal);
+   }
+   else if (goal.isgrandparent)
+   {
+    prover.explored.push(g);
    }
    else if (g.parent != null && prover.explored[prover.explored.length - 1] == g.parent)
    {var i = prover.frontier.length - 1;
@@ -64,7 +68,6 @@ function cut_try_fn(goal,prover)
    {
     g.noretry = true;
     prover.explored.push(g);
-//    prover.explored.push(goal);
    }
 
    return true;
@@ -80,7 +83,7 @@ function cut_try_fn(goal,prover)
    mergeGoalBindings(g,g.parent);
   }
  };
- 
+
  prover.explored.push(goal);
  return true;
 }
@@ -239,14 +242,18 @@ function internal_catch_handle_catch(encl,err,t3,goal,prover)
 function cut_retry_fn(goal,prover)
 {var g;
 
- removeChildGoalsFromFrontier(goal.parent,prover.frontier)
+ if (!goal.isgrandparent)
+  removeChildGoalsFromFrontier(goal.parent,prover.frontier)
 
  while ((g = prover.explored.pop()) != undefined)
  {
   undoGoal(g,false);
   if (g == goal.parent)
   {
-   prover.frontier.push(g);
+   if (goal.isgrandparent)
+    prover.explored.push(g);
+   else	
+    prover.frontier.push(g);
    break;
   }
  };

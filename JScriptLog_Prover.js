@@ -39,7 +39,7 @@ function newQueryProver(kb,query)
  
  prover.query = query;
  
- addBodyGoalsToFrontier(null,new ArrayEnclosure(query.enclosure,terms),prover.kb,prover.frontier);
+ addBodyGoalsToFrontier(null,null,new ArrayEnclosure(query.enclosure,terms),prover.kb,prover.frontier);
 
  return prover; 
 }
