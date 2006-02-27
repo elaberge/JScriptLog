@@ -30,7 +30,7 @@ function Goal(type,encl,parent)
  // this.rule_index : 
  // this.prover : a sub-prover
  // this.noretry : if true, the next retry must fail.
- // this.isgrandparent : true if parent set to grand+-parent (ancestor).
+ // this.parent_is_ancestor : true if parent set to grand+-parent (ancestor).
   
  return this;
 }
@@ -155,18 +155,18 @@ function tryGoal(goal,prover)
 	 
 	 goal.rule_index = 0;
 	 rule_body = nextUnifiedRuleBodyForGoal(goal);
-	 
+
 	 if (rule_body == null)
 	 {
 	  prover.frontier.push(goal);
 	  return false;
 	 }
 	 else if (rule_body.terms != null)
-	 {// if deterministic, or last-try
+	 {
+	  // if last-try	  
 	  if (goal.parent != null && // entails prover.explored.length >= 1
-			(goal.ruleset.rules.length == 1 || 
-			(goal.rule_index == goal.ruleset.rules.length - 1 && 
-			 prover.explored[prover.explored.length - 1] == goal.parent)))
+			goal.rule_index == goal.ruleset.rules.length - 1 && 
+			prover.explored[prover.explored.length - 1] == goal.parent)
 	  {
 	   mergeGoalBindings(goal,goal.parent);
 	   addBodyGoalsToFrontier(goal.parent,true,rule_body,prover.kb,prover.frontier);
@@ -222,7 +222,6 @@ function retryGoal(goal,prover)
 
  undoGoal(goal,true);
 
-
  removeChildGoalsFromFrontier(goal,prover.frontier);
 
  // handle TRAVERSAL retry
@@ -239,11 +238,11 @@ function retryGoal(goal,prover)
   return false;
  }
  else if (rule_body.terms != null)
- {// if deterministic, or last-try
+ {
+  // if last-try	  
   if (goal.parent != null && // entails prover.explored.length >= 1
-		(goal.ruleset.rules.length == 1 || 
-		(goal.rule_index == goal.ruleset.rules.length - 1 && 
-		 prover.explored[prover.explored.length - 1] == goal.parent)))
+		goal.rule_index == goal.ruleset.rules.length - 1 && 
+		prover.explored[prover.explored.length - 1] == goal.parent)
   {
    mergeGoalBindings(goal,goal.parent);
    addBodyGoalsToFrontier(goal.parent,true,rule_body,prover.kb,prover.frontier);
@@ -322,7 +321,7 @@ function addBodyGoalsToFrontier(parent,isgp,body,kb,frontier)
  {
   encl = newSubtermEnclosure(body.enclosure,body.terms[i]);
   goal = newGoal(getFinalEnclosure(encl),parent,kb);
-  goal.isgrandparent = isgp;
+  goal.parent_is_ancestor = isgp;
   frontier.push(goal);
  }
 }

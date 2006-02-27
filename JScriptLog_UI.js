@@ -262,6 +262,29 @@ function jslog_ui_consult()
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
 
+
+ // query(O) O is output for query: /*hello*/ \'queens:me\'(4,X1).  
+ {
+  addRuleSet(jslog_kb,new RuleSet('query',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('query',[newListFromTerms([newVariable('A'),newVariable('N'),newVariable('V')])]),
+		newConsPairsFromTerms([
+		newAtom('atom_chars',[newConstant(' /*hello*/ \'queens:me\'(4,X1).'),newVariable('Z')]),
+		newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('Z'),newVariable('Y'),newVariable('A'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('lparen'),newConstant('fail'),newVariable('Y'),newVariable('X'),newVariable('_'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('number'),newConstant('true'),newVariable('X'),newVariable('W'),newVariable('N'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('comma'),newConstant('true'),newVariable('W'),newVariable('U'),newVariable('_'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('variable'),newConstant('true'),newVariable('U'),newVariable('T'),newVariable('V'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('rparen'),newConstant('true'),newVariable('T'),newVariable('S'),newVariable('_'),newListNull()]),
+		newAtom('plog:next_token',[newConstant('period'),newConstant('true'),newVariable('S'),newVariable('R'),newVariable('_'),newListNull()])
+		]))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+
+
  // :- dynamic(p/2).
  {
   addRuleSet(jslog_kb,new RuleSet('p',2,true));
@@ -405,6 +428,48 @@ function jslog_ui_consult()
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
 
+  
+ // rtest2a(X) :- X = 2.  
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest2a',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest2a',[newVariable('X')]),
+			newAtom('=',[newVariable('X'),newNumber(2)])
+			)),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // rtest2b(1).
+ // rtest2b(2).
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest2b',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newAtom('rtest2b',[newNumber(1)])),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newAtom('rtest2b',[newNumber(2)])),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ // rtest2c(X) :- rtest2b(X), rtest2a(X).
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest2c',1,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest2c',[newVariable('X')]),
+		newConsPair(
+			newAtom('rtest2b',[newVariable('X')]),
+			newAtom('rtest2a',[newVariable('X')])))),
+	true);
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ }
+ 
+
  try
  {
 //  jslog_kb = jslog_parse(window.document.formUI.kb.value);
@@ -445,6 +510,12 @@ function jslog_ui_init_query()
  q[i++] = newAtom('pprove',[newAtom('queens',[newNumber(8),newVariable('X')])]);
 
  q[i++] = newConstant('!');
+/* q[i++] = newConsPairsFromTerms([
+		newAtom('atom_chars',[newConstant('\'queens\'(4,X).'),newVariable('Z')]),
+		newAtom('plog:token:squote',[newVariable('Z'),newVariable('Y'),newVariable('A')]),
+		newAtom('plog:token:character',[newVariable('Y'),newVariable('V'),newVariable('B')])
+		]);*/
+ q[i++] = newAtom('query',[newVariable('O')]);
  q[i++] = newAtom('dtest1',[newNumber(10)]);
  q[i++] = newAtom('dtest1',[newNumber(50)]);
  q[i++] = newAtom('dtest1',[newNumber(100)]);
@@ -452,6 +523,7 @@ function jslog_ui_init_query()
  q[i++] = newAtom('dtest2',[newNumber(100)]);
  q[i++] = newAtom('dtest3',[newNumber(100)]);
  q[i++] = newAtom('rtest1a',[newVariable('A')]);
+ q[i++] = newAtom('rtest2c',[newVariable('X')]);
  q[i++] = newAtom('\\+',[newConstant('true')]);
  q[i++] = newAtom('\\+',[newConstant('fail')]);
  q[i++] = newAtom('call',[newConstant('true')]);

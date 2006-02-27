@@ -143,3 +143,30 @@ function jslog_toString_BinaryOp(stack,encl,eval_fn,sep,islist)
   }
  }
 } 
+
+function jslog_GoalStack_toString(gstack)
+{var str = "";
+ var i;
+ 
+ for(i=gstack.length - 1; i >= 0; --i)
+  str += jslog_Goal_toString(gstack[i],true) + "\n";
+
+ return str;
+}
+
+function jslog_Goal_toString(goal,show_parent)
+{var str;
+
+ str = "goal term:" + jslog_toString(goal.encl);
+ if (show_parent && goal.parent != undefined)
+ {
+  if (goal.parent_is_ancestor)
+   str += " ancestor:";
+  else
+   str += " parent:";
+   
+  str += jslog_Goal_toString(goal.parent,false);
+ }
+
+ return str;
+}

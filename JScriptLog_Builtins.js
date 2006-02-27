@@ -49,7 +49,7 @@ function cut_try_fn(goal,prover)
 	 
     prover.explored.push(goal);
    }
-   else if (goal.isgrandparent)
+   else if (goal.parent_is_ancestor)
    {
     prover.explored.push(g);
    }
@@ -242,7 +242,7 @@ function internal_catch_handle_catch(encl,err,t3,goal,prover)
 function cut_retry_fn(goal,prover)
 {var g;
 
- if (!goal.isgrandparent)
+ if (!goal.parent_is_ancestor)
   removeChildGoalsFromFrontier(goal.parent,prover.frontier)
 
  while ((g = prover.explored.pop()) != undefined)
@@ -250,7 +250,7 @@ function cut_retry_fn(goal,prover)
   undoGoal(g,false);
   if (g == goal.parent)
   {
-   if (goal.isgrandparent)
+   if (goal.parent_is_ancestor)
     prover.explored.push(g);
    else	
     prover.frontier.push(g);
