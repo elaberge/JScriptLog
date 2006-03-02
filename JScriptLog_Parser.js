@@ -156,6 +156,8 @@ function jslog_library_parser(kb)
  jslog_plog_token('lblock','[',kb);
  jslog_plog_token('rblock',']',kb);
  jslog_plog_token('two_blocks',['[',']'],kb);
+ jslog_plog_token('bar',['|'],kb);
+ jslog_plog_token('comma_dot_dot',[',','.','.'],kb);
  jslog_plog_range_token('exp',['e','E'],null,kb);
  jslog_plog_range_token('hexx',['x','X'],null,kb);
  jslog_plog_range_token('sign',['+','-'],null,kb);
@@ -730,7 +732,7 @@ function jslog_library_parser(kb)
     newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('T')]),
 		newConsPairsFromTerms([
-			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('T')]),
+			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('T'),newNumber(1200)]),
 			newAtom('plog:next_token',[newConstant('period'),newConstant('true'),newVariable('O1'),newVariable('O'),newVariable('_'),newListNull()]),
 			newConstant('!')
 			]))),
@@ -761,31 +763,25 @@ function jslog_library_parser(kb)
  // term(+I,-O,-T,-N) I is the input char list, O is the remainder list,
  // T is the term, N is the priority value of the term.
  // plog:term(I,O,A,0) :- plog:next_token('atomname',true,I,O1,A1,[]), 
- //			plog:next_token('lparen',fail,O1,O2,_,[]), plog:arguments(O2,O3,A2),
- //			plog:next_token('rparen',true,O3,O,_,[]), !, A=[A1|A2].
- // plog:term(I,O,A,0) :- plog:next_token('lparen',fail,I,O1,_,[]), plog:subterm(O1,O2,A,1200),
- //			plog:next_token('rparen',fail,O3,O,_,[]), !.
- // plog:term(I,O,A,0) :- plog:next_token('lbrace',fail,I,O1,_,[]), plog:subterm(O1,O2,A1,1200),
- //			plog:next_token('rbrace',fail,O3,O,_,[]), !, A=['{}'|A1].
+ //			plog:atomname_term(A1,O1,O,A), !. 
+ // plog:term(I,O,A,0) :- plog:next_token('lparen',true,I,O1,_,[]), plog:subterm(O1,O2,A,1200),
+ //			plog:next_token('rparen',true,O2,O,_,[]), !.
+ // plog:term(I,O,A,0) :- plog:next_token('lbrace',true,I,O1,_,[]), plog:subterm(O1,O2,A1,1200),
+ //			plog:next_token('rbrace',true,O2,O,_,[]), !, A=['{}',A1].
  // plog:term(I,O,L,0) :- plog:list(I,O,L), !.
  // plog:term(I,O,L,0) :- plog:token:string(I,O,L), !.
  // plog:term(I,O,N,0) :- plog:token:number(I,O,N), !.
- // plog:term(I,O,A,0) :- plog:token:atomname(I,O,A), !.
  // plog:term(I,O,V,0) :- plog:token:variable(I,O,V), !. 
  {
   addRuleSet(kb,new RuleSet('plog:term',4,false));
- 
+
   addRule(kb,newRule(
     newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('A'),newNumber(0)]),
 		newConsPairsFromTerms([
 			newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('A1'),newListNull()]),
-			newAtom('plog:next_token',[newConstant('lparen'),newConstant('fail'),newVariable('O1'),newVariable('O2'),newVariable('_'),newListNull()]),
-			newAtom('plog:arguments',[newVariable('O2'),newVariable('O3'),newVariable('A2')]),
-			newAtom('plog:next_token',[newConstant('rparen'),newConstant('true'),newVariable('O3'),newVariable('O'),newVariable('_'),newListNull()]),
-			newConstant('!'),
-			newAtom('=',[newVariable('A'),newListPair(newVariable('A1'),newVariable('A2'))])
-			]))),
+			newAtom('plog:atomname_term',[newVariable('A1'),newVariable('O1'),newVariable('O'),newVariable('A')]),
+			newConstant('!')]))),
 	true); 
   addRule(kb,newRule(
     newRuleTerm(
@@ -805,7 +801,7 @@ function jslog_library_parser(kb)
 			newAtom('plog:subterm',[newVariable('O1'),newVariable('O2'),newVariable('A1'),newNumber(1200)]),
 			newAtom('plog:next_token',[newConstant('rbrace'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
 			newConstant('!'),
-			newAtom('=',[newVariable('A'),newListPair(newConstant('{}'),newVariable('A1'))])
+			newAtom('=',[newVariable('A'),newListFromTerms([newConstant('{}'),newVariable('A1')])])
 			]))),
 	true); 
   addRule(kb,newRule(
@@ -831,13 +827,6 @@ function jslog_library_parser(kb)
 	true); 
   addRule(kb,newRule(
     newRuleTerm(
-		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('A'),newNumber(0)]),
-		newConsPairsFromTerms([
-			newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('A'),newListNull()]),
-			newConstant('!')]))),
-	true); 
-  addRule(kb,newRule(
-    newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('V'),newNumber(0)]),
 		newConsPairsFromTerms([
 			newAtom('plog:next_token',[newConstant('variable'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('V'),newListNull()]),
@@ -845,16 +834,34 @@ function jslog_library_parser(kb)
 	true); 
  }
 
- // FIX: complete arguments (preferably using singular rule)
- // arguments(+I,-O,-T) I is the input char list, O is the remainder list, T is the terms.
- // plog:arguments(I,O,T) :- plog:subterm(I,O1,T1,999), plog:next_token('comma',true,O1,O2,_,[]), !,
- //			plog:arguments(O2,O,T2), !, T=[T1|T2].
- // plog:arguments(I,O,T) :- plog:subterm(I,O,T,999).
+ // atomname_term(+N,-I,-O,-A) I is the input char list, O is the remainder list,
+ // A is the complete atom term, N is the atom symbol.
+ // plog:atomname_term(N,I,O,A) :- plog:next_token('lparen',fail,O1,O2,_,[]), !, 
+ //			plog:arguments(O2,O3,A2), plog:next_token('rparen',true,O3,O,_,[]), !, A=[A1|A2].
+ // plog:atomname_term(A,I,I,A).
+ {
+  addRuleSet(kb,new RuleSet('plog:atomname_term',4,false));
 
- // plog:arguments(I,O,T) :- plog:subterm(I,O1,T1,999), 
- //			(plog:next_token('comma',true,O1,O2,_,[]), plog:subterm(O2,O,T2), T=[T1|T2] ; 
- //			O=O1, T=[T1]), !,
- //			plog:arguments(O2,O,T2), !, T=[T1|T2].
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:atomname_term',[newVariable('N'),newVariable('I'),newVariable('O'),newVariable('A')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('lparen'),newConstant('fail'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:arguments',[newVariable('O1'),newVariable('O2'),newVariable('A1')]),
+			newAtom('plog:next_token',[newConstant('rparen'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('=',[newVariable('A'),newListPair(newVariable('N'),newVariable('A1'))])
+			]))),
+	true); 
+  addRule(kb,newRule(
+    	newAtom('plog:atomname_term',[newVariable('A'),newVariable('I'),newVariable('I'),newVariable('A')])),
+	true); 
+ }
+ 
+ 
+ // arguments(+I,-O,-T) I is the input char list, O is the remainder list, T is the terms.
+ // plog:arguments(I,O,T) :- plog:subterm(I,O1,T1,999), plog:arguments2(O1,O,T2), !, T=[T1|T2].
  {
   addRuleSet(kb,new RuleSet('plog:arguments',3,false));
  
@@ -863,26 +870,35 @@ function jslog_library_parser(kb)
 		newAtom('plog:arguments',[newVariable('I'),newVariable('O'),newVariable('T')]),
 		newConsPairsFromTerms([
 			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('T1'),newNumber(999)]),
-			newAtom('plog:next_token',[newConstant('comma'),newConstant('true'),newVariable('O1'),newVariable('O2'),newVariable('_'),newListNull()]),
+			newAtom('plog:arguments2',[newVariable('O1'),newVariable('O'),newVariable('T2')]),
 			newConstant('!'),
-			newAtom('plog:arguments',[newVariable('O2'),newVariable('O'),newVariable('T2')]),
-			newConstant('!'),
-			newAtom('=',[newVariable('T'),newListPair(newVariable('T1'),newVariable('T2'))])
-			]))),
-	true); 
-  addRule(kb,newRule(
-    newRuleTerm(
-		newAtom('plog:arguments',[newVariable('I'),newVariable('O'),newVariable('T')]),
-		newConsPairsFromTerms([
-			newAtom('plog:subterm',[newVariable('I'),newVariable('O'),newVariable('T'),newNumber(999)])
-			]))),
+			newAtom('=',[newVariable('T'),newListPair(newVariable('T1'),newVariable('T2'))])]))),
 	true); 
  } 
 
- // FIX: complete list (parse non-empty lists)
+ // plog:arguments2(I,O,T) :- plog:next_token('comma',true,I,O1,_,[]), !, plog:arguments(O1,O,T).
+ // plog:arguments2(I,I,[]).
+ {
+  addRuleSet(kb,new RuleSet('plog:arguments2',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:arguments2',[newVariable('I'),newVariable('O'),newVariable('T')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('comma'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:arguments',[newVariable('O1'),newVariable('O'),newVariable('T')])]))),
+	true); 
+  addRule(kb,newRule(
+		newAtom('plog:arguments2',[newVariable('I'),newVariable('I'),newListNull()])),
+	true); 
+ } 
+
+
  // list(+I,-O,-L) I is the input char list, O is the remainder list, L is the terms list.
  // plog:list(I,O,[]) :- plog:next_token('two_blocks',true,I,O,_,[]), !,
-
+ // plog:list(I,O,L) :- plog:next_token('lblock',true,I,O1,_,[]), !, plog:list_expr(O1,O2,L), !,  
+ //				plog:next_token('rblock',true,O2,O,_,[]), !.
  {
   addRuleSet(kb,new RuleSet('plog:list',3,false));
  
@@ -891,9 +907,76 @@ function jslog_library_parser(kb)
 		newAtom('plog:list',[newVariable('I'),newVariable('O'),newListNull()]),
 		newConsPairsFromTerms([
 			newAtom('plog:next_token',[newConstant('two_blocks'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('_'),newListNull()]),
-			newConstant('!')
-			]))),
+			newConstant('!')]))),
 	true); 
- } 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:list',[newVariable('I'),newVariable('O'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('lblock'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:list_expr',[newVariable('O1'),newVariable('O2'),newVariable('L')]),
+			newConstant('!'),
+			newAtom('plog:next_token',[newConstant('rblock'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
+			newConstant('!')]))),
+	true); 
+ }
+ 
+ // list_expr(+I,-O,-L) I is the input char list, O is the remainder list, L is the terms list.
+ // plog:list_expr(I,O,L) :- plog:subterm(I,O1,L1,999), !, plog:list_tail(O1,O,L2), !, L=[L1|L2].
+ {
+  addRuleSet(kb,new RuleSet('plog:list_expr',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:list_expr',[newVariable('I'),newVariable('O'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('L1'),newNumber(999)]),
+			newConstant('!'),
+			newAtom('plog:list_tail',[newVariable('O1'),newVariable('O'),newVariable('L2')]),
+			newConstant('!'),
+			newAtom('=',[newVariable('L'),newListPair(newVariable('L1'),newVariable('L2'))])]))),
+	true); 
+ }
+
+ // plog:list_tail(I,O,L) :- plog:next_token('comma_dot_dot',true,I,O1,_,[]), !, plog:subterm(O1,O,L,999), !.
+ // plog:list_tail(I,O,L) :- plog:next_token('comma',true,I,O1,_,[]), !, plog:list_expr(O1,O,L), !.
+ // plog:list_tail(I,O,L) :- plog:next_token('bar',true,I,O1,_,[]), !, plog:subterm(O1,O,L,999), !.
+ // plog:list_tail(I,I,[]).
+ {
+  addRuleSet(kb,new RuleSet('plog:list_tail',3,false));
+ 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:list_tail',[newVariable('I'),newVariable('O'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('comma_dot_dot'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:subterm',[newVariable('O1'),newVariable('O'),newVariable('L'),newNumber(999)]),
+			newConstant('!')]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:list_tail',[newVariable('I'),newVariable('O'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('comma'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:list_expr',[newVariable('O1'),newVariable('O'),newVariable('L')]),
+			newConstant('!')]))),
+	true); 
+  addRule(kb,newRule(
+    newRuleTerm(
+		newAtom('plog:list_tail',[newVariable('I'),newVariable('O'),newVariable('L')]),
+		newConsPairsFromTerms([
+			newAtom('plog:next_token',[newConstant('bar'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:subterm',[newVariable('O1'),newVariable('O'),newVariable('L'),newNumber(999)]),
+			newConstant('!')]))),
+	true); 
+  addRule(kb,newRule(
+		newAtom('plog:list_tail',[newVariable('I'),newVariable('I'),newListNull()])),
+	true); 
+ }
+
 
 }

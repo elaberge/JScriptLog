@@ -263,24 +263,18 @@ function jslog_ui_consult()
  }
 
 
- // query(O) O is output for query: /*hello*/ \'queens:me\'(4,X1).  
+ // query(I,O) O is output for query, I is input constant.  
  {
-  addRuleSet(jslog_kb,new RuleSet('query',1,false));
+  addRuleSet(jslog_kb,new RuleSet('query',2,false));
  
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
-		newAtom('query',[newListFromTerms([newVariable('A'),newVariable('N'),newVariable('V')])]),
+		newAtom('query',[newVariable('Q'),newListFromTerms([newVariable('Z'),newVariable('Y'),newVariable('A')])]),
 		newConsPairsFromTerms([
-		newAtom('atom_chars',[newConstant(' /*hello*/ \'queens:me\'(4,X1).'),newVariable('Z')]),
-		newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('Z'),newVariable('Y'),newVariable('A'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('lparen'),newConstant('fail'),newVariable('Y'),newVariable('X'),newVariable('_'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('number'),newConstant('true'),newVariable('X'),newVariable('W'),newVariable('N'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('comma'),newConstant('true'),newVariable('W'),newVariable('U'),newVariable('_'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('variable'),newConstant('true'),newVariable('U'),newVariable('T'),newVariable('V'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('rparen'),newConstant('true'),newVariable('T'),newVariable('S'),newVariable('_'),newListNull()]),
-		newAtom('plog:next_token',[newConstant('period'),newConstant('true'),newVariable('S'),newVariable('R'),newVariable('_'),newListNull()])
+		newAtom('atom_chars',[newVariable('Q'),newVariable('Z')]),
+		newAtom('plog:term',[newVariable('Z'),newVariable('Y'),newVariable('A')])
 		]))),
-	true);
+	true);	
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
 
@@ -468,7 +462,33 @@ function jslog_ui_consult()
 	true);
   window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
  }
- 
+
+
+ // rtest3a(I,O,A) :- plog:token:atomname(I,O1,A1), fail.
+ // rtest3a(I,O,A) :- plog:token:atomname(I,O,A).
+ {
+  addRuleSet(jslog_kb,new RuleSet('rtest3a',3,false));
+
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest3a',[newVariable('I'),newVariable('O'),newVariable('A')]),
+		newConsPairsFromTerms([
+//			newAtom('writeln',[newConstant('rtest3 pre1')]),
+			newAtom('plog:token:atomname',[newVariable('I'),newVariable('O1'),newVariable('A1')]),
+//			newAtom('writeln',[newConstant('rtest3 post1')]),
+			newConstant('fail')
+			]))),
+	true); 
+  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('rtest3a',[newVariable('I'),newVariable('O'),newVariable('A')]),
+		newConsPairsFromTerms([
+//			newAtom('writeln',[newConstant('rtest3 pre2')]),			
+			newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('A'),newListNull()])]))),
+	true); 
+  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+ } 
 
  try
  {
@@ -510,12 +530,18 @@ function jslog_ui_init_query()
  q[i++] = newAtom('pprove',[newAtom('queens',[newNumber(8),newVariable('X')])]);
 
  q[i++] = newConstant('!');
-/* q[i++] = newConsPairsFromTerms([
-		newAtom('atom_chars',[newConstant('\'queens\'(4,X).'),newVariable('Z')]),
-		newAtom('plog:token:squote',[newVariable('Z'),newVariable('Y'),newVariable('A')]),
-		newAtom('plog:token:character',[newVariable('Y'),newVariable('V'),newVariable('B')])
-		]);*/
- q[i++] = newAtom('query',[newVariable('O')]);
+ q[i++] = newConsPairsFromTerms([
+//		newAtom('atom_chars',[newConstant('[a,b|X]'),newVariable('Z')]),
+//		newAtom('atom_chars',[newConstant('(a,b,X)'),newVariable('Z')]),
+//		newAtom('atom_chars',[newConstant('{a,b,X}'),newVariable('Z')]),
+		newAtom('atom_chars',[newConstant('a.'),newVariable('Z')]),
+//		newAtom('plog:list',[newVariable('Z'),newVariable('Y'),newVariable('A')])
+//		newAtom('plog:subterm',[newVariable('Z'),newVariable('Y'),newVariable('A'),newNumber(1200)])
+//		newAtom('plog:token:atomname',[newVariable('Z'),newVariable('Y'),newVariable('A')])
+//		newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('Z'),newVariable('Y'),newVariable('A'),newListNull()])
+		newAtom('plog:term',[newVariable('Z'),newVariable('Y'),newVariable('A'),newVariable('M')])
+		]);
+ q[i++] = newAtom('query',[newConstant(' /*hi*/ \'qu:een\'(4,X1,[],[a,b|Z],c).'),newVariable('O')]);
  q[i++] = newAtom('dtest1',[newNumber(10)]);
  q[i++] = newAtom('dtest1',[newNumber(50)]);
  q[i++] = newAtom('dtest1',[newNumber(100)]);
@@ -524,6 +550,9 @@ function jslog_ui_init_query()
  q[i++] = newAtom('dtest3',[newNumber(100)]);
  q[i++] = newAtom('rtest1a',[newVariable('A')]);
  q[i++] = newAtom('rtest2c',[newVariable('X')]);
+ q[i++] = newConsPair(
+		newAtom('atom_chars',[newConstant('a.'),newVariable('X')]),
+		newAtom('rtest3a',[newVariable('X'),newVariable('Y'),newVariable('Z')]));
  q[i++] = newAtom('\\+',[newConstant('true')]);
  q[i++] = newAtom('\\+',[newConstant('fail')]);
  q[i++] = newAtom('call',[newConstant('true')]);

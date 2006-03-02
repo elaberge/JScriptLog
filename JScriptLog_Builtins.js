@@ -59,6 +59,7 @@ function cut_try_fn(goal,prover)
 	while (i >= 0 && prover.frontier[i].parent == g)
 	{
 	 prover.frontier[i].parent = g.parent;
+	 prover.frontier[i].parent_is_ancestor = true;
 	 --i;
 	}
 

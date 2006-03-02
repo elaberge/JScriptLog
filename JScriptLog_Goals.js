@@ -202,6 +202,7 @@ function tryGoal(goal,prover)
 	  {
 	   goal.retry_fn = rule_body.retry_fn;
 	   goal.undo_fn = rule_body.undo_fn;
+	   
 	   return rule_body.try_fn(goal,prover);
 	  }
 	  else
