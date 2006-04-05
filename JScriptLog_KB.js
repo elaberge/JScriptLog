@@ -16,6 +16,8 @@
 var KB_PHASE_CONSULT = 1;
 var KB_PHASE_READY = 2;
 
+// note: preservation of order is important!
+// type < OP_TYPE_FX is arity 2, type >= OP_TYPE_FX is arity 1
 var OP_TYPE_XFX = 1;
 var OP_TYPE_XFY = 2;
 var OP_TYPE_YFX = 3;
@@ -26,9 +28,7 @@ var OP_TYPE_YF = 7;
 
 
 function KB()
-{var ruleset;
- var rule;
-
+{
  this.rulesets = new Object();
  this.phase = KB_PHASE_READY;
  
@@ -733,6 +733,16 @@ function newKB()
  
   addRuleSet(kb,ruleset);
  }
+ // current_op(P,T,N) :- internal:current_op(N,T,P,_).
+ {
+  ruleset = new RuleSet('current_op',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('current_op',[newVariable('P'),newVariable('T'),newVariable('N')]),
+		newAtom('internal:current_op',[newVariable('N'),newVariable('T'),newVariable('P'),newVariable('_')]))));
+ 
+  addRuleSet(kb,ruleset);
+ }
  // abolish(F) :- internal:current_predicate(F,L), internal:member(rs(F,true,R),L), internal:abolish(R).
  {
   ruleset = new RuleSet('abolish',1,false);
@@ -845,7 +855,7 @@ function newKB()
  // mod/2 eval function
  {
   ruleset = new RuleSet('mod',2,false);
-  setOperatorInfo(ruleset,OP_TYPE_XFX,300);
+  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
   
   setEvaluateFunctionForRuleSet(ruleset,mod_eval_fn);
    
@@ -854,7 +864,7 @@ function newKB()
  // **/2 eval function
  {
   ruleset = new RuleSet('**',2,false);
-  setOperatorInfo(ruleset,OP_TYPE_XFY,200);
+  setOperatorInfo(ruleset,OP_TYPE_XFX,200);
   
   setEvaluateFunctionForRuleSet(ruleset,pow_eval_fn);
    
@@ -1037,7 +1047,7 @@ function newKB()
  // \\/1 eval function
  {
   ruleset = new RuleSet('\\',1,false);
-  setOperatorInfo(ruleset,OP_TYPE_YFX,400);
+  setOperatorInfo(ruleset,OP_TYPE_FX,500);
   
   setEvaluateFunctionForRuleSet(ruleset,bitwise_negate_eval_fn);
    
@@ -1420,6 +1430,18 @@ function newKB()
    
   addRuleSet(kb,ruleset);
  }
+ // internal:current_op/4 enumerates operators.
+ // internal:current_op(N,T,P,R) N is an atomsymbol, T is the op type, P is the priority number, 
+ // R is a ruleset reference.
+ {
+  ruleset = new RuleSet('internal:current_op',4,false);
+  
+  ruleset.rules.push(newTraversalRule(newAtom('internal:current_op',[
+				newVariable('N'),newVariable('T'),newVariable('P'),newVariable('R')]),
+				internal_current_op_try_fn,internal_current_op_retry_fn,null));
+   
+  addRuleSet(kb,ruleset);
+ }
  // internal:retract/2 retract rule of given rule reference and index number.
  {
   ruleset = new RuleSet('internal:retract',2,false);
@@ -1750,6 +1772,11 @@ function getRuleNameArity(rule)
  return (rule.name.toString()+"/"+rule.arity.toString());
 }
 
+function getRuleSetName(ruleset)
+{
+ return ruleset.name;
+}
+
 // return the enclosure array for unifying rule.head with encl
 // returns null if unification fails.
 // binding is an array, updated with the unification bindings if succeeds.
@@ -1768,13 +1795,58 @@ function getOperatorType(ruleset)
  return ruleset.op_type;
 }
 
+// returns null if op_type is not in valid range
+function getOperatorTypeStringFromType(op_type)
+{
+ switch (op_type)
+ {
+  case OP_TYPE_XFX:
+    return 'xfx';
+  case OP_TYPE_XFY:
+    return 'xfy';
+  case OP_TYPE_YFX:
+    return 'yfx';
+  case OP_TYPE_FX:
+    return 'fx';
+  case OP_TYPE_FY:
+    return 'fy';
+  case OP_TYPE_XF:
+    return 'xf';
+  case OP_TYPE_YF:
+    return 'yf';
+ }
+ return null;
+}
+
+// return the OP_TYPE_* value for the given op_type_string
+// returns null if op_type_string is not valid
+function getOperatorTypeFromString(op_type_string)
+{
+ if (op_type_string == 'xfx')
+  return OP_TYPE_XFX;
+ if (op_type_string == 'xfy')
+  return OP_TYPE_XFY;
+ if (op_type_string == 'yfx')
+  return OP_TYPE_YFX;
+ if (op_type_string == 'fx')
+  return OP_TYPE_FX;
+ if (op_type_string == 'fy')
+  return OP_TYPE_FY;
+ if (op_type_string == 'xf')
+  return OP_TYPE_XF;
+ if (op_type_string == 'yf')
+  return OP_TYPE_YF;
+  
+ return null;
+}
+
 // returns undefined if ruleset does not represent an operator
 function getOperatorPrecedence(ruleset)
 {
  return ruleset.op_precedence;
 }
 
-// returns undefined if ruleset does not represent an operator
+// makes ruleset represent an operator with type (OP_TYPE_* value) and precedence (number)
 function setOperatorInfo(ruleset,type,precedence)
 {
  ruleset.op_type = type;
@@ -1786,6 +1858,11 @@ function setEvaluateFunctionForRuleSet(ruleset,eval_fn)
  ruleset.eval_fn = eval_fn;
 
  return ruleset;
+}
+
+function isOperatorRuleSet(ruleset)
+{
+ return (ruleset.op_type != null && ruleset.op_precedence != null);
 }
 
 function isDynamicRuleSet(ruleset)

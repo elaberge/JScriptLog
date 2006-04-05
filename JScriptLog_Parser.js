@@ -10,19 +10,24 @@
 *******/
 
 ///////////////////////////////////
-// jslog_parse_* functions for the Prolog parser
+// jslog_parse functions for the Prolog parser
 ///////////////////////////////////
 
 // FIX: Create parser in JScriptLog Prolog
 
 // parse string in_src, which represents a sequence of Prolog clauses
-function jslog_parse(in_src)
+
+function jslog_query(in_src)
+{
+}
+
+function jslog_consult(in_src,kb)
 {
 }
 
 
 ///////////////////////////////////
-// jslog_plog_* functions for the Prolog parser
+// jslog_plog*_token functions for the Prolog parser
 ///////////////////////////////////
 
 // plog:token:name([symbol|O],O,[symbol]).
@@ -674,7 +679,6 @@ function jslog_library_parser(kb)
  }
 
 
- // FIX: when current_op/3 is implemented, remove P=1000,T=xfy terms and uncomment current_op line.
  // plog:op(I,O,A,P,T) :- plog:token:atomname(I,O,A), current_op(P,T,A).
  // I is the input, O the remaining chars, A the atomname, P the op priority, T the op type. 
  {
@@ -685,9 +689,7 @@ function jslog_library_parser(kb)
 		newAtom('plog:token:op',[newVariable('I'),newVariable('O'),newVariable('A'),newVariable('P'),newVariable('T'),]),
 		newConsPairsFromTerms([
 			newAtom('plog:token:atomname',[newVariable('I'),newVariable('O'),newVariable('A')]),
-//			newAtom('current_op',[newVariable('P'),newVariable('T'),newVariable('A')])
-			newAtom('=',[newVariable('P'),newNumber(1000)]),
-			newAtom('=',[newVariable('T'),newConstant('xfy')])			
+			newAtom('current_op',[newVariable('P'),newVariable('T'),newVariable('A')])
 			]))),
 	true); 
  }

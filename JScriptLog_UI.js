@@ -776,6 +776,11 @@ function jslog_ui_init_query()
  q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newConstant('f'),newNumber(2)]),newVariable('L')]);
  q[i++] = newAtom('internal:current_predicate',[newAtom('/',[newVariable('X'),newNumber(2)]),newVariable('L')]);
  q[i++] = newAtom('internal:current_predicate',[newVariable('F'),newVariable('L')]);
+ q[i++] = newAtom('current_op',[newVariable('P'),newVariable('T'),newVariable('N')]);
+ q[i++] = newAtom('current_op',[newVariable('P'),newVariable('T'),newConstant(':-')]);
+ q[i++] = newAtom('current_op',[newVariable('P'),newConstant('xfx'),newVariable('N')]);
+ q[i++] = newAtom('current_op',[newNumber(1200),newVariable('T'),newVariable('N')]);
+ q[i++] = newAtom('internal:current_op',[newVariable('N'),newVariable('T'),newVariable('P'),newVariable('R'),newVariable('X')]);
  q[i++] = newAtom('internal:call',[newAtom('f',[newVariable('X')]),newListPair(newVariable('Y'),newListNull())]);
  q[i++] = newAtom('internal:append',[newListFromTerms([newConstant('a'),newConstant('b')]),
 				newListFromTerms([newNumber(1),newNumber(2)]),newVariable('Y')]);

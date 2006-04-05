@@ -12,11 +12,11 @@ It has some shortcomings and room for improvement.
 
 SHORTCOMINGS:
 
-* The parser is very basic.  It does not give advice on syntax errors (e.g., their location or cause), and it does not handle infix operators (i.e., it is primarily suitable for basic queries).  
+* The parser is very basic.  It does not give advice on syntax errors (e.g., their location or cause), and it does not handle infix operators (i.e., it is primarily suitable for basic single-atom queries).  
 
 It is possible to construct the terms directly (see existing code and queries for N-Queens).  See patch #1311136 for the writeJSLog/1 converter tool, which constructs the terms directly from the given Prolog source code, using an external Prolog interpreter, such as JLog.  
 
-* Some notable missing predicates are: miscellaneous (op/3, dynamic/1, current_op/3, current_prolog_flag/2, set_prolog_flag/2), term display and input predicates (write_term/1, write_canonical/1, writeq/1, read_term/1, read/1), consulting predicates (consult/1, include/1, ensure_loaded/1), DCG predicates (e.g., -->), and the stream based I/O predicates.
+* Some notable missing predicates are: miscellaneous (op/3, dynamic/1, current_prolog_flag/2, set_prolog_flag/2), term display and input predicates (write_term/1, write_canonical/1, writeq/1, read_term/1, read/1), consulting predicates (consult/1, include/1, ensure_loaded/1), DCG predicates (e.g., -->), and the stream based I/O predicates.
 
 * The post-consult optimization phase (e.g., pre-binding) is incomplete.  It doesn't perform constant propagation, and it is limited in the nested-depth of terms in the KB  (i.e., not terms constructed during runtime).
 

@@ -165,6 +165,149 @@ function internal_clause_test(body,rref,idx,goal,prover)
 }
 
 
+function internal_current_op_try_fn(goal,prover)
+{var encl = getFinalEnclosure(goal.encl);
+ var name = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var optype = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var pri = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
+
+ goal.rulesets_array = new Array();
+ goal.rulesets_index = 0;
+
+ if (isObjectReference(rref.term))
+ {
+   if (!isOperatorRuleSet(rref.term.name))
+    throw newErrorException("Invalid ruleset reference:current_op/4.");
+
+   goal.rulesets_array[0] = rref.term.name;
+ }
+ else if (isConstant(name.term))
+ {
+  if (isConstant(optype.term))
+  {
+   var type_num = getOperatorTypeFromString(optype.term.name);
+   
+   if (type_num == null)
+    throw newErrorException("Invalid operator type ("+optype.term.name+"):current_op/4.");
+
+   var arity;
+   
+   if (type_num < OP_TYPE_FX)
+    arity = 2;
+   else
+    arity = 1;
+
+   var ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,arity);
+   
+   if (ruleset != null)
+    goal.rulesets_array[0] = ruleset;
+  }
+  else
+  {
+   var ruleset;
+   
+   ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,1);
+   
+   if (ruleset != null)
+    goal.rulesets_array[goal.rulesets_array.length] = ruleset;
+
+   ruleset = getRuleSetFromNameArity(goal.kb,name.term.name,2);
+   
+   if (ruleset != null)
+    goal.rulesets_array[goal.rulesets_array.length] = ruleset;
+  }
+ }
+ else if (isConstant(optype.term))
+ {
+   var type_num = getOperatorTypeFromString(optype.term.name);
+   var pri_num = null;
+    
+   if (type_num == null)
+    throw newErrorException("Invalid operator type ("+optype.term.name+"):current_op/4.");
+
+  if (isInteger(pri.term))
+  {
+   if (pri.term.name < 0 || pri.term.name > 1200)
+    throw newErrorException("Invalid operator priority value ("+pri.term.name+"):current_op/4.");
+
+   pri_num = pri.term.name;
+  }
+  
+  internal_current_op_collect_rulesets(goal.rulesets_array,goal.kb,type_num,pri_num);
+ }
+ else if (isInteger(pri.term))
+ {
+   if (pri.term.name < 0 || pri.term.name > 1200)
+    throw newErrorException("Invalid operator priority value ("+pri.term.name+"):current_op/4.");
+
+  internal_current_op_collect_rulesets(goal.rulesets_array,goal.kb,null,pri.term.name);
+ }
+ else // collect all rulesets
+ {
+  internal_current_op_collect_rulesets(goal.rulesets_array,goal.kb,null,null);
+ }
+
+ if (goal.rulesets_array.length <= 0)
+ {
+  prover.frontier.push(goal);
+  return false;
+ }
+
+ return internal_current_op_test(name,optype,pri,rref,goal,prover);
+}
+
+// helper for internal_current_op_*_fn
+// addes all rulesets matching type_num and pri_num filters to rulesets_array
+// null filters match any value.
+function internal_current_op_collect_rulesets(rulesets_array,kb,type_num,pri_num)
+{ 
+ for (var r in kb.rulesets)
+ {
+  var ruleset = kb.rulesets[r];
+
+  if (isOperatorRuleSet(ruleset) &&
+		(type_num == null || type_num == getOperatorType(ruleset)) &&
+		(pri_num == null || pri_num == getOperatorPrecedence(ruleset)))
+   rulesets_array[rulesets_array.length] = ruleset;
+ }
+}
+
+// helper for internal_current_op_*_fn
+// removes all goal bindings on failure.
+function internal_current_op_test(name,optype,pri,rref,goal,prover)
+{
+ while (goal.rulesets_index < goal.rulesets_array.length)
+ {
+  var ruleset = goal.rulesets_array[goal.rulesets_index];
+  
+  var rref2 = newTermEnclosure(newObjectReference(ruleset));
+  var name2 = newTermEnclosure(newConstant(getRuleSetName(ruleset)));
+  var pri2 = newTermEnclosure(newNumber(getOperatorPrecedence(ruleset)));
+  var optype2 = newTermEnclosure(newConstant(getOperatorTypeStringFromType(getOperatorType(ruleset))));
+
+  if (jslog_unify(name,name2,goal.bindings) && jslog_unify(rref,rref2,goal.bindings) && 
+		jslog_unify(optype,optype2,goal.bindings) && jslog_unify(pri,pri2,goal.bindings))
+  {
+   prover.explored.push(goal);
+   return true;
+  }
+  else
+  {
+   removeBindings(goal.bindings);
+   goal.rulesets_index++;
+  }
+ }
+ 
+ // no ruleset matches
+ {
+  removeBindings(goal.bindings);
+  prover.frontier.push(goal);
+  return false;
+ }
+}
+
+
 function internal_catch_try_fn(goal,prover)
 {var encl = getFinalEnclosure(goal.encl);
  var g = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
@@ -284,6 +427,25 @@ function internal_clause_retry_fn(goal,prover)
   goal.subgoal.rule_index++;
 
  return internal_clause_test(body,rref,idx,goal,prover);
+}
+
+
+function internal_current_op_retry_fn(goal,prover)
+{var encl = getFinalEnclosure(goal.encl);
+ var name = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var optype = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var pri = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[2]));
+ var rref = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[3]));
+
+ goal.rulesets_index++;
+ 
+ if (goal.rulesets_index >= goal.rulesets_array.length)
+ {
+  prover.frontier.push(goal);
+  return false;
+ }
+
+ return internal_current_op_test(name,optype,pri,rref,goal,prover);
 }
 
 

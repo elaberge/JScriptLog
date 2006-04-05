@@ -31,6 +31,8 @@ function Goal(type,encl,parent)
  // this.prover : a sub-prover
  // this.noretry : if true, the next retry must fail.
  // this.parent_is_ancestor : true if parent set to grand+-parent (ancestor).
+ // this.rulesets_array : an array of rulesets
+ // this.rulesets_index : the current index into rulesets_array
   
  return this;
 }

@@ -1,3 +1,40 @@
+JScriptLog 0.7.0.beta
+====================
+
+¥ Added simple prover statistics gathering (returns the size of each stack, the number of bindings on each, and the maximums of multiple samples).
+
+¥ Added stack-space optimization to merge the sub-tree for deterministic and last try goals with their parent (i.e., remove the deterministic goal node where possible).  Added mergeGoalBindings method.  Performs a kind of tail-recursive optimization.  Thanks to Jeff for finding a bug in the first implementation (fixed now -- rtest1*/1 is the regression test).
+
+¥ Changed behaviour of cut (!/0) to remove non-retryable goals when trying the cut, instead of just when the cut is retried.  The result is logically equivalent, but the search tree is pruned earlier.  Some goals (particularly traversal goals with an undo function) delay the full optimization (they are undone on the retry).  The !/0 predicate uses cut_try_fn for the try, instead of true_try_fn.  Thanks again to Jeff for finding a bug in the first implementation (fixed now -- rtest2*/1 is the regression test).
+
+¥ Added the noretry property to ATOM_GOALS.  If this property is true, then the goal must fail the next retry.  Effectively used by cut (!/0) to support tail-recursive optimization with simple predecessor test.
+
+¥ Removed TYPE_FUNCTION_GOAL and TYPE_TRAVERSAL_GOAL goal types, and their associated Goal functions.  These are handled, as they were previously, as part of the TYPE_ATOM_GOAL.  
+
+¥ Added optional ruleset and goal_type properties to terms.  newGoal now uses this information to determine the goal to create.  newAtomGoal now sets the term.ruleset value to the found ruleset, if it was not already found.  internal:atom_append! now invalidates the term.ruleset property (because it changes the arity).
+
+¥ Added getOperatorType, getOperatorPrecedence, and setOperatorInfo methods for RuleSets.  Added several OP_TYPE_* constants.  RuleSets which represent operators now have the associated op_type and op_precedence properties set.
+
+¥ Added internal:flatten predicate (flattens a list).
+
+¥ Added some experimental post-consult optimizations: 
+
+1) rule.name and term.name are set equal to the owning ruleset.name (a same string object which speeds comparison on some platforms), 
+
+2) term.ruleset and term.goal_type are bound to the correct values to speed rule lookup and goal creation.  
+
+To perform pre-binding, call optimizeKB after consult.  Unfortunately, the optimizations provide only a slight performance benefit.  
+
+NOTE: There is a limit on the nesting-depth of terms in the KB that the optimization code can handle (may be limited by Javascript stack space). 
+
+¥ Added jslog_GoalStack_toString and jslog_Goal_toString functions to display goal-stacks (e.g. explored and frontier) and goals.
+
+¥ Added current_op/3 and internal:current_op/4 predicates.  Also added internal_current_op_try_fn, internal_current_op_collect_rulesets, internal_current_op_test, and internal_current_op_retry functions.
+
+¥ Added isOperatorRuleSet, getOperatorTypeStringFromType, and getOperatorTypeFromString methods to JScriptLog_KB.js file.
+
+
+
 JScriptLog 0.6.0.alpha
 ====================
 
@@ -7,7 +44,7 @@ JScriptLog 0.6.0.alpha
 
 ¥ Changed nextUnifiedRuleBodyForGoal method so that it only creates a new array for goal.bindings if goal.bindings == null (otherwise the array must be empty).
 
-¥ Changes to JScriptLog_Prover.js source.  Added Prover class, which encapsulates proof queries, and maintains the prover state, phase, associated KB, and goal sets.  Replaced jslog_user_* and jslog_prove* functions with proveProver, retryProver, stopProver, and haltProver methods.  Updated JScriptLog_UI.js to reflect prover changes.  As a user of the Prolog Prover, it no longer needs to keep track of the QUERY_STATE_* values. Added isProverState* test methods.  Moved jslog_kb declaration out of JScriptLog_KB.js and into JScriptLog_UI.js (the user of the JScriptLog Prolog engine should construct the KB they want to use).  Modified tryGoal and retryGoal to take a Prover object (instead of kb, frontier, explored).
+¥ Changes to JScriptLog_Prover.js source.  Added Prover class, which encapsulates proof queries, and maintains the prover state, associated KB, and goal sets.  Replaced jslog_user_* and jslog_prove* functions with proveProver, retryProver, stopProver, and haltProver methods.  Updated JScriptLog_UI.js to reflect prover changes.  As a user of the Prolog Prover, it no longer needs to keep track of the QUERY_STATE_* values. Added isProverState* test methods.  Moved jslog_kb declaration out of JScriptLog_KB.js and into JScriptLog_UI.js (the user of the JScriptLog Prolog engine should construct the KB they want to use).  Modified tryGoal and retryGoal to take a Prover object (instead of kb, frontier, explored).
 
 ¥ Modified protocol for try_fn and retry_fn traversal functions so that they take a prover parameter, instead of the two stacks (this gives traversal functions more information, hence greater control).
 
