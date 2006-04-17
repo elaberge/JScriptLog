@@ -56,7 +56,7 @@ function Exception(encl)
 {
  this.encl = encl;
  
- this.toString = function() { return "Exception - " + jslog_toString(this.encl); };
+ this.toString = function() { return "Exception - " + jslog_toString(this.encl,null); };
  
  return this;
 }

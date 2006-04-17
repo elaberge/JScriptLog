@@ -1777,6 +1777,11 @@ function getRuleSetName(ruleset)
  return ruleset.name;
 }
 
+function getRuleSetArity(ruleset)
+{
+ return ruleset.arity;
+}
+
 // return the enclosure array for unifying rule.head with encl
 // returns null if unification fails.
 // binding is an array, updated with the unification bindings if succeeds.
@@ -1847,6 +1852,7 @@ function getOperatorPrecedence(ruleset)
 }
 
 // makes ruleset represent an operator with type (OP_TYPE_* value) and precedence (number)
+// note: type and ruleset.arity must match (i.e., *F* => arity = 2 ; *F, F* => arity = 1). 
 function setOperatorInfo(ruleset,type,precedence)
 {
  ruleset.op_type = type;
@@ -1862,7 +1868,8 @@ function setEvaluateFunctionForRuleSet(ruleset,eval_fn)
 
 function isOperatorRuleSet(ruleset)
 {
- return (ruleset.op_type != null && ruleset.op_precedence != null);
+ return (ruleset.op_type != null && ruleset.op_precedence != null && 
+		ruleset.arity >= 1 && ruleset.arity <= 2);
 }
 
 function isDynamicRuleSet(ruleset)

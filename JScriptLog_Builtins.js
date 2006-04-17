@@ -1082,7 +1082,7 @@ function write_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
  
- window.document.formUI.output.value += jslog_toString(lhs);
+ window.document.formUI.output.value += jslog_toString(lhs,goal.kb);
  return true; 
 }
 

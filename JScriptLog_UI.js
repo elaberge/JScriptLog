@@ -49,7 +49,7 @@ function jslog_ui_consult()
 			newAtom('range',[newNumber(1),newVariable('N'),newVariable('Ns')]),
 			newAtom('queens',[newVariable('Ns'),newListNull(),newVariable('Qs')])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  //queens(UQs, SQs, Qs) :- select(Q,UQs,UQs1),\+ attack(Q,SQs), queens(UQs1,[Q|SQs],Qs).
  //queens([],Qs,Qs).
@@ -65,11 +65,11 @@ function jslog_ui_consult()
 			newAtom('queens',[newVariable('UQs1'),
 				newListPair(newVariable('Q'),newVariable('SQs')),newVariable('Qs')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
 	t = newAtom('queens',[newListNull(),newVariable('Qs'),newVariable('Qs')])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // attack(X,Xs) :- attack(X, 1, Xs).
  {
@@ -80,7 +80,7 @@ function jslog_ui_consult()
 		newAtom('attack',[newVariable('X'),newVariable('Xs')]),
 		 newAtom('attack',[newVariable('X'),newNumber(1),newVariable('Xs')]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // attack(X,N,[Y|_]) :- X is Y+N ; X is Y-N.
  // attack(X,N,[_|Ys]) :- N1 is N+1, attack(X,N1,Ys).
@@ -94,7 +94,7 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('X'),newAtom('+',[newVariable('Y'),newVariable('N')])]),
 			newAtom('is',[newVariable('X'),newAtom('-',[newVariable('Y'),newVariable('N')])])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('attack',[newVariable('X'),newVariable('N'),newListPair(newVariable('_'),newVariable('Ys'))]),
@@ -102,7 +102,7 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('N1'),newAtom('+',[newVariable('N'),newNumber(1)])]),
 			newAtom('attack',[newVariable('X'),newVariable('N1'),newVariable('Ys')])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
  // range(M,N,[M|Ns]) :- M < N, M1 is M+1, range(M1,N,Ns).
@@ -118,11 +118,11 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('M1'),newAtom('+',[newVariable('M'),newNumber(1)])]),
 			newAtom('range',[newVariable('M1'),newVariable('N'),newVariable('Ns')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
 	t = newAtom('range',[newVariable('N'),newVariable('N'),newListPair(newVariable('N'),newListNull())])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  
  // predicate_property(queens(_,_),_) :- !, fail.
@@ -141,49 +141,49 @@ function jslog_ui_consult()
 			newAtom('queens',[newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newAtom('queens',[newVariable('_'),newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newAtom('attack',[newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newAtom('attack',[newVariable('_'),newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newAtom('range',[newVariable('_'),newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newAtom('select',[newVariable('_'),newVariable('_'),newVariable('_')]),newVariable('_')]),
 		newConsPair(newConstant('!'),newConstant('fail')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('predicate_property',[
 			newVariable('X'),newConstant('built_in')]),
 		newConstant('!'))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // pprove((A;B)) :- !, pprove(A) ; pprove(B).
  // pprove((A,B)) :- !, pprove(A) , pprove(B).
@@ -199,20 +199,20 @@ function jslog_ui_consult()
 		newConsPair(newConstant('!'),
 			newOrPair(newAtom('pprove',[newVariable('A')]),newAtom('pprove',[newVariable('B')]))))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('pprove',[newConsPair(newVariable('A'),newVariable('B'))]),
 		newConsPair(newConstant('!'),
 			newConsPair(newAtom('pprove',[newVariable('A')]),newAtom('pprove',[newVariable('B')]))))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('pprove',[newConstant('!')]),
 		newConsPair(newConstant('!'),newConstant('pprove_cut')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('pprove',[newVariable('X')]),
@@ -220,7 +220,7 @@ function jslog_ui_consult()
 			newConstant('!'),
 			newAtom('call',[newVariable('X')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('pprove',[newVariable('H')]),
@@ -229,7 +229,7 @@ function jslog_ui_consult()
 						newConstant('pprove_cut_exception'),
 						newConstant('fail')]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
  // pprove_cut. 
@@ -240,13 +240,13 @@ function jslog_ui_consult()
   addRule(jslog_kb,newRule(
     t = newConstant('pprove_cut')),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newConstant('pprove_cut'),
 		newAtom('throw',[newConstant('pprove_cut_exception')]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
 
@@ -259,7 +259,7 @@ function jslog_ui_consult()
 		newAtom('plus',[newVariable('X'),newVariable('Y'),newVariable('Z')]),
 		newAtom('is',[newVariable('Z'),newAtom('+',[newVariable('X'),newVariable('Y')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
 
@@ -275,7 +275,7 @@ function jslog_ui_consult()
 		newAtom('plog:term',[newVariable('Z'),newVariable('Y'),newVariable('A')])
 		]))),
 	true);	
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
 
@@ -293,21 +293,21 @@ function jslog_ui_consult()
   window.document.formUI.kb.value += ":- dynamic f/2\n\n";	
  
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(1),newNumber(1)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(1),newNumber(2)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(2),newNumber(1)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(2),newNumber(2)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(3),newNumber(1)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(4),newNumber(2)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(3),newNumber(1)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(t = newAtom('f',[newNumber(4),newNumber(2)])),true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // throw_long(0) :- throw(err('test throw').  
  // throw_long(N) :- N1 is N - 1, throw_long(N1). 
@@ -319,7 +319,7 @@ function jslog_ui_consult()
 		newAtom('throw_long',[newNumber(0)]),
 		newAtom('throw',[newAtom('err',[newConstant('test throw')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('throw_long',[newVariable('N')]),
@@ -327,7 +327,7 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
 			newAtom('throw_long',[newVariable('N1')])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // dtest1(0).  
  // dtest1(N) :- N1 is N - 1, dtest1(N1). 
@@ -337,7 +337,7 @@ function jslog_ui_consult()
   addRule(jslog_kb,newRule(
     t = newAtom('dtest1',[newNumber(0)])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('dtest1',[newVariable('N')]),
@@ -345,7 +345,7 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
 			newAtom('dtest1',[newVariable('N1')])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // dtest2(N) :- N > 0, N1 is N - 1, dtest2(N1). 
  // dtest2(0).  
@@ -360,11 +360,11 @@ function jslog_ui_consult()
 			newAtom('is',[newVariable('N1'),newAtom('-',[newVariable('N'),newNumber(1)])]),
 			newAtom('dtest2',[newVariable('N1')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newAtom('dtest2',[newNumber(0)])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // dtest3(N) :- N > 0, dtest2(N), N1 is N - 1, !, dtest3(N1). 
  // dtest3(0).  
@@ -381,11 +381,11 @@ function jslog_ui_consult()
 			newConstant('!'),
 			newAtom('dtest3',[newVariable('N1')])]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newAtom('dtest3',[newNumber(0)])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
  // rtest1a(X) :- rtest1b(X), fail.
@@ -400,13 +400,13 @@ function jslog_ui_consult()
 			newAtom('rtest1b',[newVariable('X')]),
 			newConstant('fail')]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('rtest1a',[newVariable('X')]),
 		newAtom('=',[newVariable('X'),newNumber(2)]))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // rtest1b(X) :- X = 1.  
  {
@@ -419,7 +419,7 @@ function jslog_ui_consult()
 			newAtom('=',[newVariable('X'),newNumber(1)]),
 			newConstant('!')))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
   
@@ -433,7 +433,7 @@ function jslog_ui_consult()
 			newAtom('=',[newVariable('X'),newNumber(2)])
 			)),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // rtest2b(1).
  // rtest2b(2).
@@ -443,11 +443,11 @@ function jslog_ui_consult()
   addRule(jslog_kb,newRule(
     t = newAtom('rtest2b',[newNumber(1)])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newAtom('rtest2b',[newNumber(2)])),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
  // rtest2c(X) :- rtest2b(X), rtest2a(X).
  {
@@ -460,7 +460,7 @@ function jslog_ui_consult()
 			newAtom('rtest2b',[newVariable('X')]),
 			newAtom('rtest2a',[newVariable('X')])))),
 	true);
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
 
@@ -479,7 +479,7 @@ function jslog_ui_consult()
 			newConstant('fail')
 			]))),
 	true); 
-  window.document.formUI.kb.value += jslog_toString(t) + "\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n";	
   addRule(jslog_kb,newRule(
     t = newRuleTerm(
 		newAtom('rtest3a',[newVariable('I'),newVariable('O'),newVariable('A')]),
@@ -487,7 +487,7 @@ function jslog_ui_consult()
 //			newAtom('writeln',[newConstant('rtest3 pre2')]),			
 			newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('A'),newListNull()])]))),
 	true); 
-  window.document.formUI.kb.value += jslog_toString(t) + "\n\n";	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  } 
 
  try
@@ -834,7 +834,7 @@ function jslog_ui_init_query()
  
  for (i = 0; i < q.length; i++)
  {
-  window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i]),i.toString(),i==1);
+  window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i],jslog_kb),i.toString(),i==1);
  }
 
  jslog_premade_queries = q;
@@ -855,11 +855,11 @@ function jslog_ui_query()
  {
   jslog_prover = newQueryProver(jslog_kb,newTermEnclosure(query_term)); 
 
-  window.document.formUI.output.value += "?- " + jslog_toString(jslog_prover.query) + "\n";
+  window.document.formUI.output.value += "?- " + jslog_toString(jslog_prover.query,jslog_kb) + "\n";
   
   if (proveProver(jslog_prover))
   {
-   window.document.formUI.output.value += jslog_toString(jslog_prover.query);
+   window.document.formUI.output.value += jslog_toString(jslog_prover.query,jslog_kb);
    
    // DEBUGGING STATISTICS INFORMATION
    jslog_proverstats = new ProverStatistic(jslog_prover);
@@ -888,7 +888,7 @@ function jslog_ui_retry()
   {
    if (retryProver(jslog_prover))
    {
-    window.document.formUI.output.value += jslog_toString(jslog_prover.query);
+    window.document.formUI.output.value += jslog_toString(jslog_prover.query,jslog_kb);
 
     // DEBUGGING STATISTICS INFORMATION
     window.document.formUI.output.value += "\n" + calculateStatistics(jslog_proverstats).toString();

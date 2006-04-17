@@ -17,18 +17,28 @@
 // FIX: Display variables uniquely (not just by their local names).
 
 // encl is either a Term or Enclosure (preferrable)
-function jslog_toString(encl)
-{var tostr_terms = new Array(1);
+// kb is the KB used for operator display info.  If kb == null, then the default
+// display procedure is used (with the exception of lists and argument separators,
+// operators are displayed as predicates).
+function jslog_toString(encl,kb)
+{var tostr_terms = new Array();
  var tostr;
  var str = "";
-
- tostr_terms[0] = encl;
+ var prev_token = null; 
+ 
+ tostr_terms.push(encl);
  
  while ((tostr = tostr_terms.pop()) != undefined)
  {
+  var ruleset = null;
+
   if (tostr.constructor == String)
   {
+   if (prev_token != null && jslog_Display_needsSpace(prev_token,tostr))
+    str += " ";
+	
    str += tostr;
+   prev_token = tostr;
    continue;
   }
   if (tostr.constructor == Term)
@@ -37,58 +47,202 @@ function jslog_toString(encl)
    continue;
   }
 
+  // from here on: assume tostr is an enclosure
   if (isVariable(tostr.term)) // display Variable
   {
-   jslog_toString_Variable(tostr_terms,tostr);
+   jslog_toString_Variable(tostr,tostr_terms);
   }
   else if (isObjectReference(tostr.term))  // display ObjectReference
   {
-   str += tostr.term.name.toString();
-  }   
-  else if (isConsPair(tostr.term))  // display ConsPairs
-  {
-   jslog_toString_BinaryOp(tostr_terms,tostr,isConsPair,",",false);
-  } 
-  else if (isOrPair(tostr.term))  // display OrPairs
-  {
-   jslog_toString_BinaryOp(tostr_terms,tostr,isOrPair,";",false);
-  } 
+   tostr_terms.push(tostr.term.name.toString());
+  }
   else if (isListPair(tostr.term))  // display ListPairs
   {
-   str += "[";
    tostr_terms.push("]");
-
-   jslog_toString_BinaryOp(tostr_terms,tostr,isListPair,",",true);
+   jslog_toString_List(tostr,tostr_terms,kb);
+   tostr_terms.push("[");
   } 
   else if (tostr.term.name == '{}' && tostr.term.children.length == 1)  // display {} sequences
   {
-   str += "{";
    tostr_terms.push("}");
-   tostr_terms.push(newSubTermEnclosure(tostr.enclosure,tostr.term.children[0]));
+   tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+   tostr_terms.push("{");
   } 
   else if (tostr.term.name == '()' && tostr.term.children.length == 1)  // display () sequences
   {
-   str += "(";
    tostr_terms.push(")");
-   tostr_terms.push(newSubTermEnclosure(tostr.enclosure,tostr.term.children[0]));
-  } 
-  else if (tostr.term.children.length == 0)  // display Constant, Number, or Atom/0
-   str += tostr.term.name.toString();
+   tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+   tostr_terms.push("(");
+  }
+  else if (kb != null && isAtom(tostr.term) && ((ruleset = getRuleSet(kb,tostr.term)) != null) &&
+			isOperatorRuleSet(ruleset))
+  {   
+   switch (getOperatorType(ruleset))
+   {
+	case OP_TYPE_XFX:
+	case OP_TYPE_XFY:
+	case OP_TYPE_YFX:
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
+	   var needs_paren1 = jslog_Display_needsParentheses(tostr,1,kb);
+	   
+	   if (needs_paren1)
+	    tostr_terms.push(")");
+       tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[1]));
+	   if (needs_paren1)
+	    tostr_terms.push("(");
+       tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),true));
+	   if (needs_paren0)
+	    tostr_terms.push(")");
+       tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+	   if (needs_paren0)
+	    tostr_terms.push("(");
+	  } 
+	 break;
+	  
+	case OP_TYPE_FX:
+	case OP_TYPE_FY:
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
+	   
+	   if (needs_paren0)
+	    tostr_terms.push(")");
+       tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+	   if (needs_paren0)
+	    tostr_terms.push("(");
+	   tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),true));
+	  }
+	 break;
+	  
+    case OP_TYPE_XF:
+	case OP_TYPE_YF:
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
+
+       tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),true));
+	   if (needs_paren0)
+	    tostr_terms.push(")");
+       tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+	   if (needs_paren0)
+	    tostr_terms.push("(");
+	  }
+	 break;
+   }
+  }
+  else if (isConsPair(tostr.term))  // display ConsPairs if it wasn't previously
+  {
+   tostr_terms.push(")");
+   tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[1]));	 
+   tostr_terms.push("),(");
+   tostr_terms.push(newSubtermEnclosure(tostr.enclosure,tostr.term.children[0]));
+   tostr_terms.push("(");
+  }
+  else if (isNumber(tostr.term))  // display Number
+  {
+   tostr_terms.push(tostr.term.name.toString());
+  }
+  else if (tostr.term.children.length == 0)  // display Constant, or Atom/0
+  {
+   tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),false));
+  }
   else  // display Atom/N
   {var args = newConsPairsFromTerms(tostr.term.children);
   
-   str += tostr.term.name.toString() + "(";
-   tostr_terms.push(")");
-   
+   tostr_terms.push(")");   
    tostr_terms.push(newSubtermEnclosure(tostr.enclosure,args));
+   tostr_terms.push("(");
+   tostr_terms.push(""); // force no space
+   tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),false));
   }
  };
   
  return str;
 }
 
+// determines if a space is needed between two String tokens.
+// token is the string which will display next, prev_token was display previously.
+// returns true if a space was needed, false otherwise.
+function jslog_Display_needsSpace(prev_token,token)
+{var needs_space = true;
+
+ if (prev_token == null)
+  return false;
+  
+ // empty string forces tokens together
+ if (prev_token == "" || token == "")
+  return false;
+  
+ // make exceptions
+ if (prev_token == ":-" || token == ":-")
+  return true;
+
+ var pt_allword = prev_token.search(/\W/) < 0;
+ var pt_allnonword = prev_token.search(/\w/) < 0;
+ var pt_isquoted = prev_token.length >= 2 && prev_token[0] == "'" && prev_token[prev_token.length-1] == "'";
+ var t_allword = token.search(/\W/) < 0;
+ var t_allnonword = token.search(/\w/) < 0;
+ var t_isquoted = token.length >= 2 && token[0] == "'" && token[token.length-1] == "'";
+
+ // need a space if pre_token and token are in the same display class
+ // (display classes: i] all word chars, ii] all non-word chars) or if either
+ // token is in the mixed class iii] (i.e., neither i] nor ii] above).
+ needs_space = (pt_allword && t_allword) || (pt_allnonword && t_allnonword) ||
+				(!pt_allword && !pt_allnonword) || (!t_allword && !t_allnonword);
+
+ // keep symbols close to mixed tokens if it is quoted.
+ if ((pt_isquoted && t_allnonword) || (t_isquoted && pt_allnonword))
+  return false;
+
+ // keep single character symbols together if they are in the small set of 'reserved' symbols
+ if (prev_token.length == 1 && token.length == 1 && 
+		prev_token.search(/[\[\]\{\}\(\)\,\;\!]/) == 0 && token.search(/[\[\]\{\}\(\)\,\.\;\!]/) == 0)
+  return false;
+
+ // keep null list token and 'reserved' single character symbols together
+ if (prev_token.length == 1 && token == "[]" && prev_token.search(/[\[\]\{\}\(\)\,\;\!]/) == 0)
+  return false;
+
+ // keep null list token and 'reserved' single character symbols together
+ if (token.length == 1 && prev_token == "[]" && token.search(/[\[\]\{\}\(\)\,\.\;\!]/) == 0)
+  return false;
+  
+ // keep \+ and -> near 'reserved' single character symbols
+ if ((token == "\\+" || token == "->") && prev_token.length == 1 && prev_token.search(/[\,\;]/) == 0)
+  return false;
+  
+ return needs_space; 
+}
+
+// determines if the child (number) of encl.term needs to have a parenthesis to
+// distinguish it from parent. if kb == null, returns false (assumes everything is
+// displayed in predicate format -- i.e., not infix).
+function jslog_Display_needsParentheses(encl,child,kb)
+{
+ if (kb == null)
+  return true;
+  
+ return false;
+}
+
+// given an atom_name, returns a displayable version of it (i.e., quotes it if it contains
+// symbols which could confuse the parser).
+// is_op is true if atom_name represents an operator. 
+function jslog_Display_AtomName(atom_name,is_op)
+{
+ // if operators are all symbols, do not quote
+ if (is_op && atom_name.search(/\w/) < 0)
+  return atom_name;
+  
+ // if name is alphanumeric(_), do not quote 
+ if (atom_name.search(/\W/) < 0)
+  return atom_name;
+ 
+ // display some known atoms without quotes
+ if (atom_name == "[]" || atom_name == "!" || atom_name == "->" )
+  return atom_name;
+  
+ return "'"+atom_name+"'";
+}
+
 // isVariable(encl.term)
-function jslog_toString_Variable(stack,encl)
+function jslog_toString_Variable(encl,stack)
 {var tostr = getBoundEnclosure(encl);
 
  if (tostr == null)
@@ -97,49 +251,52 @@ function jslog_toString_Variable(stack,encl)
   stack.push(tostr);
 }
 
-// eval_fn(encl.term) must be true.
-// eval_fn is a type evaluation function taking a single term.
-// sep is the separator string to use.
-// If islist is true, the tail end of the sequence is treated like a list 
-// (e.g., '|' if not null terminated).
-function jslog_toString_BinaryOp(stack,encl,eval_fn,sep,islist)
-{var list = new Array(1);
-   
+// isListPair(encl.term) must be true.
+// push terms / strings to display onto stack.
+function jslog_toString_List(encl,stack,kb)
+{var list = new Array();
+ 
  list.push(getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0])));
  encl = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
 
- while (eval_fn(encl.term))
+ while (isListPair(encl.term))
  {
   list.push(getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0])));
   encl = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
  }
 
- if (islist)
- {
-  if (!isListNull(encl.term))
-  {
-   stack.push(encl);
-   stack.push("|");
-  }
- } 
- else
-  list.push(encl);
-
- if ((encl = list.pop()) != undefined)
+ if (!isListNull(encl.term))
  {
   stack.push(encl);
+  stack.push("|");  
+ }
+   
+ if ((encl = list.pop()) != undefined)
+ {var needs_paren;
+
+  needs_paren = isConsPair(encl.term) || isOrPair(encl.term); //FIX: Change to test operator precedence
+  
+  if (needs_paren)
+   stack.push(")");
+
+  stack.push(encl);
+
+  if (needs_paren)
+   stack.push("(");
 
   while ((encl = list.pop()) != undefined)
   {
-   stack.push(sep);
-   if (isConsPair(encl.term) || isOrPair(encl.term)) //FIX: Change to test operator precedence
-   {
+   needs_paren = isConsPair(encl.term) || isOrPair(encl.term); //FIX: Change to test operator precedence
+   
+   stack.push(",");
+   
+   if (needs_paren)
 	stack.push(")");
-    stack.push(encl);
+
+   stack.push(encl);
+
+   if (needs_paren)
 	stack.push("(");
-   }
-   else
-    stack.push(encl);
   }
  }
 } 
