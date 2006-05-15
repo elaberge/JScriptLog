@@ -33,6 +33,8 @@ NOTE: There is a limit on the nesting-depth of terms in the KB that the optimiza
 
 ¥ Added isOperatorRuleSet, getOperatorTypeStringFromType, and getOperatorTypeFromString methods to JScriptLog_KB.js file.
 
+¥ Modified jslog_toString to take a second kb parameter (the KB).  If kb is not null then operator precedence is used to display operators using infix notation.  Removed function jslog_toString_BinaryOp and replaced it with jslog_toString_List which is used to display lists in the standard syntactic-sugar form.  Fixed a runtime error bug for displaying {}/1 and ()/1 predicates.  Added jslog_Display_AtomName, jslog_Display_needsParentheses, and jslog_Display_needsSpace helper functions to JSciptLog_Display.js file.
+
 
 
 JScriptLog 0.6.0.alpha

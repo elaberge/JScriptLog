@@ -82,8 +82,8 @@ function jslog_toString(encl,kb)
 	case OP_TYPE_XFX:
 	case OP_TYPE_XFY:
 	case OP_TYPE_YFX:
-	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
-	   var needs_paren1 = jslog_Display_needsParentheses(tostr,1,kb);
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,ruleset,0,kb);
+	   var needs_paren1 = jslog_Display_needsParentheses(tostr,ruleset,1,kb);
 	   
 	   if (needs_paren1)
 	    tostr_terms.push(")");
@@ -101,7 +101,7 @@ function jslog_toString(encl,kb)
 	  
 	case OP_TYPE_FX:
 	case OP_TYPE_FY:
-	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,ruleset,0,kb);
 	   
 	   if (needs_paren0)
 	    tostr_terms.push(")");
@@ -114,7 +114,7 @@ function jslog_toString(encl,kb)
 	  
     case OP_TYPE_XF:
 	case OP_TYPE_YF:
-	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,0,kb);
+	  {var needs_paren0 = jslog_Display_needsParentheses(tostr,ruleset,0,kb);
 
        tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),true));
 	   if (needs_paren0)
@@ -210,15 +210,57 @@ function jslog_Display_needsSpace(prev_token,token)
  return needs_space; 
 }
 
-// determines if the child (number) of encl.term needs to have a parenthesis to
-// distinguish it from parent. if kb == null, returns false (assumes everything is
-// displayed in predicate format -- i.e., not infix).
-function jslog_Display_needsParentheses(encl,child,kb)
+// determines if the child (at child_idx number) of encl.term needs to have a parenthesis to
+// distinguish it from parent (assumes using infix). if kb == null, returns true 
+// (assume everything needs parentheses -- if displayed in predicate format, 
+// i.e. not infix, then don't call this).
+// ruleset = getRuleSet(kb,encl.term) && ruleset != null && isOperatorRuleSet(ruleset)
+// child_idx is the index of the child term to evaluate.  encl.term must represent an
+// operator and encl.term.children[child_idx] must be a valid.
+function jslog_Display_needsParentheses(encl,ruleset,child_idx,kb)
 {
  if (kb == null)
   return true;
-  
- return false;
+
+ var op_type = getOperatorType(ruleset);
+ var op_prec = getOperatorPrecedence(ruleset);
+
+ var child = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[child_idx]));
+
+ if (!isAtom(child.term))
+  return false;
+
+ var child_ruleset = getRuleSet(kb,child.term);
+ 
+ if (child_ruleset == null || !isOperatorRuleSet(child_ruleset))
+  return false;
+
+ var child_op_prec = getOperatorPrecedence(child_ruleset);
+
+ if (child_op_prec < op_prec)
+  return false;
+
+ if (child_op_prec > op_prec)
+  return true;
+
+ // child_op_prec == op_prec, so handle via specific cases
+ 
+ switch (op_type)
+ {
+  case OP_TYPE_XFY:
+    if (child_idx == 1)
+	 return false;
+   break;
+  case OP_TYPE_YFX:
+    if (child_idx == 0)
+	 return false;
+   break;
+  case OP_TYPE_FY:
+  case OP_TYPE_YF:
+    return false;
+ }
+ 
+ return true;
 }
 
 // given an atom_name, returns a displayable version of it (i.e., quotes it if it contains
