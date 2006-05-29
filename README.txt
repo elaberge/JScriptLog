@@ -12,7 +12,7 @@ It has some shortcomings and room for improvement.
 
 SHORTCOMINGS:
 
-* The parser is very basic.  It does not give advice on syntax errors (e.g., their location or cause), and it does not handle infix operators (i.e., it is primarily suitable for basic single-atom queries).  
+* The experimental parser is very basic and not suitable for more than simple queries.  It does not give advice on syntax errors (e.g., their location or cause), it does not handle infix operators (i.e., it is primarily suitable for basic single-atom / predicate queries), and it is too slow for consulting KBs.
 
 It is possible to construct the terms directly (see existing code and queries for N-Queens).  See patch #1311136 for the writeJSLog/1 converter tool, which constructs the terms directly from the given Prolog source code, using an external Prolog interpreter, such as JLog.  
 

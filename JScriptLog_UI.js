@@ -278,6 +278,21 @@ function jslog_ui_consult()
   window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
  }
 
+ // parse(I,O) I is input constant, O is parsed term.  
+ {
+  addRuleSet(jslog_kb,new RuleSet('parse',2,false));
+ 
+  addRule(jslog_kb,newRule(
+    t = newRuleTerm(
+		newAtom('parse',[newVariable('Q'),newVariable('A')]),
+		newConsPairsFromTerms([
+		newAtom('atom_chars',[newVariable('Q'),newVariable('Z')]),
+		newAtom('plog:term',[newVariable('Z'),newVariable('_'),newVariable('A')])
+		]))),
+	true);	
+  window.document.formUI.kb.value += jslog_toString(t,jslog_kb) + "\n\n";	
+ }
+
 
  // :- dynamic(p/2).
  {
@@ -509,8 +524,9 @@ var jslog_premade_queries = new Array();
 // FIX: When parser is working, remove pre-made queries function.
 function jslog_ui_init_query()
 {var q = new Array();
- var i = 0;
+ var i = 1;
 
+ q[0] = null; // slot for handling user queries...
 
  q[i++] = newAtom('member',[newVariable('Y'),
 		newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
@@ -542,6 +558,10 @@ function jslog_ui_init_query()
 		newAtom('plog:term',[newVariable('Z'),newVariable('Y'),newVariable('A'),newVariable('M')])
 		]);
  q[i++] = newAtom('query',[newConstant(' /*hi*/ \'qu:een\'(4,X1,[],[a,b|Z],c).'),newVariable('O')]);
+ q[i++] = newConsPairsFromTerms([
+			newAtom('parse',[newConstant('queens(4,X).'),newVariable('O')]),
+			newAtom('writeln',[newVariable('O')]),
+			newAtom('call',[newVariable('O')])]);
  q[i++] = newAtom('dtest1',[newNumber(10)]);
  q[i++] = newAtom('dtest1',[newNumber(50)]);
  q[i++] = newAtom('dtest1',[newNumber(100)]);
@@ -831,10 +851,12 @@ function jslog_ui_init_query()
 				newVariable('E'),
 				newAtom('writeln',[newConsPair(newConstant('thrown: '),newVariable('E'))])]);
 
+
+ window.document.formUI.premade_queries[0] = new Option("<-- enter query (no infix operators).",'0',true);
  
- for (i = 0; i < q.length; i++)
+ for (i = 1; i < q.length; i++)
  {
-  window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i],jslog_kb),i.toString(),i==1);
+  window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i],jslog_kb),i.toString(),false);
  }
 
  jslog_premade_queries = q;
@@ -849,7 +871,17 @@ function jslog_ui_query()
   jslog_ui_stop();
 
  //FIX: until parser is working, use builtin queries.
- query_term = jslog_premade_queries[window.document.formUI.premade_queries.selectedIndex];
+ var idx = window.document.formUI.premade_queries.selectedIndex;
+ 
+ if (idx == 0)
+ {
+  query_term = newConsPairsFromTerms([
+			newAtom('parse',[newConstant(query_str),newVariable('O')]),
+			newAtom('write',[newConstant('user query parsed: ')]),newAtom('writeln',[newVariable('O')]),
+			newAtom('call',[newVariable('O')])]);
+ }
+ else
+  query_term = jslog_premade_queries[idx];   //FIX: until parser is working, use builtin queries.
     
  try
  {

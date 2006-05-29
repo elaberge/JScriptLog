@@ -35,6 +35,7 @@ NOTE: There is a limit on the nesting-depth of terms in the KB that the optimiza
 
 ¥ Modified jslog_toString to take a second kb parameter (the KB).  If kb is not null then operator precedence is used to display operators using infix notation.  Removed function jslog_toString_BinaryOp and replaced it with jslog_toString_List which is used to display lists in the standard syntactic-sugar form.  Fixed a runtime error bug for displaying {}/1 and ()/1 predicates.  Added jslog_Display_AtomName, jslog_Display_needsParentheses, and jslog_Display_needsSpace helper functions to JSciptLog_Display.js file.
 
+¥ Added an experimental Prolog-parser-in-Prolog.  It is very basic and incomplete; not suitable for more than simple queries.  It does not give advice on syntax errors (e.g., their location or cause), it does not handle infix operators (i.e., it is primarily suitable for basic single-atom / predicate queries), and it is too slow for consulting KBs (there is an external parser to help construct KBs -- see patch #1311136 for the writeJSLog/1 converter tool).
 
 
 JScriptLog 0.6.0.alpha

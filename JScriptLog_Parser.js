@@ -725,7 +725,7 @@ function jslog_library_parser(kb)
  }
 
 
- // term(+I,-O,-T) I is the input char list, O is the remainder list, T is the term.
+ // term(+I,-O,-T) I is the input char list, O is the remainder list, T is the term enclosure.
  // plog:term(I,O,A) :- plog:subterm(I,O1,T,1200), plog:next_token('period',true,O1,O,_,[]), !.
  {
   addRuleSet(kb,new RuleSet('plog:term',3,false));
@@ -734,15 +734,16 @@ function jslog_library_parser(kb)
     newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('T')]),
 		newConsPairsFromTerms([
-			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('T'),newNumber(1200)]),
+			newAtom('plog:subterm',[newVariable('I'),newVariable('O1'),newVariable('T1'),newNumber(1200)]),
 			newAtom('plog:next_token',[newConstant('period'),newConstant('true'),newVariable('O1'),newVariable('O'),newVariable('_'),newListNull()]),
-			newConstant('!')
+			newConstant('!'),
+			newAtom('plog:util:objectmake_enclosure',[newVariable('T1'),newVariable('T')])
 			]))),
 	true); 
  }
 
 
- // subterm(+I,-O,-T,+N) I is the input char list, O is the remainder list, T is the term,
+ // subterm(+I,-O,-T,+N) I is the input char list, O is the remainder list, T is the term obj-ref,
  // N is the term priority number.
  // plog:subterm(I,O,T,N) :- plog:token:blank(I,O1,_), !, plog:term(O1,O,T,M), M =< N, !.
  {
@@ -763,17 +764,17 @@ function jslog_library_parser(kb)
 
 
  // term(+I,-O,-T,-N) I is the input char list, O is the remainder list,
- // T is the term, N is the priority value of the term.
+ // T is the term obj-ref, N is the priority value of the term.
  // plog:term(I,O,A,0) :- plog:next_token('atomname',true,I,O1,A1,[]), 
  //			plog:atomname_term(A1,O1,O,A), !. 
  // plog:term(I,O,A,0) :- plog:next_token('lparen',true,I,O1,_,[]), plog:subterm(O1,O2,A,1200),
  //			plog:next_token('rparen',true,O2,O,_,[]), !.
  // plog:term(I,O,A,0) :- plog:next_token('lbrace',true,I,O1,_,[]), plog:subterm(O1,O2,A1,1200),
- //			plog:next_token('rbrace',true,O2,O,_,[]), !, A=['{}',A1].
+ //			plog:next_token('rbrace',true,O2,O,_,[]), !, L1=[A1], plog:util:makeobject_atom('{}',L1,A).
  // plog:term(I,O,L,0) :- plog:list(I,O,L), !.
- // plog:term(I,O,L,0) :- plog:token:string(I,O,L), !.
- // plog:term(I,O,N,0) :- plog:token:number(I,O,N), !.
- // plog:term(I,O,V,0) :- plog:token:variable(I,O,V), !. 
+ // plog:term(I,O,L,0) :- plog:token:string(I,O,L1), !, plog:util:makeobject_list(L1,L).
+ // plog:term(I,O,N,0) :- plog:token:number(I,O,N1), !, plog:util:makeobject_number(N1,N).
+ // plog:term(I,O,V,0) :- plog:token:variable(I,O,V1), !, plog:util:makeobject_var(V1,V). 
  {
   addRuleSet(kb,new RuleSet('plog:term',4,false));
 
@@ -803,7 +804,8 @@ function jslog_library_parser(kb)
 			newAtom('plog:subterm',[newVariable('O1'),newVariable('O2'),newVariable('A1'),newNumber(1200)]),
 			newAtom('plog:next_token',[newConstant('rbrace'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
 			newConstant('!'),
-			newAtom('=',[newVariable('A'),newListFromTerms([newConstant('{}'),newVariable('A1')])])
+			newAtom('=',[newVariable('L1'),newListFromTerms([newVariable('A1')])]),
+			newAtom('plog:util:makeobject_atom',[newConstant('{}'),newVariable('L1'),newVariable('A')])
 			]))),
 	true); 
   addRule(kb,newRule(
@@ -824,23 +826,26 @@ function jslog_library_parser(kb)
     newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('N'),newNumber(0)]),
 		newConsPairsFromTerms([
-			newAtom('plog:next_token',[newConstant('number'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('N'),newListNull()]),
-			newConstant('!')]))),
+			newAtom('plog:next_token',[newConstant('number'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('N1'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:util:makeobject_number',[newVariable('N1'),newVariable('N')])]))),
 	true); 
   addRule(kb,newRule(
     newRuleTerm(
 		newAtom('plog:term',[newVariable('I'),newVariable('O'),newVariable('V'),newNumber(0)]),
 		newConsPairsFromTerms([
-			newAtom('plog:next_token',[newConstant('variable'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('V'),newListNull()]),
-			newConstant('!')]))),
+			newAtom('plog:next_token',[newConstant('variable'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('V1'),newListNull()]),
+			newConstant('!'),
+			newAtom('plog:util:makeobject_var',[newVariable('V1'),newVariable('V')])]))),
 	true); 
  }
 
  // atomname_term(+N,-I,-O,-A) I is the input char list, O is the remainder list,
- // A is the complete atom term, N is the atom symbol.
- // plog:atomname_term(N,I,O,A) :- plog:next_token('lparen',fail,O1,O2,_,[]), !, 
- //			plog:arguments(O2,O3,A2), plog:next_token('rparen',true,O3,O,_,[]), !, A=[A1|A2].
- // plog:atomname_term(A,I,I,A).
+ // A is the complete atom term obj-ref, N is the atom symbol.
+ // plog:atomname_term(N,I,O,A) :- plog:next_token('lparen',fail,I,O1,_,[]), !, 
+ //			plog:arguments(O1,O2,A1), plog:next_token('rparen',true,O2,O,_,[]), !, 
+ //			plog:util:makeobject_atom(N,A1,A).
+ // plog:atomname_term(N,I,I,A) :- !, plog:util:makeobject_constant(N,A).
  {
   addRuleSet(kb,new RuleSet('plog:atomname_term',4,false));
 
@@ -853,16 +858,20 @@ function jslog_library_parser(kb)
 			newAtom('plog:arguments',[newVariable('O1'),newVariable('O2'),newVariable('A1')]),
 			newAtom('plog:next_token',[newConstant('rparen'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
 			newConstant('!'),
-			newAtom('=',[newVariable('A'),newListPair(newVariable('N'),newVariable('A1'))])
+			newAtom('plog:util:makeobject_atom',[newVariable('N'),newVariable('A1'),newVariable('A')])
 			]))),
 	true); 
   addRule(kb,newRule(
-    	newAtom('plog:atomname_term',[newVariable('A'),newVariable('I'),newVariable('I'),newVariable('A')])),
+	newRuleTerm(
+    	newAtom('plog:atomname_term',[newVariable('N'),newVariable('I'),newVariable('I'),newVariable('A')]),
+		newConsPairsFromTerms([
+			newConstant('!'),
+			newAtom('plog:util:makeobject_constant',[newVariable('N'),newVariable('A')])]))),
 	true); 
  }
  
  
- // arguments(+I,-O,-T) I is the input char list, O is the remainder list, T is the terms.
+ // arguments(+I,-O,-T) I is the input char list, O is the remainder list, T is a list of the term obj-refs.
  // plog:arguments(I,O,T) :- plog:subterm(I,O1,T1,999), plog:arguments2(O1,O,T2), !, T=[T1|T2].
  {
   addRuleSet(kb,new RuleSet('plog:arguments',3,false));
@@ -897,19 +906,20 @@ function jslog_library_parser(kb)
  } 
 
 
- // list(+I,-O,-L) I is the input char list, O is the remainder list, L is the terms list.
- // plog:list(I,O,[]) :- plog:next_token('two_blocks',true,I,O,_,[]), !,
- // plog:list(I,O,L) :- plog:next_token('lblock',true,I,O1,_,[]), !, plog:list_expr(O1,O2,L), !,  
- //				plog:next_token('rblock',true,O2,O,_,[]), !.
+ // list(+I,-O,-L) I is the input char list, O is the remainder list, L is the terms list obj-ref.
+ // plog:list(I,O,L) :- plog:next_token('two_blocks',true,I,O,_,[]), !, plog:util:makeobject_nulllist(L).
+ // plog:list(I,O,L) :- plog:next_token('lblock',true,I,O1,_,[]), !, plog:list_expr(O1,O2,L1), !,  
+ //				plog:next_token('rblock',true,O2,O,_,[]), !, plog:util:makeobject_list(L1,L).
  {
   addRuleSet(kb,new RuleSet('plog:list',3,false));
  
   addRule(kb,newRule(
     newRuleTerm(
-		newAtom('plog:list',[newVariable('I'),newVariable('O'),newListNull()]),
+		newAtom('plog:list',[newVariable('I'),newVariable('O'),newVariable('L')]),
 		newConsPairsFromTerms([
 			newAtom('plog:next_token',[newConstant('two_blocks'),newConstant('true'),newVariable('I'),newVariable('O'),newVariable('_'),newListNull()]),
-			newConstant('!')]))),
+			newConstant('!'),
+			newAtom('plog:util:makeobject_nulllist',[newVariable('L')])]))),
 	true); 
   addRule(kb,newRule(
     newRuleTerm(
@@ -917,10 +927,11 @@ function jslog_library_parser(kb)
 		newConsPairsFromTerms([
 			newAtom('plog:next_token',[newConstant('lblock'),newConstant('true'),newVariable('I'),newVariable('O1'),newVariable('_'),newListNull()]),
 			newConstant('!'),
-			newAtom('plog:list_expr',[newVariable('O1'),newVariable('O2'),newVariable('L')]),
+			newAtom('plog:list_expr',[newVariable('O1'),newVariable('O2'),newVariable('L1')]),
 			newConstant('!'),
 			newAtom('plog:next_token',[newConstant('rblock'),newConstant('true'),newVariable('O2'),newVariable('O'),newVariable('_'),newListNull()]),
-			newConstant('!')]))),
+			newConstant('!'),
+			newAtom('plog:util:makeobject_list',[newVariable('L1'),newVariable('L')])]))),
 	true); 
  }
  
@@ -981,4 +992,201 @@ function jslog_library_parser(kb)
  }
 
 
+ // makeobject_var(N,V) : creates an object term V containing a Variable named N.term.name
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_var',2,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_var',[newVariable('N'),newVariable('V')]),parser_makeobject_var_fn));
+ }
+ // makeobject_number(N,V) : creates an object term V containing a Number with value N.term.name
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_number',2,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_number',[newVariable('N'),newVariable('V')]),parser_makeobject_number_fn));
+ }
+ // makeobject_constant(N,A) : creates an object term A containing a constant (atom/0) term with 
+ // name N.term.name
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_constant',2,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_constant',[newVariable('N'),newVariable('A')]),parser_makeobject_constant_fn));
+ }
+ // makeobject_atom(N,L,A) : creates an object term A containing an atom term with name N.term.name
+ // and arguments from each element object ref term in list L.
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_atom',3,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_atom',[newVariable('N'),newVariable('L'),newVariable('A')]),parser_makeobject_atom_fn));
+ }
+ // makeobject_list(L,T) : creates an object term T containing a list term containing 
+ // term elements of list L.
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_list',2,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_list',[newVariable('L'),newVariable('T')]),parser_makeobject_list_fn));
+ }
+ // makeobject_nulllist(L) : creates an object term L containing a listnull term.
+ {
+  addRuleSet(kb,new RuleSet('plog:util:makeobject_nulllist',1,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:makeobject_nulllist',[newVariable('L')]),parser_makeobject_nulllist_fn));
+ }
+
+ // objectmake_enclosure(O,T) : creates an enclosure T for the term inside object ref O.
+ {
+  addRuleSet(kb,new RuleSet('plog:util:objectmake_enclosure',2,false));
+
+  addRule(kb,newFunctionRule(
+  		newAtom('plog:util:objectmake_enclosure',[newVariable('O'),newVariable('T')]),parser_objectmake_enclosure_fn));
+ }
+ 
+} 
+
+///////////////////////////////////
+// jslog_parser_*_fn
+///////////////////////////////////
+
+function parser_makeobject_var_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ 
+ if (!isConstant(lhs.term))
+  throw newErrorException("Expected LHS to evaluate to a constant: makeobject_var/2");
+
+ var obj = newObjectReference(newVariable(lhs.term.name));
+   
+ return jslog_unify(rhs,newBlankEnclosure(0,obj),goal.bindings);
 }
+
+function parser_makeobject_number_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ 
+ if (!isNumber(lhs.term))
+  throw newErrorException("Expected LHS to evaluate to a number: makeobject_number/2");
+
+ var obj = newObjectReference(lhs.term);
+   
+ return jslog_unify(rhs,newBlankEnclosure(0,obj),goal.bindings);
+}
+
+function parser_makeobject_constant_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+
+ if (!isConstant(lhs.term))
+  throw newErrorException("Expected LHS to evaluate to a constant: makeobject_constant/2");
+
+ var obj = newObjectReference(lhs.term);
+   
+ return jslog_unify(rhs,newBlankEnclosure(0,obj),goal.bindings);
+}
+
+function parser_makeobject_atom_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var lst = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[2]);
+ 
+ if (!isConstant(lhs.term))
+  throw newErrorException("Expected LHS to evaluate to a constant: makeobject_atom/2");
+
+ var arr = new Array();
+
+ while (isListPair(lst.term))
+ {
+  var t = getFinalEnclosure(newSubtermEnclosure(lst.enclosure,lst.term.children[0]));
+  
+  if (!isObjectReference(t.term))
+   throw newErrorException("Expected list of object references: makeobject_atom/2");
+
+  arr.push(t.term.name);
+    
+  lst = getFinalEnclosure(newSubtermEnclosure(lst.enclosure,lst.term.children[1]));
+ }
+
+ if (!isListNull(lst.term))
+  throw newErrorException("Expected LIST to evaluate to a list: makeobject_atom/2");
+
+ var obj = newObjectReference(newAtom(lhs.term.name,arr));
+   
+ return jslog_unify(rhs,newBlankEnclosure(0,obj),goal.bindings);
+}
+
+function parser_makeobject_list_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]); 
+ var arr = new Array();
+
+ while (isListPair(lhs.term))
+ {
+  var t = getFinalEnclosure(newSubtermEnclosure(lhs.enclosure,lhs.term.children[0]));
+  
+  if (isObjectReference(t.term))
+  {
+   arr.push(t.term.name);
+  }
+  else
+  {
+   arr.push(t.term);
+  }
+    
+  lhs = getFinalEnclosure(newSubtermEnclosure(lhs.enclosure,lhs.term.children[1]));
+ }
+ 
+ var lterm = null;
+ 
+ if (isListNull(lhs.term))
+ {
+  lterm = newListNull();
+ }
+ else if (isObjectReference(lhs.term))
+ {
+  lterm = lhs.term.name;
+ }
+ else
+ {
+   lterm = lhs.term;
+ }
+  
+ var elem;
+ while ((elem = arr.pop()) != undefined)
+ {
+  lterm = newListPair(elem,lterm);
+ }
+  
+ var obj = newObjectReference(lterm);
+   
+ return jslog_unify(rhs,newBlankEnclosure(0,obj),goal.bindings);
+}
+
+function parser_makeobject_nulllist_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);
+
+ var obj = newObjectReference(newListNull());
+   
+ return jslog_unify(lhs,newBlankEnclosure(0,obj),goal.bindings);
+}
+
+function parser_objectmake_enclosure_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = newSubtermEnclosure(encl.enclosure,encl.term.children[1]);
+ 
+ if (!isObjectReference(lhs.term))
+  throw newErrorException("Expected LHS to evaluate to an object reference: objectmake_enclosure/2");
+
+ return jslog_unify(rhs,newTermEnclosure(lhs.term.name),goal.bindings);
+}
+
