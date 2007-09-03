@@ -314,20 +314,21 @@ function newKB()
  
   addRuleSet(kb,ruleset);
  }
- // bagof(T,G,L) :- internal:term_variables(T,Tv), internal:term_variables(G,Gv),
- //				internal:selectlist(internal:inlist(Tv,_),Gv,_,Dv), findall(T-Dv,G,M), 
- //				internal:bagof_results(M,Dv,L).
+ // bagof(T,G,L) :- internal:term_split_existential(G,E,G2), internal:term_variables((T,E),TEv), 
+ //				internal:term_variables(G,Gv), internal:selectlist(internal:inlist(TEv,_),Gv,_,Dv), 
+ //				findall(T-Dv,G2,M), internal:bagof_results(M,Dv,L).
  {
   ruleset = new RuleSet('bagof',3,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('bagof',[newVariable('T'),newVariable('G'),newVariable('L')]),
 		newConsPairsFromTerms([
-			newAtom('internal:term_variables',[newVariable('T'),newVariable('Tv')]),
+			newAtom('internal:term_split_existential',[newVariable('G'),newVariable('E'),newVariable('G2')]),
+			newAtom('internal:term_variables',[newConsPair(newVariable('T'),newVariable('E')),newVariable('TEv')]),
 			newAtom('internal:term_variables',[newVariable('G'),newVariable('Gv')]),
-			newAtom('internal:selectlist',[newAtom('internal:inlist',[newVariable('Tv')]),
+			newAtom('internal:selectlist',[newAtom('internal:inlist',[newVariable('TEv')]),
 						newVariable('Gv'),newVariable('_'),newVariable('Dv')]),
-			newAtom('findall',[newAtom('-',[newVariable('T'),newVariable('Dv')]),newVariable('G'),newVariable('M')]),
+			newAtom('findall',[newAtom('-',[newVariable('T'),newVariable('Dv')]),newVariable('G2'),newVariable('M')]),
 			newAtom('internal:bagof_results',[newVariable('M'),newVariable('Dv'),newVariable('L')])]))));
  
   addRuleSet(kb,ruleset);
@@ -1123,6 +1124,25 @@ function newKB()
  
   addRuleSet(kb,ruleset);  
  }
+
+ // internal:=@=/2 : equivalence (structural similarity)
+ {
+  ruleset = new RuleSet('internal:=@=',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:=@=',[newVariable('X'),newVariable('Y')]),internal_equivalent_fn));
+ 
+  addRuleSet(kb,ruleset);  
+ }
+ // internal:\=@=/2 : non-equivalence (structural difference)
+ {
+  ruleset = new RuleSet('internal:\\=@=',2,false);
+
+  ruleset.rules.push(newFunctionRule(
+  		newAtom('internal:\\=@=',[newVariable('X'),newVariable('Y')]),internal_nequivalent_fn));
+ 
+  addRuleSet(kb,ruleset);
+ }
  
  // internal:copy_term/2 copy term so that term is copied, not just the enclosures
  // internal:copy_term(T,C).  C is a copy of T.
@@ -1144,6 +1164,25 @@ function newKB()
    
   addRuleSet(kb,ruleset);
  }
+ // internal:term_split_existential(E^G,[E|Es],Rs) :- !, internal:term_split_existential(G,Es,Rs).
+ // internal:term_split_existential(G,[],G).
+ {
+  ruleset = new RuleSet('internal:term_split_existential',3,false);
+
+  ruleset.rules.push(newRule(newRuleTerm(
+		newAtom('internal:term_split_existential',[
+			newAtom('^',[newVariable('E'),newVariable('G')]),
+			newListPair(newVariable('E'),newVariable('Es')),
+			newVariable('Rs')]),
+		newConsPairsFromTerms([
+			newConstant('!'),
+			newAtom('internal:term_split_existential',[newVariable('G'),newVariable('Es'),newVariable('Rs')])]))));
+  ruleset.rules.push(newRule(
+		newAtom('internal:term_split_existential',[newVariable('G'),newListNull(),newVariable('G')])));
+ 
+  addRuleSet(kb,ruleset);
+ }
+ 
  // internal:compare/3 compare two terms, and return constants '<','=', or '>'.
  {
   ruleset = new RuleSet('internal:compare',3,false);
@@ -1192,14 +1231,14 @@ function newKB()
  
   addRuleSet(kb,ruleset);
  }
- // internal:bagof_match(G,T-D,T) :- G == D.
+ // internal:bagof_match(G,T-D,T) :- G internal:=@= D.
  {
   ruleset = new RuleSet('internal:bagof_match',3,false);
 
   ruleset.rules.push(newRule(newRuleTerm(
 		newAtom('internal:bagof_match',[newVariable('G'),
 				newAtom('-',[newVariable('T'),newVariable('D')]),newVariable('T')]),
-		newAtom('==',[newVariable('G'),newVariable('D')]))));
+		newAtom('internal:=@=',[newVariable('G'),newVariable('D')]))));
  
   addRuleSet(kb,ruleset);
  } 

@@ -694,6 +694,22 @@ function identical_fn(goal)
  return (result == 0); 
 }
 
+function internal_equivalent_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+
+ return jslog_equivalent(lhs,rhs);
+}
+
+function internal_nequivalent_fn(goal)
+{var encl = getFinalEnclosure(goal.encl);
+ var lhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[0]));
+ var rhs = getFinalEnclosure(newSubtermEnclosure(encl.enclosure,encl.term.children[1]));
+
+ return !jslog_equivalent(lhs,rhs);
+}
+
 function internal_compare_fn(goal)
 {var encl = getFinalEnclosure(goal.encl);
  var lhs = newSubtermEnclosure(encl.enclosure,encl.term.children[0]);

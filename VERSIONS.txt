@@ -1,3 +1,16 @@
+JScriptLog 0.7.5.beta
+====================
+
+¥ Added support for the ^/2 existential qualifier to bagof/3 and setof/3 goals.
+
+¥ Fixed bagof/3 (and hence setof/3) to better match standard implementation when variables are involved (i.e., require equivalence, not equality).
+
+¥ Added internal:=@= and internal:\=@= equivalence predicates and jslog_equivalent function to JScriptLog_Unify. 
+
+¥ Fix display of cons pairs (i.e., ',' operators) in atom args. Now p/2 displays correctly as p((a,b),(c,d)), instead of as p/3, p((a,b),c,d).
+
+¥ Added newOrPairsFromTerms constructor in jScriptLog_Types.
+
 JScriptLog 0.7.0.beta
 ====================
 

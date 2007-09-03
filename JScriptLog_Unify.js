@@ -287,3 +287,93 @@ function jslog_occurs_check(v_encl,t_encl)
 
  return true;
 }
+
+// Equivalence test Enclosures encl1 with encl2
+// Returns true if they are structurally equivalent, false otherwise.
+// encl1 and encl2 are not mutated.
+// NOTE: based on jslog_unify -- if jslog_unify is modified, verify this remains valid.
+function jslog_equivalent(encl1,encl2)
+{var vars_hash = new Hashtable();
+ var lhs_encls = new Array(1);
+ var rhs_encls = new Array(1);
+ var lhs, rhs;
+
+ lhs_encls[0] = encl1;
+ rhs_encls[0] = encl2;
+
+ while ((lhs = lhs_encls.pop()) != undefined && (rhs = rhs_encls.pop()) != undefined)
+ {
+  lhs = getFinalEnclosure(lhs);
+  rhs = getFinalEnclosure(rhs);
+  
+  if (isVariable(lhs.term) && isVariable(rhs.term))
+  {
+   if (lhs.enclosure == rhs.enclosure && 
+		lhs.term.children[0] == rhs.term.children[0])
+   {
+    // do nothing, variables are equal
+   }
+   else
+   {
+    // mapping is an array of (enclosure,index) pairs
+	// NOTE: lhs_encl_mapping and rhs_encl_mapping may be the same object
+    var lhs_encl_mapping = hashGet(vars_hash,lhs.enclosure);
+
+	if (lhs_encl_mapping == undefined)
+	{
+	 lhs_encl_mapping = new Array(lhs.enclosure.length);
+	 hashPut(vars_hash,lhs.enclosure,lhs_encl_mapping);
+	}
+	
+	// lhs_encl_mapping must already be hashPut since lhs and rhs enclosures may be equal.
+    var rhs_encl_mapping = hashGet(vars_hash,rhs.enclosure);
+
+	if (rhs_encl_mapping == undefined)
+	{
+	 rhs_encl_mapping = new Array(rhs.enclosure.length);
+	 hashPut(vars_hash,rhs.enclosure,rhs_encl_mapping);
+	}
+	
+	var lhs_mapping = lhs_encl_mapping[lhs.term.children[0]];
+	var rhs_mapping = rhs_encl_mapping[rhs.term.children[0]];
+	
+	if (lhs_mapping == undefined && rhs_mapping == undefined)
+	{
+	 lhs_mapping = new Pair(rhs.enclosure,rhs.term.children[0]);
+	 rhs_mapping = new Pair(lhs.enclosure,lhs.term.children[0]);
+	 
+	 lhs_encl_mapping[lhs.term.children[0]] = lhs_mapping;
+	 rhs_encl_mapping[rhs.term.children[0]] = rhs_mapping;
+	}
+	else if (lhs_mapping == undefined || rhs_mapping == undefined)
+	{
+	 return false;
+	}
+	else
+	{
+	 if (lhs_mapping.first != lhs.enclosure || rhs_mapping.first != lhs.enclosure ||
+		 lhs_mapping.second != rhs.term.children[0] || rhs_mapping.second != lhs.term.children[0])
+	  return false; 
+	}
+   }
+  }
+  else if ((lhs.term.type != rhs.term.type) || (lhs.term.name != rhs.term.name) ||
+			(lhs.term.children.length != rhs.term.children.length))
+  {
+   return false;
+  }
+  else
+  {
+   for (i = lhs.term.children.length - 1; i >= 0; i--)
+   {
+    lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
+    rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));
+   }
+  }
+ };
+
+ if (lhs_encls.length == 0 && rhs_encls.length == 0)
+  return true;
+
+ return false;
+}

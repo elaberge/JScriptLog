@@ -639,6 +639,17 @@ function jslog_ui_init_query()
  q[i++] = newAtom('=..',[newAtom('p',[newVariable('A'),newVariable('B')]),
 						newListFromTerms([newConstant('p'),newConstant('a'),newVariable('X')])]);
  q[i++] = newAtom('=',[newVariable('A'),newVariable('A')]);
+ q[i++] = newAtom('=',[newVariable('A'),newVariable('B')]);
+ q[i++] = newAtom('=',[newConsPair(newVariable('X'),newVariable('X')),newConsPair(newVariable('Y'),newVariable('Y'))]);
+ q[i++] = newConsPair(
+				newAtom('=',[newVariable('A'),newVariable('B')]),
+				newAtom('=',[newVariable('B'),newVariable('C')]));
+ q[i++] = newConsPair(
+				newAtom('=',[newVariable('A'),newVariable('B')]),
+				newAtom('=',[newVariable('B'),newConstant('bound value')]));
+ q[i++] = newConsPair(
+				newAtom('=',[newConsPair(newVariable('X'),newVariable('X')),newConsPair(newVariable('Y'),newVariable('Y'))]),
+				newAtom('=',[newConsPair(newVariable('Y'),newVariable('Y')),newConsPair(newNumber(1),newNumber(1))]));
  q[i++] = newAtom('unify_with_occurs_check',[
 				newAtom('a',[newNumber(1),newConstant('b'),newVariable('Z')]),
 				newAtom('a',[newVariable('A'),newVariable('B'),newAtom('c',[newVariable('Y')])])]);
@@ -759,6 +770,16 @@ function jslog_ui_init_query()
  q[i++] = newAtom('@>=',[newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)]),
 				newAtom('b',[newVariable('X'),newConstant('f'),newNumber(3)])]);
 
+ q[i++] = newAtom('internal:=@=',[
+				newConsPair(newVariable('X'),newVariable('X')),
+				newConsPair(newVariable('Y'),newVariable('Y'))]);
+ q[i++] = newAtom('internal:=@=',[
+				newConsPair(newVariable('X'),newVariable('X')),
+				newConsPair(newVariable('X'),newVariable('Y'))]);
+ q[i++] = newAtom('internal:=@=',[
+				newConsPair(newVariable('X'),newVariable('X')),
+				newConsPair(newVariable('Y'),newVariable('Z'))]);
+
  q[i++] = newAtom('findall',[newVariable('T'),
 			newAtom('member',[newVariable('T'),
 				newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
@@ -769,6 +790,21 @@ function jslog_ui_init_query()
 			newVariable('L')]);
  q[i++] = newAtom('bagof',[newVariable('X'),
 			newAtom('f',[newVariable('X'),newVariable('Y')]),newVariable('L')]);
+ q[i++] = newAtom('bagof',[newVariable('X'),
+			newAtom('^',[newVariable('Y'),newAtom('f',[newVariable('X'),newVariable('Y')])]),
+			newVariable('L')]);
+ q[i++] = newAtom('bagof',[newAtom('^',[newVariable('X'),newVariable('Y')]),
+			newOrPair(
+				newConsPair(newAtom('=',[newVariable('X'),newNumber(1)]),newAtom('=',[newVariable('Y'),newNumber(2)])),
+				newConsPair(newAtom('=',[newVariable('X'),newNumber(3)]),newAtom('=',[newVariable('Y'),newNumber(4)]))),
+			newVariable('B')]);
+ q[i++] = newAtom('bagof',[newNumber(1),
+			newOrPairsFromTerms([
+				newAtom('=',[newVariable('X'),newVariable('X')]),
+				newAtom('=',[newVariable('X'),newVariable('X')]),
+				newAtom('=',[newVariable('X'),newVariable('Y')]),
+				]),
+			newVariable('B')]);
  q[i++] = newAtom('setof',[newVariable('X'),
 			newAtom('f',[newVariable('X'),newVariable('Y')]),newVariable('L')]);
  q[i++] = newAtom('assertz',[newRuleTerm(
@@ -891,6 +927,7 @@ function jslog_ui_query()
   
   if (proveProver(jslog_prover))
   {
+  // FIX - we should display each variable in the initial query, and its bound value
    window.document.formUI.output.value += jslog_toString(jslog_prover.query,jslog_kb);
    
    // DEBUGGING STATISTICS INFORMATION

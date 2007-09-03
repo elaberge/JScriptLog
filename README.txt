@@ -3,7 +3,7 @@ Created by Glendon Holst.  Copyright 2005, 2006.
 
 INTRODUCTION:
 
-JScriptLog version 0.7.0.beta is an implementation of ISO-Standard Prolog in JavaScript.  It has potential, and is released in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (about 30x slower than JLog) and Prolog meta-interpret that same solution too.
+JScriptLog version 0.7.5.beta is an implementation of ISO-Standard Prolog in JavaScript.  It has potential, and is released in hopes that it may prove useful (Prolog joke ;-).  It can solve the 8-Queens problem (about 30x slower than JLog) and Prolog meta-interpret that same solution too.
 
 The available built-in predicates are the Control, Meta, Comparison, Arithmetic, Clausal Database, Solution Collection, and (almost all) Miscellaneous predicates in the ISO standard (i.e., the non-I/O predicates).
 

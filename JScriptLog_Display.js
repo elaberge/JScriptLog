@@ -143,10 +143,27 @@ function jslog_toString(encl,kb)
    tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),false));
   }
   else  // display Atom/N
-  {var args = newConsPairsFromTerms(tostr.term.children);
-  
-   tostr_terms.push(")");   
-   tostr_terms.push(newSubtermEnclosure(tostr.enclosure,args));
+  {
+   tostr_terms.push(")");
+   
+   // push children in reverse order
+   for (i = tostr.term.children.length - 1; i >= 0; i--)
+   {
+    var tostr_encl = newSubtermEnclosure(tostr.enclosure,tostr.term.children[i]);
+    var is_cons_pair = isConsPair(tostr_encl.term);
+	
+	if (is_cons_pair)
+     tostr_terms.push(")"); 
+	 
+    tostr_terms.push(tostr_encl);
+
+	if (is_cons_pair)
+     tostr_terms.push("("); 
+
+    if (i != 0)
+     tostr_terms.push(","); 
+   }
+   
    tostr_terms.push("(");
    tostr_terms.push(""); // force no space
    tostr_terms.push(jslog_Display_AtomName(tostr.term.name.toString(),false));

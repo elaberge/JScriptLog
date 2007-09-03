@@ -95,6 +95,23 @@ function newOrPair(lhs,rhs)
  return term;
 }
 
+// terms should be a non-empty array of Terms
+// returns undefined if terms is empty
+// returns terms[0] if terms has only a single Term
+function newOrPairsFromTerms(terms)
+{var cp;
+
+ if (terms.length < 2)
+  return terms[0];
+
+ cp = newOrPair(terms[terms.length-2],terms[terms.length-1]);
+   
+ for (i = terms.length - 3; i >= 0; i--)
+  cp = newOrPair(terms[i],cp);
+  
+ return cp;
+}
+
 function newListPair(lhs,rhs)
 {var term = new Term(TYPE_ATOM,'.');
 
