@@ -318,9 +318,8 @@ function nextUnifiedRuleBodyForGoal(goal)
 function addBodyGoalsToFrontier(parent,isgp,body,kb,frontier)
 {var encl;
  var goal;
- var i;
 
- for (i = body.terms.length - 1; i >= 0; i--)
+ for (var i = body.terms.length - 1; i >= 0; i--)
  {
   encl = newSubtermEnclosure(body.enclosure,body.terms[i]);
   goal = newGoal(getFinalEnclosure(encl),parent,kb);

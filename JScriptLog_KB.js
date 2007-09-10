@@ -1948,9 +1948,8 @@ function optimizeTerms(term,kb)
  optimizeTerm(term,kb);
 
  if (isAtom(term))
- {var i;
- 
-  for (i = 0; i < term.children.length; i++)
+ {
+  for (var i = 0; i < term.children.length; i++)
    optimizeTerms(term.children[i],kb);
  }
 }
@@ -1961,18 +1960,16 @@ function optimizeRule(rule,ruleset,kb)
  rule.name = ruleset.name;
  optimizeTerm(rule.head,kb);
  if (rule.body != null)
- {var i;
- 
-  for (i = 0; i < rule.body.length; i++)
+ {
+  for (var i = 0; i < rule.body.length; i++)
    optimizeTerms(rule.body[i],kb);
  }
 }
 
 // do not call directly
 function optimizeRuleSet(ruleset,kb)
-{var i;
- 
- for (i = 0; i < ruleset.rules.length; i++)
+{
+ for (var i = 0; i < ruleset.rules.length; i++)
   optimizeRule(ruleset.rules[i],ruleset,kb);
 }
 

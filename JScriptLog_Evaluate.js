@@ -47,7 +47,7 @@ function jslog_Evaluate(kb,encl)
    {
     toeval_ops.push(eval_fn);
 
-    for (i = 0 ; i < toeval.term.children.length; i++)
+    for (var i = 0 ; i < toeval.term.children.length; i++)
      toeval_ops.push(newSubtermEnclosure(toeval.enclosure,toeval.term.children[i]));
    }
    else

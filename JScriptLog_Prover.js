@@ -29,7 +29,8 @@ function Prover(kb)
  
  //// Other Properties (document here):
  // this.query : the given query encl
-  
+ // this.query_variables : array of variable encls in the original query
+ 
  return this;
 }
 

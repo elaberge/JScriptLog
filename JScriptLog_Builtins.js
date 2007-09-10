@@ -799,9 +799,8 @@ function atom_to_list_fn(goal)
  
  if (isAtom(lhs.term))
  {var list = newListNull();
-  var i;
   
-  for (i = lhs.term.children.length - 1; i >= 0; i--)
+  for (var i = lhs.term.children.length - 1; i >= 0; i--)
    list = newListPair(lhs.term.children[i],list);
 
   lhs = newSubtermEnclosure(lhs.enclosure,newListPair(newConstant(lhs.term.name),list));
@@ -898,10 +897,9 @@ function atom_chars_fn(goal)
  var c;
  
  if (isConstant(lhs.term))
- {var i;
-  var cp = newListNull();
+ {var cp = newListNull();
 
-  for (i = lhs.term.name.length - 1; i >= 0; i--)
+  for (var i = lhs.term.name.length - 1; i >= 0; i--)
    cp = newListPair(newConstant(lhs.term.name.charAt(i)),cp);
   
   c = newSubtermEnclosure(encl.enclosure,cp); 
@@ -985,11 +983,10 @@ function internal_term_variables_fn(goal)
  var vencls = enumFinalVariableEnclosures(lhs);
  var vlist;
  var result;
- var i;
 
  vlist = newListNull();
  
- for (i = vencls.length - 1; i >= 0; i--)
+ for (var i = vencls.length - 1; i >= 0; i--)
  {var v = newVariable('_');
  
   v.children[0] = i;

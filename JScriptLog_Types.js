@@ -81,7 +81,7 @@ function newConsPairsFromTerms(terms)
 
  cp = newConsPair(terms[terms.length-2],terms[terms.length-1]);
    
- for (i = terms.length - 3; i >= 0; i--)
+ for (var i = terms.length - 3; i >= 0; i--)
   cp = newConsPair(terms[i],cp);
   
  return cp;
@@ -106,7 +106,7 @@ function newOrPairsFromTerms(terms)
 
  cp = newOrPair(terms[terms.length-2],terms[terms.length-1]);
    
- for (i = terms.length - 3; i >= 0; i--)
+ for (var i = terms.length - 3; i >= 0; i--)
   cp = newOrPair(terms[i],cp);
   
  return cp;
@@ -130,7 +130,7 @@ function newListNull()
 function newListFromTerms(terms)
 {var cp = newListNull();
 
- for (i = terms.length - 1; i >= 0; i--)
+ for (var i = terms.length - 1; i >= 0; i--)
   cp = newListPair(terms[i],cp);
   
  return cp;
@@ -197,26 +197,24 @@ function newDuplicateTerm(term,variables)
     hashPut(terms_hash,t,variables[t.children[0]]);
   }
   else if (hashGet(terms_hash,t) == undefined)
-  {var i;
-  
+  {
    t_copy = new Term(t.type,t.name);
    t_copy.children = new Array(t.children.length);
    terms_todo.push(t);
    
    hashPut(terms_hash,t,t_copy);
    
-   for (i=0; i < t.children.length; i++)
+   for (var i=0; i < t.children.length; i++)
 	terms.push(t.children[i]);
   }
  }
  
  // connect duplicate terms like original ones
  while ((t = terms_todo.pop()) != undefined)
- {var i;
-  
+ {
   t_copy = hashGet(terms_hash,t);
     
-  for (i=0; i < t.children.length; i++)
+  for (var i=0; i < t.children.length; i++)
    t_copy.children[i] = hashGet(terms_hash,t.children[i]);
  }
  
@@ -347,9 +345,8 @@ function enumVariables(term)
     vars[vars.length] = t;
    }
    else
-   {var i;
-  
-    for (i = t.children.length - 1; i >= 0; i--)
+   {
+    for (var i = t.children.length - 1; i >= 0; i--)
 	 terms.push(t.children[i]);
    }
   } 

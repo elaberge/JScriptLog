@@ -57,7 +57,7 @@ function jslog_unify(encl1,encl2,bindings)
   }
   else
   {
-   for (i = lhs.term.children.length - 1; i >= 0; i--)
+   for (var i = lhs.term.children.length - 1; i >= 0; i--)
    {
     lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
     rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));
@@ -152,7 +152,7 @@ function jslog_compare(encl1,encl2)
 	  return 1;
 	 else // atom name / arity are equal
 	 {
-      for (i = lhs.term.children.length - 1; i >= 0; i--)
+      for (var i = lhs.term.children.length - 1; i >= 0; i--)
       {
        lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
        rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));
@@ -253,7 +253,7 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
   }
   else
   {
-   for (i = lhs.term.children.length - 1; i >= 0; i--)
+   for (var i = lhs.term.children.length - 1; i >= 0; i--)
    {
     lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
     rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));
@@ -274,10 +274,9 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
 // isVariable(v_encl.term) must be true.
 function jslog_occurs_check(v_encl,t_encl)
 {var v_encls = enumFinalVariableEnclosures(t_encl);
- var i;
  var e;
  
- for (i = 0; i < v_encls.length; i++)
+ for (var i = 0; i < v_encls.length; i++)
  {
   e = v_encls[i];
   
@@ -364,7 +363,7 @@ function jslog_equivalent(encl1,encl2)
   }
   else
   {
-   for (i = lhs.term.children.length - 1; i >= 0; i--)
+   for (var i = lhs.term.children.length - 1; i >= 0; i--)
    {
     lhs_encls.push(newSubtermEnclosure(lhs.enclosure,lhs.term.children[i]));
     rhs_encls.push(newSubtermEnclosure(rhs.enclosure,rhs.term.children[i]));

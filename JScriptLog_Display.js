@@ -13,8 +13,10 @@
 // jslog_toString_* functions for Display
 ///////////////////////////////////
 
-// FIX: Display all unary and binary operators as operators (needs table of operators from KB).
-// FIX: Display variables uniquely (not just by their local names).
+// Global variables used to uniquely name variables.
+var jslog_global_variable_names_hash = null;
+var jslog_global_used_variable_names = null;
+var jslog_global_variable_next_id = 1;
 
 // encl is either a Term or Enclosure (preferrable)
 // kb is the KB used for operator display info.  If kb == null, then the default
@@ -147,7 +149,7 @@ function jslog_toString(encl,kb)
    tostr_terms.push(")");
    
    // push children in reverse order
-   for (i = tostr.term.children.length - 1; i >= 0; i--)
+   for (var i = tostr.term.children.length - 1; i >= 0; i--)
    {
     var tostr_encl = newSubtermEnclosure(tostr.enclosure,tostr.term.children[i]);
     var is_cons_pair = isConsPair(tostr_encl.term);
@@ -300,12 +302,64 @@ function jslog_Display_AtomName(atom_name,is_op)
  return "'"+atom_name+"'";
 }
 
+
+// isVariable(encl.term)
+function jslog_Display_uniqueVariableName(encl, use_existing_name)
+{
+ if (jslog_global_variable_names_hash == null)
+ {
+  return encl.term.name.toString();
+ }
+
+ var encl_mapping = hashGet(jslog_global_variable_names_hash,encl.enclosure);
+
+ if (encl_mapping == undefined)
+ {
+  encl_mapping = new Array(encl.enclosure.length);
+  hashPut(jslog_global_variable_names_hash,encl.enclosure,encl_mapping);
+ }
+		
+ var name = encl_mapping[encl.term.children[0]];
+	
+ if (name == undefined)
+ {
+  
+  if (use_existing_name && encl.term.name != null && 
+		encl.term.name.constructor == String && encl.term.name != '' && encl.term.name != '_')
+  {
+   name = encl.term.name.toString();
+  }
+  else
+  {
+    do
+	{
+	 name = "_G0" +  jslog_global_variable_next_id.toString();
+	 jslog_global_variable_next_id++;
+	 
+	 if (jslog_global_used_variable_names[name] == undefined)
+	  break;
+	} while (true);
+  }
+
+  jslog_global_used_variable_names[name] = new Pair(encl.enclosure,encl.term.children[0]);
+  encl_mapping[encl.term.children[0]] = name;
+ }
+ 
+ return name;
+}
+
+
 // isVariable(encl.term)
 function jslog_toString_Variable(encl,stack)
-{var tostr = getBoundEnclosure(encl);
-
+{var encl2 = getFinalEnclosure(encl);
+ var tostr = getBoundEnclosure(encl2);
+ 
  if (tostr == null)
-  stack.push(encl.term.name.toString()); // FIX: Need global (for original toString) naming scheme
+ {
+  var name = jslog_Display_uniqueVariableName(encl2, false);
+  
+  stack.push(name.toString());
+ }
  else
   stack.push(tostr);
 }
@@ -362,9 +416,8 @@ function jslog_toString_List(encl,stack,kb)
 
 function jslog_GoalStack_toString(gstack)
 {var str = "";
- var i;
  
- for(i=gstack.length - 1; i >= 0; --i)
+ for (var i=gstack.length - 1; i >= 0; --i)
   str += jslog_Goal_toString(gstack[i],true) + "\n";
 
  return str;
@@ -384,5 +437,66 @@ function jslog_Goal_toString(goal,show_parent)
   str += jslog_Goal_toString(goal.parent,false);
  }
 
+ return str;
+}
+
+
+// initialize the query_variables for prover, which must have already been created with
+// a query.  call this outside the scope of all queries that require unique variables to
+// display with unique names.  DO NOT call while any queries of interest are in progress,
+// rather, set the prover.query_variables manually on prover.
+function jslog_Display_initializeVariableNames(prover)
+{
+ prover.query_variables = enumFinalVariableEnclosures(prover.query);
+  
+ // referencing global variables
+ jslog_global_variable_names_hash = new Hashtable();
+ jslog_global_used_variable_names = new Object();
+ jslog_global_variable_next_id = 1;
+ 
+ // initialize hashtable
+ var vars = prover.query_variables;
+ for (var i = 0; i < vars.length; i++)
+ {
+  var term = vars[i].term;
+  var name = term.name;
+  
+  if (isVariable(vars[i].term))
+  {
+   jslog_Display_uniqueVariableName(vars[i], true);
+  } 
+ }
+}
+
+function jslog_Display_resetVariableNames()
+{
+ // referencing global variables
+ jslog_global_variable_names_hash = null;
+ jslog_global_used_variable_names = null;
+ jslog_global_variable_next_id = 1;
+}
+
+
+// given an array of variable enclosures (i.e., from enumFinalVariableEnclosures) 
+// returns a string, suitable to display after a query, listing each variable by name,
+// and its bound value.  ignore variables starting with a '_'.
+function jslog_varEnclosures_toString(vars,kb)
+{
+ var str = "";
+
+ for (var i = 0; i < vars.length; i++)
+ {
+  var term = vars[i].term;
+  var name = term.name;
+  
+  if (isVariable(term) && name != null && name.constructor == String && name != '' && name.charAt(0) != '_' )
+  {
+   var encl = getFinalEnclosure(vars[i]);
+   
+   str += name + " = "
+   str += jslog_toString(encl,kb);
+   str += "\n";
+  } 
+ }
  return str;
 }

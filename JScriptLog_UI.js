@@ -37,7 +37,7 @@ function jslog_ui_consult()
  jslog_ui_init_query(); 
   
  // DEMO TEST PREDICATES
-  
+
  //queens(N,Qs) :- range(1,N,Ns), queens(Ns,[],Qs).
  {
   addRuleSet(jslog_kb,new RuleSet('queens',2,false));
@@ -530,7 +530,8 @@ function jslog_ui_init_query()
 
  q[i++] = newAtom('member',[newVariable('Y'),
 		newListFromTerms([newConstant('a'),newConstant('b'),newConstant('c'),
-			newNumber(1),newNumber(2),newVariable('Z')])]);
+			newNumber(1),newNumber(2),newVariable('_Z')])]);
+ q[i++] = newAtom('member',[newVariable('Y'),newVariable('Z')]);
   
  q[i++] = newAtom('queens',[newNumber(4),newVariable('X')]);
  q[i++] = newAtom('queens',[newNumber(5),newVariable('X')]);
@@ -557,6 +558,7 @@ function jslog_ui_init_query()
 //		newAtom('plog:next_token',[newConstant('atomname'),newConstant('true'),newVariable('Z'),newVariable('Y'),newVariable('A'),newListNull()])
 		newAtom('plog:term',[newVariable('Z'),newVariable('Y'),newVariable('A'),newVariable('M')])
 		]);
+
  q[i++] = newAtom('query',[newConstant(' /*hi*/ \'qu:een\'(4,X1,[],[a,b|Z],c).'),newVariable('O')]);
  q[i++] = newConsPairsFromTerms([
 			newAtom('parse',[newConstant('queens(4,X).'),newVariable('O')]),
@@ -650,6 +652,7 @@ function jslog_ui_init_query()
  q[i++] = newConsPair(
 				newAtom('=',[newConsPair(newVariable('X'),newVariable('X')),newConsPair(newVariable('Y'),newVariable('Y'))]),
 				newAtom('=',[newConsPair(newVariable('Y'),newVariable('Y')),newConsPair(newNumber(1),newNumber(1))]));
+	
  q[i++] = newAtom('unify_with_occurs_check',[
 				newAtom('a',[newNumber(1),newConstant('b'),newVariable('Z')]),
 				newAtom('a',[newVariable('A'),newVariable('B'),newAtom('c',[newVariable('Y')])])]);
@@ -713,6 +716,7 @@ function jslog_ui_init_query()
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
 			newAtom('copy_term',[newVariable('X'),newVariable('Z')]),
 			newAtom('=',[newVariable('Z'),newAtom('p',[newVariable('A'),newConstant('b')])])]);
+
 
 /* q[i++] = newConsPairsFromTerms([
 			newAtom('=',[newVariable('X'),newAtom('p',[newConstant('a'),newVariable('Y')])]),
@@ -890,7 +894,7 @@ function jslog_ui_init_query()
 
  window.document.formUI.premade_queries[0] = new Option("<-- enter query (no infix operators).",'0',true);
  
- for (i = 1; i < q.length; i++)
+ for (var i = 1; i < q.length; i++)
  {
   window.document.formUI.premade_queries[i] = new Option(jslog_toString(q[i],jslog_kb),i.toString(),false);
  }
@@ -921,28 +925,33 @@ function jslog_ui_query()
     
  try
  {
-  jslog_prover = newQueryProver(jslog_kb,newTermEnclosure(query_term)); 
 
+  jslog_prover = newQueryProver(jslog_kb,newTermEnclosure(query_term)); 
+  jslog_Display_initializeVariableNames(jslog_prover);
+  
   window.document.formUI.output.value += "?- " + jslog_toString(jslog_prover.query,jslog_kb) + "\n";
   
   if (proveProver(jslog_prover))
   {
-  // FIX - we should display each variable in the initial query, and its bound value
-   window.document.formUI.output.value += jslog_toString(jslog_prover.query,jslog_kb);
+   window.document.formUI.output.value += jslog_varEnclosures_toString(jslog_prover.query_variables,jslog_kb);
    
    // DEBUGGING STATISTICS INFORMATION
    jslog_proverstats = new ProverStatistic(jslog_prover);
-   window.document.formUI.output.value += "\n" + calculateStatistics(jslog_proverstats).toString();
+   window.document.formUI.output.value += calculateStatistics(jslog_proverstats).toString() + "\n";
   }
   else
   {
    jslog_prover = null;
+   jslog_Display_resetVariableNames();
+   
    window.document.formUI.output.value += "No";
   }
  }
  catch (err)
  {
   jslog_prover = null;
+  jslog_Display_resetVariableNames();
+  
   window.document.formUI.output.value += err.toString();
  } 
 
@@ -957,20 +966,24 @@ function jslog_ui_retry()
   {
    if (retryProver(jslog_prover))
    {
-    window.document.formUI.output.value += jslog_toString(jslog_prover.query,jslog_kb);
+    window.document.formUI.output.value += jslog_varEnclosures_toString(jslog_prover.query_variables,jslog_kb);
 
     // DEBUGGING STATISTICS INFORMATION
-    window.document.formUI.output.value += "\n" + calculateStatistics(jslog_proverstats).toString();
+    window.document.formUI.output.value += calculateStatistics(jslog_proverstats).toString() + "\n";
    }
    else
    {
     jslog_prover = null;
+	jslog_Display_resetVariableNames();
+	
     window.document.formUI.output.value += "No";
    }
   } 
   catch (err)
   {
    jslog_prover = null;
+   jslog_Display_resetVariableNames();
+   
    window.document.formUI.output.value += err.toString();
   } 
   window.document.formUI.output.value += "\n";
@@ -985,6 +998,8 @@ function jslog_ui_stop()
  {
   haltProver(jslog_prover);
   jslog_prover = null;
+  jslog_Display_resetVariableNames();
+  
   window.document.formUI.output.value += "stopped query.\n";
  }
 }

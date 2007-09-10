@@ -104,13 +104,12 @@ function newDuplicateEnclosure(encl)
  while ((e = encls.pop()) != undefined)
  {
   if (hashGet(encls_hash,e.enclosure) == undefined)
-  {var i;
-  
+  {
    e_copy = new Array(e.enclosure.length);
    hashPut(encls_hash,e.enclosure,e_copy);
    encls_todo.push(e);
    
-   for (i=0; i < e_copy.length; i++)
+   for (var i=0; i < e_copy.length; i++)
    {
     if (e.enclosure[i] != null)
 	 encls.push(getFinalEnclosure(e.enclosure[i]));
@@ -120,11 +119,10 @@ function newDuplicateEnclosure(encl)
  
  // connect duplicate enclosures like original ones
  while ((e = encls_todo.pop()) != undefined)
- {var i;
-
+ {
   e_copy = hashGet(encls_hash,e.enclosure);
    
-  for (i=0; i < e_copy.length; i++)
+  for (var i=0; i < e_copy.length; i++)
   {
    if (e.enclosure[i] != null)
    {var fin_encl = getFinalEnclosure(e.enclosure[i]);
@@ -155,7 +153,6 @@ function newDuplicateTermFromEnclosure(encl)
   if (hashGet(encls_hash,e) == undefined)
   {var variables = hashGet(enclosures_hash,e.enclosure);
    var t_copy;
-   var i;
 
    if (variables == undefined)
    {
@@ -167,7 +164,7 @@ function newDuplicateTermFromEnclosure(encl)
    hashPut(encls_hash,e,t_copy);
    encls_todo.push(e);
       
-   for (i=0; i < e.enclosure.length; i++)
+   for (var i=0; i < e.enclosure.length; i++)
    {
     if (e.enclosure[i] != null && variables[i] != undefined)
 	 encls.push(getFinalEnclosure(e.enclosure[i]));
@@ -197,11 +194,10 @@ function replaceVariablesWithTerms(term,enclosure,encls_hash)
  while ((t = terms.pop()) != undefined)
  {
   if ((!isVariable(t)) && (hashGet(terms_hash,t) == undefined))
-  {var i;
-  
+  {  
    hashPut(terms_hash,t,t);
    
-   for (i=0; i < t.children.length; i++)
+   for (var i=0; i < t.children.length; i++)
    {var c = t.children[i];
    
     if (isVariable(c))
@@ -250,9 +246,8 @@ function newTermEnclosure(term)
    }	
   }
   else
-  {var i;
-  
-   for (i = t.children.length - 1; i >= 0 ; i--)
+  {
+   for (var i = t.children.length - 1; i >= 0 ; i--)
     terms.push(t.children[i]);
   }
  };
@@ -294,14 +289,13 @@ function getBoundEnclosure(encl)
 // body is an ArrayEnclosure
 function getConsPairEnclosureFromEnclosureArray(body)
 {var bterm;
- var i;
 
  if (body.terms.length >= 1)
   bterm = body.terms[body.terms.length - 1];
  else
   bterm = newConstant('true');
   
- for (i = body.terms.length - 2; i >= 0; i--)
+ for (var i = body.terms.length - 2; i >= 0; i--)
   bterm = newConsPair(body.terms[i],bterm);
  
  return newSubtermEnclosure(body.enclosure,bterm);
@@ -325,7 +319,6 @@ function enumFinalVariableEnclosures(encl)
   {var vs = enumVariables(e.term);
    var lencls = new Array();
    var variables;
-   var i;
 
    hashPut(encls_hash,e,e);
 
@@ -335,7 +328,7 @@ function enumFinalVariableEnclosures(encl)
 	hashPut(enclosures_hash,e.enclosure,variables);
    }
 
-   for (i = 0; i < vs.length; i++)
+   for (var i = 0; i < vs.length; i++)
    {var idx = vs[i].children[0];
    
     if (variables[idx] == undefined)

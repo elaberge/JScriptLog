@@ -1,9 +1,15 @@
 JScriptLog 0.7.5.beta
 ====================
 
+¥ Added support for globally unique variable names.  Initialize before query with JScript_Display_initializeVariableNames.  When queries terminate, call jslog_Display_resetVariableNames.
+
+¥ Added better display of query results (each variable in query is shown with its bound value).  Added the jslog_varEnclosures_toString function to JScriptLog_Display, and demonstrate in JScriptLog_UI how to bind enumFinalVariableEnclosures(prover.query) to prover.query_variables (via JScript_Display_initializeVariableNames) and display results.
+
+¥ Fix several occurrences of global variables used in for loops where local variables were required.
+
 ¥ Added support for the ^/2 existential qualifier to bagof/3 and setof/3 goals.
 
-¥ Fixed bagof/3 (and hence setof/3) to better match standard implementation when variables are involved (i.e., require equivalence, not equality).
+¥ Fixed bagof/3 (and hence setof/3) to better match standard implementation when variables are involved (i.e., require equivalence, not equality).  Thanks to Jeff T. for bringing these issues to my attention.
 
 ¥ Added internal:=@= and internal:\=@= equivalence predicates and jslog_equivalent function to JScriptLog_Unify. 
 

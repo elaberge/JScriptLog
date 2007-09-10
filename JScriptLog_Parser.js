@@ -33,7 +33,7 @@ function jslog_consult(in_src,kb)
 // plog:token:name([symbol|O],O,[symbol]).
 // plog:token:name([s1,s2,s3...|O],O,[s1,s2,s3,...]).
 function jslog_plog_token(name,symbol,kb)
-{var inlist,outlist,i;
+{var inlist,outlist;
 
  addRuleSet(kb,new RuleSet('plog:token:'+name,3,false));
 
@@ -46,7 +46,7 @@ function jslog_plog_token(name,symbol,kb)
  inlist = newListPair(newConstant(symbol[symbol.length - 1]),newVariable('O'));
  outlist = newListPair(newConstant(symbol[symbol.length - 1]),newListNull());
  
- for (i = symbol.length - 2; i >= 0; i--) 
+ for (var i = symbol.length - 2; i >= 0; i--) 
  {
   inlist = newListPair(newConstant(symbol[i]),inlist);
   outlist = newListPair(newConstant(symbol[i]),outlist);
@@ -80,7 +80,7 @@ function jslog_plog_range_token(name,symbol_min,symbol_max,kb)
  else
   pairs = newAtom('==',[newVariable('I'),newConstant(symbol_min[symbol_min.length - 1])]);
  			
- for (i = symbol_min.length - 2; i >= 0; i--) 
+ for (var i = symbol_min.length - 2; i >= 0; i--) 
  {
   if (symbol_min[i] != symbol_max[i])
    pairs = newOrPair(

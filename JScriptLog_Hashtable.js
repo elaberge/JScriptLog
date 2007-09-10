@@ -138,10 +138,9 @@ function hashNodeSet(node,key,value)
 
 // Get index for key object in hashtable, returns -1 if key not found
 function hashNodeFindIndex(node,key)
-{var i;
- var v;
+{var v;
  
- for (i = 0; i < node.values.length; i++)
+ for (var i = 0; i < node.values.length; i++)
  {
   if ((v = node.values[i]) != undefined && v.first == key)
    return i;
