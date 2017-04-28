@@ -2,69 +2,71 @@
     This file is part of JScriptLog.  This notice must remain.
 
     Created by Glendon Holst.  Copyright 2005.
-    
+
     JLog is free software licensed under the GNU General Public License.
 	See the included LICENSE.txt and GNU.txt files.
 
     Check <http://jlogic.sourceforge.net/> for further information.
 *******/
 
+import {
+  Hashtable,
+  hashGet, hashPut
+} from "./hashtable";
+
 ///////////////////////////////////
 // * Type objects
 ///////////////////////////////////
 
-var TYPE_ATOM = 1; 
-var TYPE_NUMBER = 2; 
-var TYPE_VARIABLE = 3; // children[0] is the index into the Enclosure
+var TYPE_ATOM = 1;
+var TYPE_NUMBER = 2;
+export var TYPE_VARIABLE = 3; // children[0] is the index into the Enclosure
 var TYPE_OBJECT = 4; // name is an object reference
 
-// type is one of the TYPE_* values, 
+// type is one of the TYPE_* values,
 // name is the name of the term (typically the predicate or function symbol),
 // The default is a term with no children.
-function Term(type, name)
-{
- this.type = type;
- this.name = name;
- this.children = new Array();
- 
- //// Other Properties (document here):
- // this.ruleset : the ruleset ruleset associated with the term
- // this.goal_type : the TYPE_*_GOAL associated with the term
+export class Term {
+  children: any[] = [];
 
- return this;
+  //// Other Properties (document here):
+  // this.ruleset : the ruleset ruleset associated with the term
+  // this.goal_type : the TYPE_*_GOAL associated with the term
+
+  constructor(public type: any, public name: any) {
+  }
 }
 
-
-function newAtom(name,terms)
+export function newAtom(name: any, terms: any)
 {var term = new Term(TYPE_ATOM,name);
 
  term.children = terms;
  return term;
 }
 
-function newConstant(name)
+export function newConstant(name: any)
 {
  return new Term(TYPE_ATOM,name);
 }
 
-function newNumber(value)
+export function newNumber(value: any)
 {
  return new Term(TYPE_NUMBER,parseFloat(value));
 }
 
-function newVariable(name)
+export function newVariable(name: any)
 {
  return new Term(TYPE_VARIABLE,name);
 }
 
-function newObjectReference(obj)
+export function newObjectReference(obj: any)
 {
  return new Term(TYPE_OBJECT,obj);
 }
 
-function newConsPair(lhs,rhs)
+export function newConsPair(lhs: any, rhs: any)
 {var term = new Term(TYPE_ATOM,',');
- 
+
  term.children[0] = lhs;
  term.children[1] = rhs;
  return term;
@@ -73,21 +75,21 @@ function newConsPair(lhs,rhs)
 // terms should be a non-empty array of Terms
 // returns undefined if terms is empty
 // returns terms[0] if terms has only a single Term
-function newConsPairsFromTerms(terms)
+export function newConsPairsFromTerms(terms: any)
 {var cp;
 
  if (terms.length < 2)
   return terms[0];
 
  cp = newConsPair(terms[terms.length-2],terms[terms.length-1]);
-   
+
  for (var i = terms.length - 3; i >= 0; i--)
   cp = newConsPair(terms[i],cp);
-  
+
  return cp;
 }
 
-function newOrPair(lhs,rhs)
+export function newOrPair(lhs: any, rhs: any)
 {var term = new Term(TYPE_ATOM,';');
 
  term.children[0] = lhs;
@@ -98,21 +100,21 @@ function newOrPair(lhs,rhs)
 // terms should be a non-empty array of Terms
 // returns undefined if terms is empty
 // returns terms[0] if terms has only a single Term
-function newOrPairsFromTerms(terms)
+export function newOrPairsFromTerms(terms: any)
 {var cp;
 
  if (terms.length < 2)
   return terms[0];
 
  cp = newOrPair(terms[terms.length-2],terms[terms.length-1]);
-   
+
  for (var i = terms.length - 3; i >= 0; i--)
   cp = newOrPair(terms[i],cp);
-  
+
  return cp;
 }
 
-function newListPair(lhs,rhs)
+export function newListPair(lhs: any, rhs: any)
 {var term = new Term(TYPE_ATOM,'.');
 
  term.children[0] = lhs;
@@ -120,23 +122,23 @@ function newListPair(lhs,rhs)
  return term;
 }
 
-function newListNull()
+export function newListNull()
 {
  return new Term(TYPE_ATOM,'[]');
 }
 
 // Returns a single list term where each element in the list is the element in terms.
 // terms should be an array of Terms
-function newListFromTerms(terms)
+export function newListFromTerms(terms: any)
 {var cp = newListNull();
 
  for (var i = terms.length - 1; i >= 0; i--)
   cp = newListPair(terms[i],cp);
-  
+
  return cp;
 }
 
-function newRuleTerm(lhs,rhs)
+export function newRuleTerm(lhs: any, rhs: any)
 {var term = new Term(TYPE_ATOM,':-');
 
  term.children[0] = lhs;
@@ -144,22 +146,14 @@ function newRuleTerm(lhs,rhs)
  return term;
 }
 
-function newCommandOp(rhs)
+function newCommandOp(rhs: any)
 {var term = new Term(TYPE_ATOM,':-');
 
  term.children[0] = rhs;
  return term;
 }
 
-// Given a term, returns a duplicate of that term. 
-// Invokes newDuplicateTerm(term,variables) below
-function newDuplicateTerm(term)
-{var variables = new Array();
-
- return newDuplicateTerm(term,variables);
-}
-
-// Given a term, returns a duplicate of that term. 
+// Given a term, returns a duplicate of that term.
 // The term must already have had an enclosure created via newTermEnclosure to bind
 // variable children[0] to the enclosure array -- duped vars reference the same enclosure entry.
 // The duplicate term has the same type and name, the same number of children,
@@ -167,16 +161,16 @@ function newDuplicateTerm(term)
 // Variables in the duplicate term are represented via a single unnamed variable instance
 // (i.e., variables lose their names, and the number of variables may be reduced).
 // The variables parameter must be an array, with each element either undefined or a Variable
-// instance.  On completion, variables contains the duplicated variables at the same index they 
+// instance.  On completion, variables contains the duplicated variables at the same index they
 // point to in the enclosure -- new Variable instances are created only if the variables array
 // is undefined at the index position a variable references.
-function newDuplicateTerm(term,variables)
+export function newDuplicateTerm(term: any, variables: any[] = [])
 {var terms_hash = new Hashtable();
  var terms_todo = new Array();
  var terms = new Array();
  var t;
  var t_copy;
- 
+
  terms.push(term);
 
  // find and copy all terms
@@ -187,9 +181,9 @@ function newDuplicateTerm(term,variables)
    if (variables[t.children[0]] == undefined)
    {
     t_copy = newVariable('_');
-   
+
     t_copy.children[0] = t.children[0];
-	
+
     variables[t.children[0]] = t_copy;
 	hashPut(terms_hash,t,t_copy);
    }
@@ -201,23 +195,23 @@ function newDuplicateTerm(term,variables)
    t_copy = new Term(t.type,t.name);
    t_copy.children = new Array(t.children.length);
    terms_todo.push(t);
-   
+
    hashPut(terms_hash,t,t_copy);
-   
+
    for (var i=0; i < t.children.length; i++)
 	terms.push(t.children[i]);
   }
  }
- 
+
  // connect duplicate terms like original ones
  while ((t = terms_todo.pop()) != undefined)
  {
   t_copy = hashGet(terms_hash,t);
-    
+
   for (var i=0; i < t.children.length; i++)
    t_copy.children[i] = hashGet(terms_hash,t.children[i]);
  }
- 
+
  return hashGet(terms_hash,term);
 }
 
@@ -225,62 +219,62 @@ function newDuplicateTerm(term,variables)
 // * Type test functions
 ///////////////////////////////////
 
-function isAtom(term)
+export function isAtom(term: any)
 {
  return (term.type == TYPE_ATOM);
 }
 
-function isConstant(term)
+export function isConstant(term: any)
 {
  return (term.type == TYPE_ATOM && term.children.length == 0);
 }
 
-function isNumber(term)
+export function isNumber(term: any)
 {
  return (term.type == TYPE_NUMBER);
 }
 
-function isInteger(term)
+export function isInteger(term: any)
 {
  return (term.type == TYPE_NUMBER && (Math.round(term.name) == term.name));
 }
 
-function isVariable(term)
+export function isVariable(term: any)
 {
  return (term.type == TYPE_VARIABLE);
 }
 
-function isObjectReference(term)
+export function isObjectReference(term: any)
 {
  return (term.type == TYPE_OBJECT);
 }
 
-function isConsPair(term)
+export function isConsPair(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == ',' && term.children.length == 2);
 }
 
-function isOrPair(term)
+export function isOrPair(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == ';' && term.children.length == 2);
 }
 
-function isListPair(term)
+export function isListPair(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == '.' && term.children.length == 2);
 }
 
-function isListNull(term)
+export function isListNull(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == '[]' && term.children.length == 0);
 }
 
-function isRuleTerm(term)
+export function isRuleTerm(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == ':-' && term.children.length == 2);
 }
 
-function isCommandOp(term)
+function isCommandOp(term: any)
 {
  return (term.type == TYPE_ATOM && term.name == ':-' && term.children.length == 1);
 }
@@ -290,15 +284,15 @@ function isCommandOp(term)
 // * Type getter / setter functions
 ///////////////////////////////////
 
-function getTermNameArity(term)
+export function getTermNameArity(term: any)
 {
  if (!isAtom(term))
   throw new Error("Expected atom.");
-  
+
  return (term.name.toString()+"/"+term.children.length.toString());
 }
 
-function getTermNameArityFromNameArity(name,arity)
+export function getTermNameArityFromNameArity(name: any, arity: any)
 {
  return (name.toString()+"/"+arity.toString());
 }
@@ -307,7 +301,7 @@ function getTermNameArityFromNameArity(name,arity)
 // returns empty array if term is undefined
 // returns array of terms, where each element is the head of a binary pair (or last tail).
 // eval_fn(t) should be true if t is a binary pair (arity 2) of the appropriate type.
-function getTermArrayFromBinaryTerm(term,eval_fn)
+export function getTermArrayFromBinaryTerm(term: any, eval_fn: any)
 {var terms = new Array();
 
  if (term != undefined)
@@ -325,12 +319,12 @@ function getTermArrayFromBinaryTerm(term,eval_fn)
 }
 
 // Return array of variables in given term
-function enumVariables(term)
+export function enumVariables(term: any)
 {var vars = new Array();
  var terms_hash = new Hashtable();
  var terms = new Array();
  var t;
- 
+
  terms.push(term);
 
  // find all variables
@@ -349,9 +343,8 @@ function enumVariables(term)
     for (var i = t.children.length - 1; i >= 0; i--)
 	 terms.push(t.children[i]);
    }
-  } 
+  }
  }
- 
+
  return vars;
 }
-

@@ -2,18 +2,29 @@
     This file is part of JScriptLog.  This notice must remain.
 
     Created by Glendon Holst.  Copyright 2005.
-    
+
     JLog is free software licensed under the GNU General Public License.
 	See the included LICENSE.txt and GNU.txt files.
 
     Check <http://jlogic.sourceforge.net/> for further information.
 *******/
 
+import {
+  newAtomGoal, newAtomGoalFromRuleSet, newVariableGoal
+} from "./goals";
+import {
+  addRuleSet, RuleSet, addRule, newRule
+} from "./kb";
+import {
+  newAtom, newConsPair, newConsPairsFromTerms, newConstant,
+  newListNull, newListPair, newRuleTerm, newVariable
+} from "./types";
+
 ///////////////////////////////////
 // jslog_library_utilities(kb)
 ///////////////////////////////////
 
-function jslog_library_utilities(kb)
+export function jslog_library_utilities(kb: any)
 {
  // writeln(O) :- write(O), nl.
  {
@@ -75,11 +86,11 @@ function jslog_library_utilities(kb)
 		newAtom('internal:append',[newVariable('X'),newVariable('Y'),newVariable('Z')]))),
 	true);
  }
- // select(X,[X|Xs],Xs).  
- // select(X,[Y|Ys],[Y|Zs]) :- select(X,Ys,Zs). 
+ // select(X,[X|Xs],Xs).
+ // select(X,[Y|Ys],[Y|Zs]) :- select(X,Ys,Zs).
  {
   addRuleSet(kb,new RuleSet('select',3,false));
- 
+
   addRule(kb,newRule(
 		newAtom('select',[newVariable('X'),newListPair(newVariable('X'),newVariable('Xs')),newVariable('Xs')])),
 	true);

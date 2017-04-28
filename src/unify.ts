@@ -2,12 +2,28 @@
     This file is part of JScriptLog.  This notice must remain.
 
     Created by Glendon Holst.  Copyright 2005.
-    
+
     JLog is free software licensed under the GNU General Public License.
 	See the included LICENSE.txt and GNU.txt files.
 
     Check <http://jlogic.sourceforge.net/> for further information.
 *******/
+
+import {
+  Binding,
+  enumFinalVariableEnclosures, getFinalEnclosure, newErrorException,
+  newSubtermEnclosure, removeBindings
+} from "./enclosures";
+import {
+  isAtomGoal, isVariableGoal
+} from "./goals";
+import {
+  Hashtable, Pair,
+  hashGet, hashPut
+} from "./hashtable";
+import {
+  isAtom, isNumber, isObjectReference, isVariable
+} from "./types";
 
 ///////////////////////////////////
 // jslog_unify_* functions for Unification
@@ -15,10 +31,10 @@
 
 // Unify Enclosures encl1 with encl2
 // Returns true if they unify, false otherwise.
-// encl1 and encl2 are mutated only in the case that unification occurs, 
+// encl1 and encl2 are mutated only in the case that unification occurs,
 // bindings is the array of affected enclosure entries, and their bound enclosures.
 // bindings must be an empty array (e.g., new Array()) when passed in.
-function jslog_unify(encl1,encl2,bindings)
+export function jslog_unify(encl1: any, encl2: any, bindings: any)
 {var lhs_encls = new Array(1);
  var rhs_encls = new Array(1);
  var lhs, rhs;
@@ -30,29 +46,29 @@ function jslog_unify(encl1,encl2,bindings)
  {
   lhs = getFinalEnclosure(lhs);
   rhs = getFinalEnclosure(rhs);
-  
+
   if (isVariable(lhs.term))
   {
-   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure && 
+   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure &&
 		lhs.term.children[0] == rhs.term.children[0])
    {
     // do nothing, variables are equal
    }
    else
    {
-    bindings.push(new Binding(lhs.enclosure,lhs.term.children[0],rhs));
+    bindings.push(new Binding(lhs.enclosure,lhs.term.children[0]));
     lhs.enclosure[lhs.term.children[0]] = rhs;
    }
   }
   else if (isVariable(rhs.term))
   {
-   bindings.push(new Binding(rhs.enclosure,rhs.term.children[0],lhs));
+   bindings.push(new Binding(rhs.enclosure,rhs.term.children[0]));
    rhs.enclosure[rhs.term.children[0]] = lhs;
   }
   else if ((lhs.term.type != rhs.term.type) || (lhs.term.name != rhs.term.name) ||
 			(lhs.term.children.length != rhs.term.children.length))
   {
-   removeBindings(bindings);			
+   removeBindings(bindings);
    return false;
   }
   else
@@ -74,13 +90,13 @@ function jslog_unify(encl1,encl2,bindings)
 
 // Compares the ordering of two Enclosures, encl1 and encl2.
 // Returns 0 if they are identical, -1 if encl1 is ordered before encl2, 1 if after.
-// The standard ordering is: variables @< numbers @< constants @< atoms @< object references. 
-//   variables are ordered by Javascript internals and their enclosure index number; 
-//   numbers are sorted in increasing order; 
-//   constants are sorted in lexicographic order; 
-//   atoms are ordered first by name, then arity, then by their arguments in left-to-right order; 
+// The standard ordering is: variables @< numbers @< constants @< atoms @< object references.
+//   variables are ordered by Javascript internals and their enclosure index number;
+//   numbers are sorted in increasing order;
+//   constants are sorted in lexicographic order;
+//   atoms are ordered first by name, then arity, then by their arguments in left-to-right order;
 //   object references are ordered by Javascript internals.
-function jslog_compare(encl1,encl2)
+export function jslog_compare(encl1: any, encl2: any)
 {var lhs_encls = new Array(1);
  var rhs_encls = new Array(1);
  var lhs, rhs;
@@ -92,7 +108,7 @@ function jslog_compare(encl1,encl2)
  {
   lhs = getFinalEnclosure(lhs);
   rhs = getFinalEnclosure(rhs);
-  
+
   if (isVariable(lhs.term))
   {
    if (isVariable(rhs.term))
@@ -113,7 +129,7 @@ function jslog_compare(encl1,encl2)
 	 return 1;
    }
    else
-    return -1;	
+    return -1;
   }
   else if (isVariable(rhs.term))
   {
@@ -176,7 +192,7 @@ function jslog_compare(encl1,encl2)
 	}
     else if (lhs.term.name < rhs.term.name)
 	 return -1;
-    else 
+    else
 	 return 1;
    }
    else
@@ -194,11 +210,11 @@ function jslog_compare(encl1,encl2)
  throw newErrorException("Error comparing terms in jslog_compare.");
 }
 
-// Same as jslog_unify, 
+// Same as jslog_unify,
 // except that unification fails if the binding variable appears in the bound term.
 // NOTE: do not maintain separately from jslog_unify -- if jslog_unify is modified,
 // copy it, then add the two jslog_occurs_check tests.
-function jslog_unify_with_occurs_check(encl1,encl2,bindings)
+export function jslog_unify_with_occurs_check(encl1: any, encl2: any, bindings: any)
 {var lhs_encls = new Array(1);
  var rhs_encls = new Array(1);
  var lhs, rhs;
@@ -210,10 +226,10 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
  {
   lhs = getFinalEnclosure(lhs);
   rhs = getFinalEnclosure(rhs);
-  
+
   if (isVariable(lhs.term))
   {
-   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure && 
+   if (isVariable(rhs.term) && lhs.enclosure == rhs.enclosure &&
 		lhs.term.children[0] == rhs.term.children[0])
    {
     // do nothing, variables are equal
@@ -222,12 +238,12 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
    {
     if (jslog_occurs_check(lhs,rhs))
 	{
-     bindings.push(new Binding(lhs.enclosure,lhs.term.children[0],rhs));
+     bindings.push(new Binding(lhs.enclosure,lhs.term.children[0]));
      lhs.enclosure[lhs.term.children[0]] = rhs;
     }
 	else
     {
-     removeBindings(bindings);			
+     removeBindings(bindings);
      return false;
     }
    }
@@ -236,19 +252,19 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
   {
    if (jslog_occurs_check(rhs,lhs))
    {
-    bindings.push(new Binding(rhs.enclosure,rhs.term.children[0],lhs));
+    bindings.push(new Binding(rhs.enclosure,rhs.term.children[0]));
     rhs.enclosure[rhs.term.children[0]] = lhs;
    }
    else
    {
-    removeBindings(bindings);			
+    removeBindings(bindings);
     return false;
-   }   
+   }
   }
   else if ((lhs.term.type != rhs.term.type) || (lhs.term.name != rhs.term.name) ||
 			(lhs.term.children.length != rhs.term.children.length))
   {
-   removeBindings(bindings);			
+   removeBindings(bindings);
    return false;
   }
   else
@@ -269,17 +285,17 @@ function jslog_unify_with_occurs_check(encl1,encl2,bindings)
 }
 
 // Performs the occurs check (determine if variable v_encl is unbound in t_encl).
-// returns true if the occurs check succeeds (i.e., v_encl is not in t_encl), 
+// returns true if the occurs check succeeds (i.e., v_encl is not in t_encl),
 // returns false otherwise (i.e., v_encl occurs in t_encl).
 // isVariable(v_encl.term) must be true.
-function jslog_occurs_check(v_encl,t_encl)
+function jslog_occurs_check(v_encl: any, t_encl: any)
 {var v_encls = enumFinalVariableEnclosures(t_encl);
  var e;
- 
+
  for (var i = 0; i < v_encls.length; i++)
  {
   e = v_encls[i];
-  
+
   if (v_encl.enclosure == e.enclosure && v_encl.term.children[0] == e.term.children[0])
    return false;
  }
@@ -291,7 +307,7 @@ function jslog_occurs_check(v_encl,t_encl)
 // Returns true if they are structurally equivalent, false otherwise.
 // encl1 and encl2 are not mutated.
 // NOTE: based on jslog_unify -- if jslog_unify is modified, verify this remains valid.
-function jslog_equivalent(encl1,encl2)
+export function jslog_equivalent(encl1: any, encl2: any)
 {var vars_hash = new Hashtable();
  var lhs_encls = new Array(1);
  var rhs_encls = new Array(1);
@@ -304,10 +320,10 @@ function jslog_equivalent(encl1,encl2)
  {
   lhs = getFinalEnclosure(lhs);
   rhs = getFinalEnclosure(rhs);
-  
+
   if (isVariable(lhs.term) && isVariable(rhs.term))
   {
-   if (lhs.enclosure == rhs.enclosure && 
+   if (lhs.enclosure == rhs.enclosure &&
 		lhs.term.children[0] == rhs.term.children[0])
    {
     // do nothing, variables are equal
@@ -323,7 +339,7 @@ function jslog_equivalent(encl1,encl2)
 	 lhs_encl_mapping = new Array(lhs.enclosure.length);
 	 hashPut(vars_hash,lhs.enclosure,lhs_encl_mapping);
 	}
-	
+
 	// lhs_encl_mapping must already be hashPut since lhs and rhs enclosures may be equal.
     var rhs_encl_mapping = hashGet(vars_hash,rhs.enclosure);
 
@@ -332,15 +348,15 @@ function jslog_equivalent(encl1,encl2)
 	 rhs_encl_mapping = new Array(rhs.enclosure.length);
 	 hashPut(vars_hash,rhs.enclosure,rhs_encl_mapping);
 	}
-	
+
 	var lhs_mapping = lhs_encl_mapping[lhs.term.children[0]];
 	var rhs_mapping = rhs_encl_mapping[rhs.term.children[0]];
-	
+
 	if (lhs_mapping == undefined && rhs_mapping == undefined)
 	{
 	 lhs_mapping = new Pair(rhs.enclosure,rhs.term.children[0]);
 	 rhs_mapping = new Pair(lhs.enclosure,lhs.term.children[0]);
-	 
+
 	 lhs_encl_mapping[lhs.term.children[0]] = lhs_mapping;
 	 rhs_encl_mapping[rhs.term.children[0]] = rhs_mapping;
 	}
@@ -352,7 +368,7 @@ function jslog_equivalent(encl1,encl2)
 	{
 	 if (lhs_mapping.first != lhs.enclosure || rhs_mapping.first != lhs.enclosure ||
 		 lhs_mapping.second != rhs.term.children[0] || rhs_mapping.second != lhs.term.children[0])
-	  return false; 
+	  return false;
 	}
    }
   }

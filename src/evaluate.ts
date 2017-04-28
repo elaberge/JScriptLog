@@ -2,12 +2,27 @@
     This file is part of JScriptLog.  This notice must remain.
 
     Created by Glendon Holst.  Copyright 2005.
-    
+
     JLog is free software licensed under the GNU General Public License.
 	See the included LICENSE.txt and GNU.txt files.
 
     Check <http://jlogic.sourceforge.net/> for further information.
 *******/
+
+import {
+  Enclosure,
+  getBoundEnclosure, newBlankEnclosure, newErrorException, newSubtermEnclosure
+} from "./enclosures";
+import {
+  isAtomGoal, isVariableGoal
+} from "./goals";
+import {
+  getRuleSet
+} from "./kb";
+import {
+  Term,
+  isAtom, isVariable
+} from "./types";
 
 ///////////////////////////////////
 // jslog_Evaluate_* functions for expression Evaluation
@@ -16,13 +31,13 @@
 // encl is an Enclosure of an expression
 // kb is the KB
 // Returns a Term which encl evaluates to.
-function jslog_Evaluate(kb,encl)
+export function jslog_Evaluate(kb: any, encl: any)
 {var toeval_ops = new Array(1);
  var value_terms = new Array();
  var toeval;
 
  toeval_ops[0] = encl;
- 
+
  while ((toeval = toeval_ops.pop()) != undefined)
  {
   if (toeval.constructor == Term)
@@ -40,9 +55,9 @@ function jslog_Evaluate(kb,encl)
     if (toeval == null)
      throw newErrorException("Unbound variable in evaluated expression.");
    }
-  
+
    var eval_fn = jslog_Evaluate_Function(kb,toeval.term);
-  
+
    if (eval_fn != undefined)
    {
     toeval_ops.push(eval_fn);
@@ -51,7 +66,7 @@ function jslog_Evaluate(kb,encl)
      toeval_ops.push(newSubtermEnclosure(toeval.enclosure,toeval.term.children[i]));
    }
    else
-    value_terms.push(toeval.term);   
+    value_terms.push(toeval.term);
   }
   else  // Evaluate Function
   {
@@ -61,11 +76,11 @@ function jslog_Evaluate(kb,encl)
 
  if (value_terms.length != 1)
   throw newErrorException("Expression did not evaluate to single value.");
-  
+
  return value_terms.pop();
 }
 
-function jslog_Evaluate_Function(kb,term)
+export function jslog_Evaluate_Function(kb: any, term: any)
 {
  if (term.eval_fn != undefined)
   return term.eval_fn;
@@ -77,5 +92,5 @@ function jslog_Evaluate_Function(kb,term)
    return ruleset.eval_fn;
  }
 
- return undefined;	
+ return undefined;
 }

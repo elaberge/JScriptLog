@@ -3,65 +3,75 @@
     This file is part of JScriptLog.  This notice must remain.
 
     Created by Glendon Holst.  Copyright 2005.
-    
+
     JLog is free software licensed under the GNU General Public License.
 	See the included LICENSE.txt and GNU.txt files.
 
     Check <http://jlogic.sourceforge.net/> for further information.
 -->
 
-<!-- core JScriptLog Prolog Engine -->
-<script language="javascript" type="text/javascript" src="JScriptLog_Hashtable.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Types.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Enclosures.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Unify.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Builtins.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_KB.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Evaluate.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Goals.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Prover.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Display.js"></script>
-<script language="javascript" type="text/javascript" src="JScriptLog_Parser.js"></script>
+<script src="system.js"></script>
 
-<!-- extra JScriptLog Utility predicates -->
-<script language="javascript" type="text/javascript" src="JScriptLog_Utilities.js"></script>
+<!-- core JScriptLog Prolog Engine -->
+<script language="javascript" type="text/javascript" src="dist/merged.js"></script>
 
 <!-- controllers for JScriptLog User Interface -->
 <script language="javascript" type="text/javascript" src="JScriptLog_UI.js"></script>
 
-	<head>
-		<title>
-			JScriptLog v0.7.5 beta
-		</title>
-	</head>
-	<body bgcolor="#bbbbbb" onload="jslog_ui_consult();">
-		<form name="formUI">
-			<p>
-Query<br>
-				<textarea width="90%" name="query" wrap="logical" rows="1" cols="45"></textarea>
+<script>
+	let jslog_ui;
 
-				<select name="premade_queries">
+	function launch() {
+		const promises = [];
+		const mod = {};
+		["builtins", "display", "enclosures", "evaluate", "goals", "hashtable", "kb", "parser", "prover", "types", "unify", "utilities"].forEach((m) => {
+			const p = System.import(m)
+				.then((module) => mod[m] = module);
+			promises.push(p);
+		});
+		Promise.all(promises)
+			.then(() => {
+				jslog_ui = jslog_ui_launch(mod);
+				jslog_ui.consult();
+			});
+	}
+</script>
+
+<head>
+	<title>
+		JScriptLog v0.7.5 beta
+	</title>
+</head>
+
+<body bgcolor="#bbbbbb" onload="launch();">
+	<form name="formUI">
+		<p>
+			Query<br>
+			<textarea width="90%" name="query" wrap="logical" rows="1" cols="45"></textarea>
+
+			<select name="premade_queries">
 				</select>
 
-				<input name="start" type="button" value="Query" onclick="jslog_ui_query();">
-				<input name="retry" type="button" value="Retry" onclick="jslog_ui_retry();">
-				<input name="stop" type="button" value="Stop" onclick="jslog_ui_stop();">
-			</p>
-			<p>
-Output<br>
-				<textarea width="100%" name="output" wrap="logical" rows="5" cols="90"></textarea>
-				<br>
-				<input name="clear" type="button" value="Clear" onclick="jslog_ui_clear();">
-			</p>
-			<p>
-KB<br>
-				<textarea width="100%" name="kb" wrap="logical" rows="21" cols="90"></textarea>
-				<br>
-				<input name="consult" type="button" value="Consult KB" onclick="jslog_ui_consult();">
-			</p>
-		</form>
-<p>
-<a href="LICENSE.txt">Licensed</a> under the <a href="GPL.txt">GPL</a>.
-</p>
-	</body>
+			<input name="start" type="button" value="Query" onclick="jslog_ui.query();">
+			<input name="retry" type="button" value="Retry" onclick="jslog_ui.retry();">
+			<input name="stop" type="button" value="Stop" onclick="jslog_ui.stop();">
+		</p>
+		<p>
+			Output<br>
+			<textarea width="100%" name="output" wrap="logical" rows="5" cols="90"></textarea>
+			<br>
+			<input name="clear" type="button" value="Clear" onclick="jslog_ui.clear();">
+		</p>
+		<p>
+			KB<br>
+			<textarea width="100%" name="kb" wrap="logical" rows="21" cols="90"></textarea>
+			<br>
+			<input name="consult" type="button" value="Consult KB" onclick="jslog_ui.consult();">
+		</p>
+	</form>
+	<p>
+		<a href="LICENSE.txt">Licensed</a> under the <a href="GPL.txt">GPL</a>.
+	</p>
+</body>
+
 </html>
