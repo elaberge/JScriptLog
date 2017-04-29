@@ -35,9 +35,7 @@ export class Prover {
   frontier: any[] = [];
   explored: any[] = [];
   query: any; // the given query encl
-
-  //// Other Properties (document here):
-  // this.query_variables : array of variable encls in the original query
+  query_variables: any; // array of variable encls in the original query
 
   constructor(public kb: any) {
   }

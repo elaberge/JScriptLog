@@ -25,7 +25,7 @@ import {
   isnumber_fn, isvar_fn, log_eval_fn, lt_fn, lte_fn, minus_eval_fn, mod_eval_fn, multiply_eval_fn,
   negative_eval_fn, neq_fn, nl_fn, plus_eval_fn, positive_eval_fn, pow_eval_fn, round_eval_fn,
   sign_eval_fn, sin_eval_fn, sqrt_eval_fn, tan_eval_fn, throw_fn, trunc_eval_fn,
-  unify_fn, unify_with_occurs_check_fn, write_fn
+  unify_fn, unify_with_occurs_check_fn, write_fn, dynamic_fn
 } from "./builtins";
 import {
   ArrayEnclosure,
@@ -756,6 +756,15 @@ export function newKB()
 			newAtom('internal:retract',[newVariable('R'),newVariable('N')])]))));
 
   addRuleSet(kb,ruleset);
+ }
+ // dynamic/1
+ {
+   ruleset = new RuleSet('dynamic',1,false);
+
+   ruleset.rules.push(newFunctionRule(
+   		newAtom('dynamic',[newVariable('P')]),dynamic_fn));
+
+   addRuleSet(kb,ruleset);
  }
  // clause(H,B) :- internal:clause(H,B,_,_,_).
  {

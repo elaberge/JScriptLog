@@ -26,9 +26,10 @@ import {
    removeChildGoalsFromFrontier, undoGoal, isAtomGoal, isVariableGoal, newVariableGoal
  } from "./goals";
  import {
+   RuleSet,
    OP_TYPE_FX, isOperatorRuleSet, getOperatorTypeFromString , getRuleSetFromNameArity,
    getOperatorType, getOperatorPrecedence, getRuleSetName, getOperatorTypeStringFromType,
-   isDynamicRuleSet, newRule, getRuleNameArity, addRule, removeRuleFromRuleSet
+   isDynamicRuleSet, newRule, getRuleNameArity, addRule, removeRuleFromRuleSet, addRuleSet
   } from "./kb";
 import {
   isProverStateDone, newQueryProver, proveProver, retryProver, stopProver
@@ -1116,6 +1117,28 @@ export function asserta_fn(goal: any)
 export function assertz_fn(goal: any)
 {
  return internal_assert_fn(true,goal);
+}
+
+export function dynamic_fn(goal: any) {
+  const encl = getFinalEnclosure(goal.encl);
+  const orig = getFinalEnclosure(newSubtermEnclosure(encl.enclosure, encl.term.children[0]));
+  const term = newDuplicateTermFromEnclosure(orig);
+  const parts = term.name.split("/");
+  if (parts.length === 1) {
+    parts.push(0);
+  } else {
+    parts[1] = parseInt(parts[1]);
+  }
+  const ruleName = parts[0];
+  const ruleArity = parts[1];
+
+  const ruleset = getRuleSetFromNameArity(goal.kb, ruleName, ruleArity);
+  if (ruleset) {
+    throw newErrorException("Cannot modify an existing ruleset: " + term.name);
+  }
+
+  addRuleSet(goal.kb, new RuleSet(ruleName, ruleArity, true));
+  return true;
 }
 
 export function write_fn(goal: any)

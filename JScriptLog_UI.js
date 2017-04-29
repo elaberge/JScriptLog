@@ -927,6 +927,9 @@ function jslog_ui_init_query()
 				newAtom('throw_long',[newNumber(10)]),
 				newVariable('E'),
 				newAtom('writeln',[newConsPair(newConstant('thrown: '),newVariable('E'))])]);
+  q[i++] = newAtom('dynamic',[newConstant('hello/1')]);
+  q[i++] = newAtom('assert',[newAtom('hello',[newConstant('world')])]);
+  q[i++] = newAtom('hello',[newVariable('X')]);
 
 
  window.document.formUI.premade_queries[0] = new Option("<-- enter query (no infix operators).",'0',true);
